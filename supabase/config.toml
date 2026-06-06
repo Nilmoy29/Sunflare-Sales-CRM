@@ -1,0 +1,10 @@
+# Supabase local config stub — extend via `supabase init` / Story 1.2 migrations.
+project_id = "sunflare"
+
+[api]
+enabled = true
+port = 54321
+
+[db]
+port = 54322
+major_version = 17

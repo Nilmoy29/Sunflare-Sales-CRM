@@ -1,0 +1,32 @@
+import type { ExpressionSpecification } from "mapbox-gl";
+import type { DoorOutcome } from "@/lib/validators/enums";
+import { DOOR_OUTCOMES } from "@/lib/validators/enums";
+
+export const DOOR_OUTCOME_COLORS = {
+  interested: "#22c55e",
+  not_home: "#eab308",
+  not_interested: "#ef4444",
+  do_not_knock: "#374151",
+  callback_requested: "#3b82f6",
+  already_has_solar: "#a855f7",
+} as const satisfies Record<DoorOutcome, string>;
+
+export const DOOR_OUTCOME_LABELS = {
+  interested: "Interested",
+  not_home: "Not home",
+  not_interested: "Not interested",
+  do_not_knock: "Do not knock",
+  callback_requested: "Callback",
+  already_has_solar: "Has solar",
+} as const satisfies Record<DoorOutcome, string>;
+
+const DEFAULT_PIN_COLOR = "#64748b";
+
+/** Mapbox `circle-color` expression keyed on GeoJSON `outcome` property. */
+export function doorOutcomeMapboxColorExpression(): ExpressionSpecification {
+  const pairs: (string | ExpressionSpecification)[] = [];
+  for (const outcome of DOOR_OUTCOMES) {
+    pairs.push(outcome, DOOR_OUTCOME_COLORS[outcome]);
+  }
+  return ["match", ["get", "outcome"], ...pairs, DEFAULT_PIN_COLOR];
+}

@@ -1,0 +1,8 @@
+-- Sunflare seed (optional, local dev only)
+--
+-- Do NOT insert auth users with passwords here.
+-- Create your first admin in Supabase Dashboard:
+--   Authentication → Users → Add user
+-- Then set role in SQL editor:
+--   update public.profiles set role = 'admin', name = 'Manager'
+--   where id = '<user-uuid>';

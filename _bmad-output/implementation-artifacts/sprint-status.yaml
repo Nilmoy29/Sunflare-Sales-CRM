@@ -1,0 +1,116 @@
+# generated: 2026-06-01
+# last_updated: 2026-06-06
+# project: Sunflare
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-06-01
+last_updated: 2026-06-06
+project: Sunflare
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  epic-1: in-progress
+  1-1-initialize-application-from-starter-template: done
+  1-2-enable-postgis-and-core-auth-schema: done
+  1-3-login-session-persistence-and-role-routing: done
+  1-4-rep-profile-fields-and-self-view: review
+  1-5-admin-user-management: review
+  1-6-password-reset-flow: review
+  1-7-invite-link-onboarding: review
+  epic-1-retrospective: optional
+
+  epic-2: in-progress
+  2-1-contacts-and-doorknocks-schema: done
+  2-2-start-and-end-shift-with-gps-tracking: done
+  2-3-rep-map-with-live-location-and-historic-pins: done
+  2-4-tap-to-log-a-door-knock: done
+  2-5-door-outcome-form-and-submission: done
+  2-6-reverse-geocoding-on-knock: done
+  2-7-offline-knock-queue-and-sync: done
+  2-8-serwist-pwa-shell: done
+  2-9-promote-interested-door-to-lead: done
+  2-10-re-knock-warning-with-history: done
+  2-11-personal-knock-history: done
+  epic-2-retrospective: optional
+
+  epic-3: done
+  3-1-admin-global-map-with-filters: done
+  3-2-live-activity-feed: done
+  3-3-daily-rep-summary-grid: done
+  3-4-low-activity-and-morning-overview-flags: done
+  3-5-shift-gps-breadcrumbs-on-admin-map: done
+  epic-3-retrospective: done
+
+  epic-4: in-progress
+  4-1-leads-schema-stages-and-rls: done
+  4-2-kanban-pipeline-board: done
+  4-3-lead-cards-and-filters: done
+  4-4-lead-detail-360-view: done
+  4-5-collaboration-notes: done
+  4-6-schedule-follow-ups: done
+  4-7-pipeline-stage-audit-trail: done
+  4-8-web-push-reminders-for-follow-ups: in-progress
+  4-9-lost-reasons-and-lead-reassignment: backlog
+  epic-4-retrospective: optional
+
+  epic-5: backlog
+  5-1-calllog-schema-and-rls: backlog
+  5-2-contact-search-and-create: backlog
+  5-3-log-a-call-with-outcome: backlog
+  5-4-promote-call-to-lead: backlog
+  5-5-contact-call-activity-stream: backlog
+  5-6-daily-call-counters: backlog
+  5-7-call-scripts-and-click-to-dial: backlog
+  epic-5-retrospective: optional
+
+  epic-6: backlog
+  6-1-territory-and-assignment-schema: backlog
+  6-2-draw-and-save-territories: backlog
+  6-3-assign-territory-to-rep-by-date: backlog
+  6-4-show-assigned-territory-on-rep-map: backlog
+  6-5-coverage-heatmap-layer: backlog
+  epic-6-retrospective: optional
+
+  epic-7: backlog
+  7-1-global-date-range-control: backlog
+  7-2-funnel-conversion-chart: backlog
+  7-3-team-leaderboard: backlog
+  7-4-rep-deep-dive-dashboard: backlog
+  7-5-geographic-yield-by-suburb: backlog
+  7-6-csv-export: backlog
+  7-7-end-of-shift-daily-summaries: backlog
+  7-8-admin-call-script-configuration: backlog
+  epic-7-retrospective: optional

@@ -1,0 +1,47 @@
+{
+  "name": "sunflare",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "packageManager": "npm@11.5.1",
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
+    "lint": "eslint",
+    "db:push": "supabase db push",
+    "db:link": "supabase link --project-ref glruwdknafegbcofvnbp",
+    "db:types": "node scripts/generate-supabase-types.mjs"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@serwist/next": "^9.0.18",
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.49.8",
+    "dexie": "^4.0.11",
+    "mapbox-gl": "^3.12.0",
+    "next": "16.2.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "serwist": "^9.0.18",
+    "web-push": "^3.6.7",
+    "zod": "^3.25.32"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/mapbox-gl": "^3.4.1",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "1.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.6",
+    "supabase": "^2.103.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

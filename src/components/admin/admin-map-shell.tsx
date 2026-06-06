@@ -1,0 +1,263 @@
+"use client";
+
+import { useCallback, useMemo, useState } from "react";
+import { AdminMapCanvas } from "@/components/admin/admin-map-canvas";
+import { useShiftBreadcrumbs } from "@/features/admin/use-shift-breadcrumbs";
+import { formatSydneyDateString } from "@/features/knocks/format-knock-date";
+import type { AdminMapFilters } from "@/features/knocks/use-admin-map-knocks";
+import {
+  DOOR_OUTCOME_COLORS,
+  DOOR_OUTCOME_LABELS,
+} from "@/lib/geo/door-outcome-colors";
+import { DOOR_OUTCOMES, type DoorOutcome } from "@/lib/validators/enums";
+
+export type AdminMapRep = {
+  id: string;
+  name: string;
+};
+
+type AdminMapShellProps = {
+  reps: AdminMapRep[];
+};
+
+function defaultFilters(): AdminMapFilters {
+  const today = formatSydneyDateString(new Date());
+  return {
+    from: today,
+    to: today,
+    repIds: null,
+    outcomes: null,
+  };
+}
+
+export function AdminMapShell({ reps }: AdminMapShellProps) {
+  const [filters, setFilters] = useState<AdminMapFilters>(defaultFilters);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const allRepsSelected = filters.repIds === null;
+  const allOutcomesSelected = filters.outcomes === null;
+
+  const sortedReps = useMemo(
+    () => [...reps].sort((a, b) => a.name.localeCompare(b.name)),
+    [reps],
+  );
+
+  const selectAllReps = useCallback(() => {
+    setFilters((prev) => ({ ...prev, repIds: null }));
+    setRefreshKey((k) => k + 1);
+  }, []);
+
+  const toggleRep = useCallback((repId: string) => {
+    setFilters((prev) => {
+      if (prev.repIds === null) {
+        return { ...prev, repIds: [repId] };
+      }
+      const next = prev.repIds.includes(repId)
+        ? prev.repIds.filter((id) => id !== repId)
+        : [...prev.repIds, repId];
+      return { ...prev, repIds: next.length === 0 ? null : next };
+    });
+    setRefreshKey((k) => k + 1);
+  }, []);
+
+  const selectAllOutcomes = useCallback(() => {
+    setFilters((prev) => ({ ...prev, outcomes: null }));
+    setRefreshKey((k) => k + 1);
+  }, []);
+
+  const toggleOutcome = useCallback((outcome: DoorOutcome) => {
+    setFilters((prev) => {
+      if (prev.outcomes === null) {
+        return { ...prev, outcomes: [outcome] };
+      }
+      const next = prev.outcomes.includes(outcome)
+        ? prev.outcomes.filter((value) => value !== outcome)
+        : [...prev.outcomes, outcome];
+      return { ...prev, outcomes: next.length === 0 ? null : next };
+    });
+    setRefreshKey((k) => k + 1);
+  }, []);
+
+  const updateDate = useCallback((field: "from" | "to", value: string) => {
+    setFilters((prev) => ({ ...prev, [field]: value }));
+    setRefreshKey((k) => k + 1);
+  }, []);
+
+  const singleDay = filters.from === filters.to;
+  const breadcrumbRepId =
+    filters.repIds?.length === 1 ? filters.repIds[0]! : null;
+  const breadcrumbDate = singleDay ? filters.from : null;
+  const breadcrumbEnabled = breadcrumbRepId !== null && breadcrumbDate !== null;
+
+  const breadcrumbs = useShiftBreadcrumbs(
+    breadcrumbRepId,
+    breadcrumbDate,
+    breadcrumbEnabled,
+  );
+
+  const selectedRepName = useMemo(() => {
+    if (!breadcrumbRepId) {
+      return null;
+    }
+    return reps.find((rep) => rep.id === breadcrumbRepId)?.name ?? "Rep";
+  }, [breadcrumbRepId, reps]);
+
+  const routeHint = useMemo(() => {
+    if (!singleDay) {
+      return "Select a single day to view routes";
+    }
+    if (!breadcrumbRepId) {
+      return null;
+    }
+    if (breadcrumbs.loading) {
+      return "Loading route…";
+    }
+    if (breadcrumbs.error) {
+      return breadcrumbs.error;
+    }
+    if (!breadcrumbs.shift) {
+      return "No shift on this day";
+    }
+    const status = breadcrumbs.shift.ended_at ? "completed" : "active";
+    const pingLabel =
+      breadcrumbs.points.length === 1
+        ? "1 ping"
+        : `${breadcrumbs.points.length} pings`;
+    return `Route: ${selectedRepName} · ${status} shift · ${pingLabel}`;
+  }, [
+    singleDay,
+    breadcrumbRepId,
+    breadcrumbs.loading,
+    breadcrumbs.error,
+    breadcrumbs.shift,
+    breadcrumbs.points.length,
+    selectedRepName,
+  ]);
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+      <aside className="w-full shrink-0 border-b border-zinc-200 bg-white p-4 md:w-72 md:border-b-0 md:border-r">
+        <h1 className="text-lg font-semibold text-zinc-900">Global map</h1>
+        <p className="mt-1 text-sm text-zinc-600">
+          All reps&apos; knock pins with filters.
+        </p>
+
+        <div className="mt-6 space-y-6">
+          <section className="space-y-2">
+            <p className="text-sm font-medium text-zinc-900">Reps</p>
+            <div className="max-h-40 space-y-2 overflow-y-auto">
+              <label className="flex min-h-10 cursor-pointer items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={allRepsSelected}
+                  onChange={selectAllReps}
+                  className="size-4 rounded border-zinc-300"
+                />
+                <span className="font-medium">All reps</span>
+              </label>
+              {sortedReps.map((rep) => {
+                const checked =
+                  !allRepsSelected &&
+                  filters.repIds !== null &&
+                  filters.repIds.includes(rep.id);
+                return (
+                  <label
+                    key={rep.id}
+                    className="flex min-h-10 cursor-pointer items-center gap-2 text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleRep(rep.id)}
+                      className="size-4 rounded border-zinc-300"
+                    />
+                    <span>{rep.name}</span>
+                  </label>
+                );
+              })}
+            </div>
+            {routeHint ? (
+              <p className="text-xs text-zinc-600">{routeHint}</p>
+            ) : null}
+          </section>
+
+          <section className="grid gap-3">
+            <div className="space-y-1">
+              <label htmlFor="admin-map-from" className="text-sm font-medium text-zinc-900">
+                From
+              </label>
+              <input
+                id="admin-map-from"
+                type="date"
+                value={filters.from}
+                onChange={(e) => updateDate("from", e.target.value)}
+                className="min-h-10 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900"
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="admin-map-to" className="text-sm font-medium text-zinc-900">
+                To
+              </label>
+              <input
+                id="admin-map-to"
+                type="date"
+                value={filters.to}
+                onChange={(e) => updateDate("to", e.target.value)}
+                className="min-h-10 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900"
+              />
+            </div>
+          </section>
+
+          <section className="space-y-2">
+            <p className="text-sm font-medium text-zinc-900">Outcome</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={selectAllOutcomes}
+                className={`min-h-10 rounded-lg px-3 py-1.5 text-sm font-semibold ring-2 ${
+                  allOutcomesSelected
+                    ? "bg-zinc-900 text-white ring-zinc-900"
+                    : "bg-white text-zinc-700 ring-zinc-200 hover:bg-zinc-50"
+                }`}
+                aria-pressed={allOutcomesSelected}
+              >
+                All
+              </button>
+              {DOOR_OUTCOMES.map((outcome) => {
+                const selected =
+                  filters.outcomes !== null && filters.outcomes.includes(outcome);
+                return (
+                  <button
+                    key={outcome}
+                    type="button"
+                    onClick={() => toggleOutcome(outcome)}
+                    className={`min-h-10 rounded-lg px-3 py-1.5 text-sm font-semibold text-white ring-2 ${
+                      selected ? "ring-zinc-900" : "ring-transparent opacity-80"
+                    }`}
+                    style={{ backgroundColor: DOOR_OUTCOME_COLORS[outcome] }}
+                    aria-pressed={selected}
+                  >
+                    {DOOR_OUTCOME_LABELS[outcome]}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+      </aside>
+
+      <div className="relative min-h-[420px] flex-1 md:min-h-0">
+        <AdminMapCanvas
+          filters={filters}
+          refreshKey={refreshKey}
+          breadcrumbs={{
+            enabled: breadcrumbEnabled,
+            points: breadcrumbs.points,
+            loading: breadcrumbs.loading,
+            error: breadcrumbs.error,
+          }}
+        />
+      </div>
+    </div>
+  );
+}

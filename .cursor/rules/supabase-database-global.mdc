@@ -1,0 +1,12 @@
+---
+description: Remind agent to prefer Supabase MCP for any DB-related task in chat
+alwaysApply: true
+---
+
+# Database tasks — Supabase MCP
+
+If the user or story mentions migrations, RLS, Postgres, `profiles`, enums, or Supabase Auth:
+
+- Prefer **Supabase MCP** tools to inspect and apply database changes when the server is connected in Cursor Settings.
+- Fall back to `supabase/migrations/*.sql` + `npx supabase db push` per `docs/SETUP_KEYS.md`.
+- Do not log or commit secrets from `.env.local`.
