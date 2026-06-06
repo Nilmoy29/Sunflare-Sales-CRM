@@ -49,3 +49,7 @@ export type LeadActivityUpdate = TablesUpdate<"lead_activity">;
 export type FollowUp = Tables<"follow_ups">;
 export type FollowUpInsert = TablesInsert<"follow_ups">;
 export type FollowUpUpdate = TablesUpdate<"follow_ups">;
+
+/** Row shape for `public.call_logs` */
+export type CallLog = Tables<"call_logs">;
+export type CallLogInsert = TablesInsert<"call_logs">;

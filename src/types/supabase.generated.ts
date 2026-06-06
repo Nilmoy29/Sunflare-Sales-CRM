@@ -18,6 +18,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      call_logs: {
+        Row: {
+          called_at: string
+          contact_id: string
+          duration_seconds: number | null
+          follow_up_at: string | null
+          id: string
+          notes: string | null
+          outcome: Database["public"]["Enums"]["call_outcome"]
+          rep_id: string
+        }
+        Insert: {
+          called_at?: string
+          contact_id: string
+          duration_seconds?: number | null
+          follow_up_at?: string | null
+          id?: string
+          notes?: string | null
+          outcome: Database["public"]["Enums"]["call_outcome"]
+          rep_id: string
+        }
+        Update: {
+          called_at?: string
+          contact_id?: string
+          duration_seconds?: number | null
+          follow_up_at?: string | null
+          id?: string
+          notes?: string | null
+          outcome?: Database["public"]["Enums"]["call_outcome"]
+          rep_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_logs_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_logs_rep_id_fkey"
+            columns: ["rep_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contacts: {
         Row: {
           address: string | null
@@ -267,6 +315,7 @@ export type Database = {
           created_at: string
           door_knock_id: string | null
           id: string
+          lost_reason: Database["public"]["Enums"]["lost_reason"] | null
           rep_id: string
           source: Database["public"]["Enums"]["lead_source"]
           stage: Database["public"]["Enums"]["lead_stage"]
@@ -278,6 +327,7 @@ export type Database = {
           created_at?: string
           door_knock_id?: string | null
           id?: string
+          lost_reason?: Database["public"]["Enums"]["lost_reason"] | null
           rep_id: string
           source: Database["public"]["Enums"]["lead_source"]
           stage?: Database["public"]["Enums"]["lead_stage"]
@@ -289,12 +339,20 @@ export type Database = {
           created_at?: string
           door_knock_id?: string | null
           id?: string
+          lost_reason?: Database["public"]["Enums"]["lost_reason"] | null
           rep_id?: string
           source?: Database["public"]["Enums"]["lead_source"]
           stage?: Database["public"]["Enums"]["lead_stage"]
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "leads_call_log_id_fkey"
+            columns: ["call_log_id"]
+            isOneToOne: false
+            referencedRelation: "call_logs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "leads_contact_id_fkey"
             columns: ["contact_id"]
@@ -426,6 +484,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_call_log: {
+        Args: {
+          p_contact_id: string
+          p_duration_seconds: number
+          p_follow_up_at: string
+          p_notes: string
+          p_outcome: Database["public"]["Enums"]["call_outcome"]
+        }
+        Returns: {
+          called_at: string
+          contact_id: string
+          duration_seconds: number
+          follow_up_at: string
+          id: string
+          notes: string
+          outcome: Database["public"]["Enums"]["call_outcome"]
+          rep_id: string
+        }[]
+      }
       create_knock_with_contact: {
         Args: {
           p_address: string
@@ -447,6 +524,18 @@ export type Database = {
           lng: number
           outcome: Database["public"]["Enums"]["door_outcome"]
           was_duplicate: boolean
+        }[]
+      }
+      find_contact_by_phone: {
+        Args: { p_phone: string }
+        Returns: {
+          address: string
+          first_name: string
+          id: string
+          last_name: string
+          phone: string
+          postcode: string
+          suburb: string
         }[]
       }
       get_admin_daily_rep_summary: {
@@ -528,6 +617,28 @@ export type Database = {
         }[]
       }
       is_admin: { Args: never; Returns: boolean }
+      normalize_phone_digits: { Args: { p_phone: string }; Returns: string }
+      promote_call_to_lead: {
+        Args: { p_call_log_id: string }
+        Returns: {
+          contact_id: string
+          lead_created: boolean
+          lead_id: string
+        }[]
+      }
+      search_contacts_for_calls: {
+        Args: { p_limit?: number; p_query: string }
+        Returns: {
+          address: string
+          first_name: string
+          id: string
+          is_linked: boolean
+          last_name: string
+          phone: string
+          postcode: string
+          suburb: string
+        }[]
+      }
     }
     Enums: {
       call_outcome:

@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useCallback } from "react";
+import { LeadReassignControl } from "@/components/pipeline/lead-reassign-control";
 import { LeadDetailTimeline } from "@/components/pipeline/lead-detail-timeline";
+import type { PipelineFilterRep } from "@/components/pipeline/pipeline-filters";
 import { createLeadFollowUp, createLeadNote } from "@/features/pipeline/api";
 import { formatLastTouchDate } from "@/features/pipeline/format-pipeline-dates";
 import { useLeadDetail } from "@/features/pipeline/use-lead-detail";
@@ -11,6 +13,7 @@ import {
   LEAD_SOURCE_LABELS,
 } from "@/features/pipeline/pipeline-source-labels";
 import { LEAD_STAGE_LABELS } from "@/features/pipeline/pipeline-stage-labels";
+import { LOST_REASON_LABELS } from "@/lib/validators/lost-reasons";
 import { syncPushSubscriptionIfGranted } from "@/features/push/client-subscribe";
 
 type LeadDetailShellProps = {
@@ -19,6 +22,8 @@ type LeadDetailShellProps = {
   backLabel: string;
   layout?: "mobile" | "desktop";
   showPushPrompt?: boolean;
+  showReassign?: boolean;
+  reps?: PipelineFilterRep[];
 };
 
 export function LeadDetailShell({
@@ -27,6 +32,8 @@ export function LeadDetailShell({
   backLabel,
   layout = "mobile",
   showPushPrompt = false,
+  showReassign = false,
+  reps = [],
 }: LeadDetailShellProps) {
   const { data, loading, reloading, error, reload } = useLeadDetail(leadId);
 
@@ -42,7 +49,11 @@ export function LeadDetailShell({
     async (input: { due_at: string; note: string }) => {
       await createLeadFollowUp(leadId, input);
       if (showPushPrompt) {
-        await syncPushSubscriptionIfGranted();
+        try {
+          await syncPushSubscriptionIfGranted();
+        } catch {
+          // Optional sync — follow-up already saved; don't fail the compose flow.
+        }
       }
       reload();
     },
@@ -127,8 +138,25 @@ export function LeadDetailShell({
                   <dd className="font-medium text-zinc-900">{data.lead.phone}</dd>
                 </div>
               ) : null}
+              {data.lead.stage === "lost" && data.lead.lost_reason ? (
+                <div>
+                  <dt className="text-zinc-500">Lost reason</dt>
+                  <dd className="font-medium text-zinc-900">
+                    {LOST_REASON_LABELS[data.lead.lost_reason]}
+                  </dd>
+                </div>
+              ) : null}
             </dl>
           </header>
+
+          {showReassign ? (
+            <LeadReassignControl
+              leadId={leadId}
+              currentRepId={data.lead.rep_id}
+              reps={reps}
+              onReassigned={reload}
+            />
+          ) : null}
 
           <LeadDetailTimeline
             timeline={data.timeline}

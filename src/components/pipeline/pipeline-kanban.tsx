@@ -27,7 +27,9 @@ import {
   LEAD_STAGE_LABELS,
   PIPELINE_STAGE_ORDER,
 } from "@/features/pipeline/pipeline-stage-labels";
-import { LEAD_STAGES, type LeadStage } from "@/lib/validators/enums";
+import { LostReasonDialog } from "@/components/pipeline/lost-reason-dialog";
+import type { MoveLeadStageOptions } from "@/features/pipeline/use-pipeline-leads";
+import { LEAD_STAGES, type LeadStage, type LostReason } from "@/lib/validators/enums";
 import type { PipelineLeadCard } from "@/lib/validators/pipeline";
 
 type PipelineKanbanProps = {
@@ -36,7 +38,16 @@ type PipelineKanbanProps = {
   error: string | null;
   showRepName: boolean;
   detailBasePath: string;
-  onStageChange: (leadId: string, stage: LeadStage) => Promise<void>;
+  onStageChange: (
+    leadId: string,
+    stage: LeadStage,
+    options?: MoveLeadStageOptions,
+  ) => Promise<boolean>;
+};
+
+type PendingLostMove = {
+  leadId: string;
+  lead: PipelineLeadCard;
 };
 
 const COLUMN_WIDTH_CLASS = "w-[260px] shrink-0";
@@ -201,6 +212,7 @@ export function PipelineKanban({
 }: PipelineKanbanProps) {
   const [activeLeadId, setActiveLeadId] = useState<string | null>(null);
   const [moving, setMoving] = useState(false);
+  const [pendingLost, setPendingLost] = useState<PendingLostMove | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -248,9 +260,32 @@ export function PipelineKanban({
       return;
     }
 
+    if (newStage === "lost") {
+      setPendingLost({ leadId, lead });
+      return;
+    }
+
     setMoving(true);
     try {
       await onStageChange(leadId, newStage);
+    } finally {
+      setMoving(false);
+    }
+  }
+
+  async function handleLostConfirm(lostReason: LostReason) {
+    if (!pendingLost || moving) {
+      return;
+    }
+
+    setMoving(true);
+    try {
+      const ok = await onStageChange(pendingLost.leadId, "lost", {
+        lost_reason: lostReason,
+      });
+      if (ok) {
+        setPendingLost(null);
+      }
     } finally {
       setMoving(false);
     }
@@ -308,6 +343,21 @@ export function PipelineKanban({
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      {pendingLost ? (
+        <LostReasonDialog
+          contactName={pendingLost.lead.contact_name}
+          submitting={moving}
+          onCancel={() => {
+            if (!moving) {
+              setPendingLost(null);
+            }
+          }}
+          onConfirm={(lostReason) => {
+            void handleLostConfirm(lostReason);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

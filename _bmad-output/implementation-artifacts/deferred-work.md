@@ -111,3 +111,34 @@
 - Stage update + activity insert not atomic — lead may move without audit row if insert fails after UPDATE; acceptable v1 (4.5 pattern).
 - No retroactive backfill for stage moves before 4.7 — historical leads show empty Stage changes section.
 - Story 3.3 appointments metric still uses `leads.updated_at` proxy — consume `stage_change` events in future metric hardening.
+
+## Deferred from: code review of 4-8-web-push-reminders-for-follow-ups (2026-06-06)
+
+- Due follow-ups with no push subscription marked `reminded_at` on cron skip — rep who subscribes later won't get retroactive push for already-due items.
+- Cron every 5 minutes — follow-up reminders may arrive up to ~5 min after `due_at`; acceptable v1.
+- Global unique `push_subscriptions.endpoint` — shared-device rep account switch may fail subscribe until stale row cleared.
+- iOS Safari Web Push requires installed PWA (iOS 16.4+) for reliable delivery — manual QA note only.
+
+## Deferred from: code review of 4-9-lost-reasons-and-lead-reassignment (2026-06-06)
+
+- Reassign lead + follow_ups not atomic — partial failure can leave lead on new rep with incomplete follow_ups still on old rep; acceptable v1 (4.7 stage+audit pattern).
+- Migration must be applied before deploy — `leads.lost_reason` column absent from generated types until `npx supabase db push` after `supabase login`.
+
+## Deferred from: code review of 5-1-calllog-schema-and-rls (2026-06-07)
+
+- RLS smoke documented as policy-structure review, not live rep A/B session — same pattern as Stories 2.1 and 4.1; add explicit rep-isolation smoke when calls API exists in 5.3.
+- `door_knocks_insert_rep` not extended with `call_logs` contact linkage — knock-after-call-only path not required for 5.1; extend if product needs rep to knock a contact they only called.
+- First call on another rep's contact blocked by `call_logs_insert_rep` until knock/call link exists — Story 5.2 contact search must use API/RPC with appropriate scope.
+- Multiple permissive SELECT policies on `call_logs` (rep + admin) — same split admin/rep pattern as `door_knocks`; consolidate when optimizing RLS performance.
+
+## Deferred from: code review of 5-2-contact-search-and-create (2026-06-07)
+
+- `normalize_phone_digits` granted to `authenticated` — low risk internal helper; revoke if unused client-side.
+- Duplicate detection skipped when normalized phone has fewer than 3 digits — acceptable v1.
+- Global `%ilike%` contact search capped at 50 — add pagination/index tuning when volume grows.
+
+## Deferred from: code review of 5-3-log-a-call-with-outcome (2026-06-09)
+
+- `is_linked` badge not updated after first cross-rep call — cosmetic; refreshes on re-search.
+- RPC does not reject negative `p_duration_seconds` at DB layer — API/client validation sufficient v1.
+- `create_call_log` SECURITY DEFINER allows any rep to log on any existing contact UUID — intentional cross-rep design; `rep_id` on row provides audit trail.

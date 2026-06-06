@@ -36,12 +36,24 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   try {
-    const lead = await updateLeadStage(id, parsed.data.stage, auth.id);
+    const lead = await updateLeadStage(
+      id,
+      parsed.data.stage,
+      auth.id,
+      parsed.data.lost_reason,
+    );
     if (!lead) {
       return apiError("LEAD_NOT_FOUND", "Lead not found", 404);
     }
     return apiSuccess({ lead });
-  } catch {
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "LOST_REASON_REQUIRED") {
+      return apiError(
+        "VALIDATION_ERROR",
+        "lost_reason is required when stage is lost",
+        400,
+      );
+    }
     return apiError(
       "STAGE_UPDATE_FAILED",
       "Could not update lead stage",

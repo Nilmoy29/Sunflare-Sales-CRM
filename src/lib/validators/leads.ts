@@ -16,6 +16,21 @@ export function isPromotableDoorOutcome(
   return promotableDoorOutcomeSchema.safeParse(outcome).success;
 }
 
+export const PROMOTABLE_CALL_OUTCOMES = [
+  "answered_interested",
+  "callback_scheduled",
+] as const;
+
+export const promotableCallOutcomeSchema = z.enum(PROMOTABLE_CALL_OUTCOMES);
+
+export type PromotableCallOutcome = z.infer<typeof promotableCallOutcomeSchema>;
+
+export function isPromotableCallOutcome(
+  outcome: string,
+): outcome is PromotableCallOutcome {
+  return promotableCallOutcomeSchema.safeParse(outcome).success;
+}
+
 export const leadSummarySchema = z.object({
   id: z.string().uuid(),
   stage: leadStageSchema,
@@ -37,3 +52,10 @@ export const leadRowSchema = z.object({
 });
 
 export type LeadRow = z.infer<typeof leadRowSchema>;
+
+export const promoteCallResponseSchema = z.object({
+  lead: leadSummarySchema,
+  created: z.boolean(),
+});
+
+export type PromoteCallResponse = z.infer<typeof promoteCallResponseSchema>;

@@ -14,6 +14,7 @@ import {
   leadActivityTypeSchema,
   leadSourceSchema,
   leadStageSchema,
+  lostReasonSchema,
 } from "@/lib/validators/enums";
 
 const LEAD_DETAIL_SELECT = `
@@ -21,6 +22,7 @@ const LEAD_DETAIL_SELECT = `
   stage,
   source,
   rep_id,
+  lost_reason,
   door_knock_id,
   contact_id,
   created_at,
@@ -132,7 +134,11 @@ function parseActivityRow(
           ...base,
           from_stage: parsed.from_stage,
           to_stage: parsed.to_stage,
-          content: formatStageChangeDisplay(parsed.from_stage, parsed.to_stage),
+          content: formatStageChangeDisplay(
+            parsed.from_stage,
+            parsed.to_stage,
+            parsed.lost_reason,
+          ),
         };
       }
       return {
@@ -207,6 +213,9 @@ export async function getLeadDetail(
 
   const stageParsed = leadStageSchema.safeParse(row.stage);
   const sourceParsed = leadSourceSchema.safeParse(row.source);
+  const lostReasonParsed = lostReasonSchema.nullable().safeParse(
+    row.lost_reason ?? null,
+  );
   const created_at = toIsoString(row.created_at);
   const contact_id = typeof row.contact_id === "string" ? row.contact_id : null;
   const door_knock_id =
@@ -218,6 +227,7 @@ export async function getLeadDetail(
     !profiles?.name ||
     !stageParsed.success ||
     !sourceParsed.success ||
+    !lostReasonParsed.success ||
     !created_at ||
     !contact_id
   ) {
@@ -293,6 +303,7 @@ export async function getLeadDetail(
       suburb: contacts?.suburb ?? null,
       phone: contacts?.phone ?? null,
       created_at,
+      lost_reason: lostReasonParsed.data,
     },
     calls_available: false,
     timeline,

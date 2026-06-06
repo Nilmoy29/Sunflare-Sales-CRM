@@ -7,10 +7,11 @@ import type { LeadDetailResponse } from "@/lib/validators/lead-detail";
 import type {
   PipelineFilters,
   PipelineLeadsResponse,
+  ReassignLeadResponse,
   UpdateLeadStageResponse,
 } from "@/lib/validators/pipeline";
 import { pipelineFiltersToQuery } from "@/lib/validators/pipeline";
-import type { LeadStage } from "@/lib/validators/enums";
+import type { LeadStage, LostReason } from "@/lib/validators/enums";
 
 function buildLeadsQueryString(filters: PipelineFilters): string {
   const query = pipelineFiltersToQuery(filters);
@@ -67,13 +68,19 @@ export async function fetchPipelineLeads(
 export async function updateLeadStage(
   leadId: string,
   stage: LeadStage,
+  lostReason?: LostReason,
   signal?: AbortSignal,
 ): Promise<UpdateLeadStageResponse> {
+  const payload: { stage: LeadStage; lost_reason?: LostReason } = { stage };
+  if (lostReason) {
+    payload.lost_reason = lostReason;
+  }
+
   const res = await fetch(`/api/v1/leads/${leadId}/stage`, {
     method: "PATCH",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ stage }),
+    body: JSON.stringify(payload),
     signal,
   });
 
@@ -88,6 +95,35 @@ export async function updateLeadStage(
 
   if (!body.data) {
     throw new Error("Could not update lead stage");
+  }
+
+  return body.data;
+}
+
+export async function reassignLead(
+  leadId: string,
+  repId: string,
+  signal?: AbortSignal,
+): Promise<ReassignLeadResponse> {
+  const res = await fetch(`/api/v1/leads/${leadId}/rep`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rep_id: repId }),
+    signal,
+  });
+
+  const body = (await res.json()) as {
+    data?: ReassignLeadResponse;
+    error?: { code: string; message: string };
+  };
+
+  if (!res.ok) {
+    throw new Error(body.error?.message ?? "Could not reassign lead");
+  }
+
+  if (!body.data) {
+    throw new Error("Could not reassign lead");
   }
 
   return body.data;

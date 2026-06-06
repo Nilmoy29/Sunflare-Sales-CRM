@@ -1,4 +1,5 @@
-import { LEAD_STAGES, type LeadStage } from "@/lib/validators/enums";
+import { LEAD_STAGES, type LeadStage, type LostReason } from "@/lib/validators/enums";
+import { LOST_REASON_LABELS } from "@/lib/validators/lost-reasons";
 
 export const PIPELINE_STAGE_ORDER = LEAD_STAGES;
 
@@ -15,8 +16,13 @@ export const LEAD_STAGE_LABELS: Record<LeadStage, string> = {
 export function formatStageChangeDisplay(
   fromStage: LeadStage,
   toStage: LeadStage,
+  lostReason?: LostReason,
 ): string {
-  return `${LEAD_STAGE_LABELS[fromStage]} → ${LEAD_STAGE_LABELS[toStage]}`;
+  const base = `${LEAD_STAGE_LABELS[fromStage]} → ${LEAD_STAGE_LABELS[toStage]}`;
+  if (toStage === "lost" && lostReason) {
+    return `${base} (${LOST_REASON_LABELS[lostReason]})`;
+  }
+  return base;
 }
 
 export type ContactNameFields = {

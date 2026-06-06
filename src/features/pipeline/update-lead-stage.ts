@@ -5,7 +5,11 @@ import {
 } from "@/features/pipeline/parse-pipeline-lead";
 import { createClient } from "@/lib/supabase/server";
 import { serializeStageChangeContent } from "@/lib/validators/lead-activity";
-import { leadStageSchema, type LeadStage } from "@/lib/validators/enums";
+import {
+  leadStageSchema,
+  type LeadStage,
+  type LostReason,
+} from "@/lib/validators/enums";
 import type { PipelineLeadCard } from "@/lib/validators/pipeline";
 
 async function enrichLeadCard(
@@ -39,6 +43,7 @@ export async function updateLeadStage(
   leadId: string,
   stage: LeadStage,
   actorId: string,
+  lostReason?: LostReason,
 ): Promise<PipelineLeadCard | null> {
   const supabase = await createClient();
 
@@ -68,9 +73,16 @@ export async function updateLeadStage(
     return enrichLeadCard(supabase, leadId);
   }
 
+  if (stage === "lost" && !lostReason) {
+    throw new Error("LOST_REASON_REQUIRED");
+  }
+
   const { data, error } = await supabase
     .from("leads")
-    .update({ stage } as never)
+    .update({
+      stage,
+      lost_reason: stage === "lost" ? lostReason ?? null : null,
+    } as never)
     .eq("id", leadId)
     .select(PIPELINE_LEAD_SELECT)
     .maybeSingle();
@@ -87,7 +99,11 @@ export async function updateLeadStage(
     lead_id: leadId,
     actor_id: actorId,
     type: "stage_change",
-    content: serializeStageChangeContent(fromStage, stage),
+    content: serializeStageChangeContent(
+      fromStage,
+      stage,
+      stage === "lost" ? lostReason : undefined,
+    ),
   } as never);
 
   if (activityError) {

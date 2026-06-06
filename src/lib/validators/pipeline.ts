@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { leadSourceSchema, leadStageSchema } from "@/lib/validators/enums";
 
+export {
+  reassignLeadBodySchema,
+  updateLeadStageBodySchema,
+  type ReassignLeadBody,
+  type UpdateLeadStageBody,
+} from "@/lib/validators/lost-reasons";
+
 const sydneyDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 export const pipelineLeadCardBaseSchema = z.object({
@@ -52,12 +59,6 @@ export const pipelineFiltersSchema = z.object({
 
 export type PipelineFilters = z.infer<typeof pipelineFiltersSchema>;
 
-export const updateLeadStageBodySchema = z.object({
-  stage: leadStageSchema,
-});
-
-export type UpdateLeadStageBody = z.infer<typeof updateLeadStageBodySchema>;
-
 export const updateLeadStageResponseSchema = z.object({
   lead: pipelineLeadCardSchema,
 });
@@ -65,6 +66,12 @@ export const updateLeadStageResponseSchema = z.object({
 export type UpdateLeadStageResponse = z.infer<
   typeof updateLeadStageResponseSchema
 >;
+
+export const reassignLeadResponseSchema = z.object({
+  lead: pipelineLeadCardSchema,
+});
+
+export type ReassignLeadResponse = z.infer<typeof reassignLeadResponseSchema>;
 
 export function pipelineFiltersToQuery(
   filters: PipelineFilters,

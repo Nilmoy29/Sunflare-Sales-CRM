@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   disablePushReminders,
   enablePushReminders,
@@ -40,11 +40,6 @@ export function FollowUpPushPrompt() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const applyResolvedState = useCallback(async () => {
-    const next = await resolvePromptState();
-    setState(next);
-  }, []);
-
   useEffect(() => {
     if (state !== "loading") {
       return;
@@ -72,7 +67,6 @@ export function FollowUpPushPrompt() {
       setError(
         e instanceof Error ? e.message : "Could not enable reminders",
       );
-      await applyResolvedState();
       if (Notification.permission === "denied") {
         setState("denied");
       } else {

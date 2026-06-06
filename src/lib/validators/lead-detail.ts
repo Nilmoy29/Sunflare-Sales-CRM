@@ -3,6 +3,7 @@ import {
   doorOutcomeSchema,
   leadSourceSchema,
   leadStageSchema,
+  lostReasonSchema,
 } from "@/lib/validators/enums";
 
 export const leadDetailHeaderSchema = z.object({
@@ -16,6 +17,7 @@ export const leadDetailHeaderSchema = z.object({
   suburb: z.string().nullable(),
   phone: z.string().nullable(),
   created_at: z.string(),
+  lost_reason: lostReasonSchema.nullable(),
 });
 
 export type LeadDetailHeader = z.infer<typeof leadDetailHeaderSchema>;

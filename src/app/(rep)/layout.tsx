@@ -21,6 +21,12 @@ export default async function RepLayout({
         <div className="flex items-center gap-4">
           <Link
             className="text-sm text-zinc-600 underline hover:text-zinc-900"
+            href="/rep/calls"
+          >
+            Calls
+          </Link>
+          <Link
+            className="text-sm text-zinc-600 underline hover:text-zinc-900"
             href="/rep/pipeline"
           >
             Pipeline

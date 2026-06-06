@@ -3,13 +3,16 @@ import { leadDetailNoteTimelineItemSchema } from "@/lib/validators/lead-detail";
 import {
   leadActivityTypeSchema,
   leadStageSchema,
+  lostReasonSchema,
   type LeadStage,
+  type LostReason,
 } from "@/lib/validators/enums";
 import { NOTES_MAX_LENGTH } from "@/lib/validators/knocks";
 
 export const stageChangeActivityContentSchema = z.object({
   from_stage: leadStageSchema,
   to_stage: leadStageSchema,
+  lost_reason: lostReasonSchema.optional(),
 });
 
 export type StageChangeActivityContent = z.infer<
@@ -19,11 +22,14 @@ export type StageChangeActivityContent = z.infer<
 export function serializeStageChangeContent(
   fromStage: LeadStage,
   toStage: LeadStage,
+  lostReason?: LostReason,
 ): string {
-  return JSON.stringify({
+  const payload: StageChangeActivityContent = {
     from_stage: fromStage,
     to_stage: toStage,
-  } satisfies StageChangeActivityContent);
+    ...(toStage === "lost" && lostReason ? { lost_reason: lostReason } : {}),
+  };
+  return JSON.stringify(payload);
 }
 
 export function parseStageChangeContent(

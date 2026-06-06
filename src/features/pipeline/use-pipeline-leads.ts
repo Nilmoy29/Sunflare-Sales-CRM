@@ -7,7 +7,11 @@ import {
 } from "@/features/pipeline/api";
 import type { PipelineFilters } from "@/lib/validators/pipeline";
 import type { PipelineLeadCard } from "@/lib/validators/pipeline";
-import type { LeadStage } from "@/lib/validators/enums";
+import type { LeadStage, LostReason } from "@/lib/validators/enums";
+
+export type MoveLeadStageOptions = {
+  lost_reason?: LostReason;
+};
 
 function filtersRequestKey(filters: PipelineFilters): string {
   return JSON.stringify(filters);
@@ -59,7 +63,11 @@ export function usePipelineLeads(filters: PipelineFilters) {
   }, [filters, requestKey]);
 
   const moveLeadStage = useCallback(
-    async (leadId: string, newStage: LeadStage) => {
+    async (
+      leadId: string,
+      newStage: LeadStage,
+      options?: MoveLeadStageOptions,
+    ) => {
       let previousLead: PipelineLeadCard | undefined;
 
       setLeads((current) => {
@@ -71,7 +79,11 @@ export function usePipelineLeads(filters: PipelineFilters) {
       setError(null);
 
       try {
-        const result = await updateLeadStageApi(leadId, newStage);
+        const result = await updateLeadStageApi(
+          leadId,
+          newStage,
+          options?.lost_reason,
+        );
         setLeads((current) => {
           if (
             filters.stages !== null &&
@@ -83,6 +95,7 @@ export function usePipelineLeads(filters: PipelineFilters) {
             lead.id === leadId ? result.lead : lead,
           );
         });
+        return true;
       } catch (e: unknown) {
         if (previousLead) {
           setLeads((current) =>
@@ -94,6 +107,7 @@ export function usePipelineLeads(filters: PipelineFilters) {
         setError(
           e instanceof Error ? e.message : "Could not update lead stage",
         );
+        return false;
       }
     },
     [filters.stages],
