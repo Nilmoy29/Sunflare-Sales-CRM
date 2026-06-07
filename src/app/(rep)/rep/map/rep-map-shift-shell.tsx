@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { DoorOutcomeSheet } from "@/components/rep/door-outcome-sheet";
 import { LogKnockButton } from "@/components/rep/log-knock-button";
 import { OfflinePendingIndicator } from "@/components/rep/offline-pending-indicator";
 import { ShiftControls } from "@/components/rep/shift-controls";
+import { ShiftEndSummarySheet } from "@/components/rep/shift-end-summary-sheet";
 import { useRepLocation } from "@/features/gps/use-rep-location";
 import { useGpsPingLoop } from "@/features/gps/use-gps-ping-loop";
 import { useKnockDraft } from "@/features/knocks/use-knock-draft";
@@ -14,6 +15,8 @@ import { usePendingKnocks } from "@/features/knocks/use-pending-knocks";
 import type { SubmitKnockResult } from "@/features/knocks/submit-knock";
 import { isPromotableDoorOutcome } from "@/lib/validators/leads";
 import { useActiveShift } from "@/features/shifts/use-active-shift";
+import { useRepTerritoryOverlay } from "@/features/territories/use-rep-territory-overlay";
+import { isPointInAnyTerritory } from "@/lib/geo/point-in-polygon";
 
 const MapCanvas = dynamic(
   () =>
@@ -29,8 +32,12 @@ const MapCanvas = dynamic(
 );
 
 export function RepMapShiftShell() {
-  const { shift, isActive, loading, busy, error, onStart, onEnd } =
+  const { shift, isActive, loading, busy, error, lastEndedSummary, dismissEndedSummary, onStart, onEnd } =
     useActiveShift();
+
+  const { territories: territoryOverlays } = useRepTerritoryOverlay({
+    enabled: isActive,
+  });
 
   const { userLocation, geoWarning: locationGeoWarning } =
     useRepLocation(isActive);
@@ -120,6 +127,18 @@ export function RepMapShiftShell() {
     });
   };
 
+  const territoryWarning = useMemo(() => {
+    if (!draft || territoryOverlays.length === 0) {
+      return null;
+    }
+
+    if (isPointInAnyTerritory(draft.lng, draft.lat, territoryOverlays)) {
+      return null;
+    }
+
+    return "Outside your assigned territory for today";
+  }, [draft, territoryOverlays]);
+
   return (
     <>
       <main className="relative flex min-h-0 flex-1 flex-col">
@@ -142,6 +161,7 @@ export function RepMapShiftShell() {
               geoWarning={locationGeoWarning}
               knockRefreshKey={knockRefreshKey}
               pendingKnocks={pendingKnocks}
+              territoryOverlays={territoryOverlays}
               onMapClick={handleMapClick}
               onPinClick={handlePinClick}
             />
@@ -154,6 +174,7 @@ export function RepMapShiftShell() {
               <DoorOutcomeSheet
                 key={`${draft.lat}-${draft.lng}-${draft.source}`}
                 draft={draft}
+                territoryWarning={territoryWarning}
                 onClose={closeDraft}
                 onSuccess={handleKnockSaved}
               />
@@ -183,6 +204,12 @@ export function RepMapShiftShell() {
           void onEnd();
         }}
       />
+      {lastEndedSummary ? (
+        <ShiftEndSummarySheet
+          summary={lastEndedSummary}
+          onDismiss={dismissEndedSummary}
+        />
+      ) : null}
     </>
   );
 }

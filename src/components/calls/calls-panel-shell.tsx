@@ -3,9 +3,15 @@
 import Link from "next/link";
 import { useState } from "react";
 import { CallLogForm } from "@/components/calls/call-log-form";
+import { CallScriptPanel } from "@/components/calls/call-script-panel";
+import { ContactCallHistory } from "@/components/calls/contact-call-history";
 import { ContactQuickAddSheet } from "@/components/calls/contact-quick-add-sheet";
+import { PhoneDialLink } from "@/components/calls/phone-dial-link";
 import { promoteCall } from "@/features/calls/api";
+import { useCallScript } from "@/features/calls/use-call-script";
+import { useContactCallHistory } from "@/features/calls/use-contact-call-history";
 import { useContactSearch } from "@/features/calls/use-contact-search";
+import { useRepDailyCallCount } from "@/features/calls/use-rep-daily-call-count";
 import type { CallLogSummary } from "@/lib/validators/call-logs";
 import { isPromotableCallOutcome } from "@/lib/validators/leads";
 import {
@@ -24,6 +30,10 @@ function toSelectedFromDuplicate(contact: ContactSummary): ContactSearchResult {
   return { ...contact, is_linked: false };
 }
 
+function formatDailyCallCountLabel(value: number): string {
+  return value === 1 ? "1 call today" : `${value} calls today`;
+}
+
 export function CallsPanelShell() {
   const [query, setQuery] = useState("");
   const [selectedContact, setSelectedContact] =
@@ -37,8 +47,25 @@ export function CallsPanelShell() {
   const [promotedCallIds, setPromotedCallIds] = useState<string[]>([]);
   const [promoting, setPromoting] = useState(false);
   const [promoteError, setPromoteError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const { contacts, loading, error } = useContactSearch(query);
+  const {
+    count: dailyCallCount,
+    loading: dailyCallCountLoading,
+    error: dailyCallCountError,
+  } = useRepDailyCallCount(refreshKey);
+  const {
+    body: callScriptBody,
+    loading: callScriptLoading,
+    error: callScriptError,
+  } = useCallScript();
+  const {
+    calls: callHistory,
+    loading: callHistoryLoading,
+    reloading: callHistoryReloading,
+    error: callHistoryError,
+  } = useContactCallHistory(selectedContact?.id ?? null, refreshKey);
   const trimmedQuery = query.trim();
   const showHint = trimmedQuery.length < CONTACT_SEARCH_MIN_LENGTH;
 
@@ -54,6 +81,7 @@ export function CallsPanelShell() {
     setLastLoggedCall(call);
     setCallLoggedNotice("Call logged.");
     setPromoteError(null);
+    setRefreshKey((key) => key + 1);
   }
 
   async function handlePromote() {
@@ -100,6 +128,19 @@ export function CallsPanelShell() {
     <main className="flex flex-1 flex-col gap-4 p-4 md:p-6">
       <div>
         <h1 className="text-2xl font-semibold text-zinc-900">Calls</h1>
+        {dailyCallCountError ? (
+          <p className="mt-2 text-sm text-red-600" role="alert">
+            {dailyCallCountError}
+          </p>
+        ) : dailyCallCountLoading ? (
+          <p className="mt-2 text-sm font-medium text-zinc-500">
+            Loading today&apos;s call count…
+          </p>
+        ) : (
+          <p className="mt-2 text-sm font-medium text-zinc-700">
+            {formatDailyCallCountLabel(dailyCallCount ?? 0)}
+          </p>
+        )}
         <p className="mt-1 text-sm text-zinc-600">
           Search for a contact or quick-add a new one before logging a call.
         </p>
@@ -161,10 +202,17 @@ export function CallsPanelShell() {
 
           return (
             <li key={contact.id}>
-              <button
-                type="button"
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => handleSelectContact(contact)}
-                className={`min-h-11 w-full rounded-lg border px-3 py-3 text-left transition ${
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    handleSelectContact(contact);
+                  }
+                }}
+                className={`min-h-11 w-full cursor-pointer rounded-lg border px-3 py-3 text-left transition ${
                   selected
                     ? "border-zinc-900 bg-zinc-50 ring-1 ring-zinc-900"
                     : "border-zinc-200 bg-white hover:bg-zinc-50"
@@ -177,7 +225,9 @@ export function CallsPanelShell() {
                     </p>
                     {contact.phone ? (
                       <p className="mt-1 text-sm text-zinc-600">
-                        {contact.phone}
+                        <PhoneDialLink phone={contact.phone}>
+                          {contact.phone}
+                        </PhoneDialLink>
                       </p>
                     ) : null}
                     {addressLine ? (
@@ -190,7 +240,7 @@ export function CallsPanelShell() {
                     </span>
                   ) : null}
                 </div>
-              </button>
+              </div>
             </li>
           );
         })}
@@ -205,13 +255,30 @@ export function CallsPanelShell() {
             {formatContactDisplayName(selectedContact)}
           </p>
           {selectedContact.phone ? (
-            <p className="mt-1 text-sm text-zinc-600">{selectedContact.phone}</p>
+            <p className="mt-1 text-sm text-zinc-600">
+              <PhoneDialLink phone={selectedContact.phone}>
+                {selectedContact.phone}
+              </PhoneDialLink>
+            </p>
           ) : null}
           {formatContactAddressLine(selectedContact) ? (
             <p className="mt-1 text-sm text-zinc-600">
               {formatContactAddressLine(selectedContact)}
             </p>
           ) : null}
+          {callScriptError ? (
+            <p className="mt-3 text-sm text-red-600" role="alert">
+              {callScriptError}
+            </p>
+          ) : null}
+          {!callScriptLoading ? (
+            <CallScriptPanel body={callScriptBody ?? ""} />
+          ) : null}
+          <CallLogForm
+            key={selectedContact.id}
+            contactId={selectedContact.id}
+            onLogged={handleCallLogged}
+          />
           {callLoggedNotice ? (
             <p className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900 ring-1 ring-emerald-200">
               {callLoggedNotice}{" "}
@@ -242,10 +309,10 @@ export function CallsPanelShell() {
               {promoteError}
             </p>
           ) : null}
-          <CallLogForm
-            key={selectedContact.id}
-            contactId={selectedContact.id}
-            onLogged={handleCallLogged}
+          <ContactCallHistory
+            calls={callHistory}
+            loading={callHistoryLoading || callHistoryReloading}
+            error={callHistoryError}
           />
         </section>
       ) : null}

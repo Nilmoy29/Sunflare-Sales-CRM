@@ -10,13 +10,14 @@ import {
 } from "@/lib/validators/daily-rep-summary";
 
 export async function getDailyRepSummary(
-  date: string,
+  from: string,
+  to: string,
 ): Promise<DailyRepSummaryResponse> {
   const supabase = await createClient();
 
   const { data, error } = await supabase.rpc("get_admin_daily_rep_summary", {
-    p_from: startOfDaySydney(date),
-    p_to: endOfDaySydney(date),
+    p_from: startOfDaySydney(from),
+    p_to: endOfDaySydney(to),
   } as never);
 
   if (error) {
@@ -25,5 +26,5 @@ export async function getDailyRepSummary(
 
   const rows = dailyRepSummaryRowSchema.array().parse(data ?? []);
 
-  return dailyRepSummaryResponseSchema.parse({ date, rows });
+  return dailyRepSummaryResponseSchema.parse({ from, to, rows });
 }

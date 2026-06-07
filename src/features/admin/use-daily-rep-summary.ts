@@ -2,19 +2,22 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { fetchDailyRepSummary } from "@/features/admin/api";
-import { formatSydneyDateString } from "@/features/knocks/format-knock-date";
+import { useDashboardDateRange } from "@/features/dashboard/dashboard-date-range-context";
 import type { DailyRepSummaryRow } from "@/lib/validators/daily-rep-summary";
 
 export function useDailyRepSummary() {
-  const [date, setDateState] = useState(() => formatSydneyDateString(new Date()));
+  const { from, to } = useDashboardDateRange();
   const [rows, setRows] = useState<DailyRepSummaryRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const loading = loadedKey !== date;
+  const rangeKey = `${from}:${to}`;
+  const loadKey = `${rangeKey}:${refreshKey}`;
+  const loading = loadedKey !== loadKey;
 
-  const setDate = useCallback((next: string) => {
-    setDateState(next);
+  const refetch = useCallback(() => {
+    setRefreshKey((key) => key + 1);
   }, []);
 
   useEffect(() => {
@@ -23,13 +26,13 @@ export function useDailyRepSummary() {
 
     async function load() {
       try {
-        const result = await fetchDailyRepSummary(date, controller.signal);
+        const result = await fetchDailyRepSummary(from, to, controller.signal);
         if (cancelled) {
           return;
         }
         setRows(result.rows);
         setError(null);
-        setLoadedKey(date);
+        setLoadedKey(loadKey);
       } catch (e: unknown) {
         if (cancelled) {
           return;
@@ -42,7 +45,7 @@ export function useDailyRepSummary() {
             ? e.message
             : "Could not load daily rep summary",
         );
-        setLoadedKey(date);
+        setLoadedKey(loadKey);
       }
     }
 
@@ -52,7 +55,7 @@ export function useDailyRepSummary() {
       cancelled = true;
       controller.abort();
     };
-  }, [date]);
+  }, [from, to, loadKey]);
 
-  return { date, setDate, rows, loading, error };
+  return { from, to, rows, loading, error, refetch };
 }

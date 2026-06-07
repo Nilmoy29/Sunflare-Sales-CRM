@@ -30,9 +30,16 @@ function defaultFilters(): AdminMapFilters {
   };
 }
 
+const DEFAULT_HEATMAP_OPACITY = 0.6;
+const MIN_HEATMAP_OPACITY = 0.2;
+const MAX_HEATMAP_OPACITY = 0.9;
+const HEATMAP_OPACITY_STEP = 0.05;
+
 export function AdminMapShell({ reps }: AdminMapShellProps) {
   const [filters, setFilters] = useState<AdminMapFilters>(defaultFilters);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [heatmapEnabled, setHeatmapEnabled] = useState(false);
+  const [heatmapOpacity, setHeatmapOpacity] = useState(DEFAULT_HEATMAP_OPACITY);
 
   const allRepsSelected = filters.repIds === null;
   const allOutcomesSelected = filters.outcomes === null;
@@ -243,6 +250,43 @@ export function AdminMapShell({ reps }: AdminMapShellProps) {
               })}
             </div>
           </section>
+
+          <section className="space-y-3">
+            <p className="text-sm font-medium text-zinc-900">Coverage heatmap</p>
+            <label className="flex min-h-10 cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={heatmapEnabled}
+                onChange={(e) => setHeatmapEnabled(e.target.checked)}
+                className="size-4 rounded border-zinc-300"
+              />
+              <span>Show knock density</span>
+            </label>
+            <div className="space-y-1">
+              <label
+                htmlFor="admin-map-heatmap-opacity"
+                className="flex items-center justify-between text-sm text-zinc-700"
+              >
+                <span>Opacity</span>
+                <span>{Math.round(heatmapOpacity * 100)}%</span>
+              </label>
+              <input
+                id="admin-map-heatmap-opacity"
+                type="range"
+                min={MIN_HEATMAP_OPACITY}
+                max={MAX_HEATMAP_OPACITY}
+                step={HEATMAP_OPACITY_STEP}
+                value={heatmapOpacity}
+                onChange={(e) => setHeatmapOpacity(Number(e.target.value))}
+                disabled={!heatmapEnabled}
+                aria-label="Heatmap opacity"
+                aria-valuenow={heatmapOpacity}
+                aria-valuemin={MIN_HEATMAP_OPACITY}
+                aria-valuemax={MAX_HEATMAP_OPACITY}
+                className="h-2 w-full cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+          </section>
         </div>
       </aside>
 
@@ -250,6 +294,8 @@ export function AdminMapShell({ reps }: AdminMapShellProps) {
         <AdminMapCanvas
           filters={filters}
           refreshKey={refreshKey}
+          heatmapEnabled={heatmapEnabled}
+          heatmapOpacity={heatmapOpacity}
           breadcrumbs={{
             enabled: breadcrumbEnabled,
             points: breadcrumbs.points,

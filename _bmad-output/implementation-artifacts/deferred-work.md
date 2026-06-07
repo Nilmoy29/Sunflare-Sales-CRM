@@ -142,3 +142,127 @@
 - `is_linked` badge not updated after first cross-rep call — cosmetic; refreshes on re-search.
 - RPC does not reject negative `p_duration_seconds` at DB layer — API/client validation sufficient v1.
 - `create_call_log` SECURITY DEFINER allows any rep to log on any existing contact UUID — intentional cross-rep design; `rep_id` on row provides audit trail.
+
+## Deferred from: code review of 5-4-promote-call-to-lead (2026-06-11)
+
+- Logging a second call without promoting hides promote UI for earlier unpromoted interested call — edge case; API promote by call id still works.
+- `promoteCallResponseSchema` unused in route — RPC parse sufficient v1.
+- `promotedCallIds` not cleared on contact switch — harmless session state.
+
+## Deferred from: code review of 5-5-contact-call-activity-stream (2026-06-06)
+
+- `contactCallHistoryResponseSchema` parsed in feature layer only, not re-validated in route — acceptable v1 (same pattern as 5.4).
+- `CallHistoryCard` duplicates `TimelineItemCard` markup — cosmetic; extract shared component if a third call-history surface appears.
+- Sub-minute call durations display as "1 min" via `Math.max(1, round(seconds/60))` — acceptable v1 rounding.
+
+## Deferred from: code review of 5-6-daily-call-counters (2026-06-06)
+
+- `get_admin_daily_rep_summary` `grant execute` to `authenticated` — same pattern as Story 3.3; API route enforces admin role.
+- Counter refetches after log rather than optimistic +1 — matches AC2 refetch semantics; brief stale count during reload acceptable v1.
+- No in-session midnight rollover — AC5 satisfied by calendar-day window on next load/refetch only.
+
+## Deferred from: code review of 5-7-call-scripts-and-click-to-dial (2026-06-06)
+
+- `get-call-script.ts` uses `limit(1)` + type cast instead of typed `.eq("id", 1)` — works for singleton v1.
+- Script fetched on panel mount even when no contact selected — acceptable v1 per AC5; no refetch on contact select until 7.8.
+- No `updated_at` trigger on `call_script` UPDATE — Story 7.8 admin PATCH should set timestamps explicitly.
+
+## Deferred from: code review of 6-1-territory-and-assignment-schema (2026-06-07)
+
+- RLS smoke documented as policy-structure review, not live rep A/B session — same pattern as schema-only stories 2.1, 4.1, 5.1.
+- Multiple permissive SELECT policies on `territories` and `territory_assignments` (admin `FOR ALL` + rep `SELECT`) — same split pattern as `call_logs`; consolidate when optimizing RLS performance.
+- Rep cannot `SELECT` territory via `profiles.territory_id` alone — only via `territory_assignments`; revisit in Story 6.4 if FR3 home territory should render without a dated assignment.
+- `TERRITORY_NAME_MAX_LENGTH` / `TERRITORY_NOTES_MAX_LENGTH` unused until Story 6.2 create/update validators.
+- `territoryRowSchema.polygon_geojson` as `z.string()` vs generated `unknown` — align when 6.2 draw API defines PostgREST geometry encoding.
+
+## Deferred from: code review of 6-2-draw-and-save-territories (2026-06-07)
+
+- RPC `grant execute` to `authenticated` (not admin-only) on territory CRUD RPCs — same pattern as Stories 3.3 and 5.6; API routes enforce admin role.
+- No polygon redraw UI despite `updateTerritoryBodySchema` supporting `polygon` — AC4 minimum is name/notes edit; geometry redraw optional v1.
+- Client `fetchTerritories` / create / update do not re-validate responses with Zod schemas — matches project fetch+hooks convention.
+- `getTerritoriesForAdmin` silently drops rows when `parseTerritorySummary` fails — acceptable v1; revisit if geometry encoding drifts.
+- `geoJsonLinearRingSchema` closed-ring check uses strict coordinate equality — Mapbox Draw closes rings; server `ST_IsValid` is backstop.
+- No territory DELETE in UI or API — story defers delete; schema RLS allows admin DELETE for a future story.
+- Map height uses same `min-h-0 flex-1` chain as `/admin/map`, not explicit `h-screen` — consistent with existing admin map layout.
+
+## Deferred from: code review of 6-3-assign-territory-to-rep-by-date (2026-06-07)
+
+- RPC `grant execute` to `authenticated` on assignment RPCs — same pattern as 6.2/3.3/5.6; API routes enforce admin role.
+- `getTerritoryAssignmentsForAdmin` silently drops rows when `parseTerritoryAssignmentSummary` fails — acceptable v1; same as 6.2.
+- Client assignment API calls do not re-validate responses with Zod — matches project fetch+hooks convention.
+- Assignment list highlight keyed by `territory_id` not `assignment.id` — cosmetic when multiple reps share a zone same day.
+- GET assignments without `assigned_date` returns unfiltered list — UI always sends date; acceptable v1 team size.
+- Local `npm run db:types` may lag remote RPC signatures — `as never` RPC casts used (6.2 pattern).
+
+## Deferred from: code review of 6-4-show-assigned-territory-on-rep-map (2026-06-07)
+
+- RPC `grant execute` to `authenticated` on `get_rep_territories_for_date` — same pattern as 6.2/6.3; RPC scopes via `auth.uid()`; API enforces rep role.
+- `getRepTerritoriesForDate` silently drops rows when `parseRepTerritoryOverlay` fails — acceptable v1; same as 6.2/6.3.
+- Client `fetchRepTerritoriesForDate` does not re-validate responses with Zod — matches project fetch+hooks convention.
+- Client fetch omits optional `assigned_date` query param — rep map uses server Sydney-today default.
+- `useRepTerritoryOverlay` swallows fetch errors with no `error` exposure — AC2 non-blocking; empty overlay on failure acceptable v1.
+- Point-in-polygon uses outer ring only (ignores GeoJSON holes) — admin draw produces simple polygons v1.
+- Local `npm run db:types` may lag remote RPC signatures — `as never` RPC casts used (6.2/6.3 pattern).
+
+## Deferred from: code review of 6-5-coverage-heatmap-layer (2026-06-07)
+
+- Heatmap GeoJSON syncs even when layer hidden — acceptable v1 at ≤500 points.
+- Duplicate `adminKnocksToFeatureCollection` build per knock update (pins + heatmap) — negligible at NFR1 scale.
+- Stale heatmap during filter/bbox refetch — same deferred pattern as Story 3.1 pins.
+- Heatmap density limited to truncated 500-pin viewport sample — Phase 3 grid out of scope.
+- Heatmap renders above breadcrumb route lines per story layer stack — route may be partially obscured when both on.
+- Default opacity `0.6` triplicated across shell/canvas/map init — `setPaintProperty` corrects on load.
+
+## Deferred from: code review of 7-1-global-date-range-control (2026-06-07)
+
+- `addDaysSydney` uses fixed 24h ms arithmetic — DST week boundaries could drift by one day; matches existing `yesterdaySydneyDateString` pattern.
+- No unit tests for Sydney week/month preset resolution — story scoped manual verification only.
+- Span validation duplicated across three Zod schemas — maintenance overhead, acceptable v1.
+
+## Deferred from: code review of 7-2-funnel-conversion-chart (2026-06-07)
+
+- `grant execute` on funnel RPC to `authenticated` — admin enforced at API route; same pattern as summary RPC.
+- Client `fetchFunnelConversion` does not re-validate response with Zod — matches fetch+hooks convention.
+- `as never` RPC cast — local `db:types` may lag new function signature.
+
+## Deferred from: code review of 7-3-team-leaderboard (2026-06-07)
+
+- Duplicate summary API call on dashboard load — story explicitly accepts leaderboard + grid both calling `fetchDailyRepSummary` for v1.
+- Stale error persists during range refetch — matches funnel/summary deferred stale-state pattern (7.2, 3.3).
+- No unit tests for `rankRepMetrics` competition ranking — story scoped manual verification only.
+- Metric toggle buttons lack `aria-pressed` — date range preset buttons use the same pattern (7.1).
+
+## Deferred from: code review of 7-4-rep-deep-dive-dashboard (2026-06-07)
+
+- RPC `grant execute` to `authenticated` on rep deep-dive RPCs — admin enforced at API route; same pattern as 7.2/7.3.
+- Stale error persists during range/rep refetch — matches funnel/leaderboard deferred stale-state pattern.
+- Pipeline stage labels hardcoded in SQL vs `LEAD_STAGE_LABELS` — labels match today; funnel RPC uses same pattern.
+- Client fetch helpers do not re-validate responses with Zod — matches project fetch+hooks convention.
+- Date range resets to default week when switching reps via selector — full navigation remounts provider; acceptable v1.
+
+## Deferred from: code review of 7-5-geographic-yield-by-suburb (2026-06-07)
+
+- Stale error persists during range refetch — matches funnel/leaderboard deferred stale-state pattern (7.2, 7.3).
+- RPC `grant execute` to `authenticated` on `get_admin_geographic_yield` — admin enforced at API route; same pattern as 7.2/7.3.
+- Client `fetchGeographicYield` does not re-validate response with Zod — matches project fetch+hooks convention.
+- Metric toggle buttons lack `aria-pressed` — same pattern as 7.3 team leaderboard / 7.1 date presets.
+
+## Deferred from: code review of 7-6-csv-export (2026-06-07)
+
+- No unit tests for `escapeCsvCell` quoting edge cases — story scoped optional manual verification only.
+- CSV formula-injection prefix for spreadsheet formula characters — admin-only internal export; not in story AC.
+- Client-side export relies on dashboard `requireRole` gate — matches 7.6 story intent; no server export route in v1.
+
+## Deferred from: code review of 7-7-end-of-shift-daily-summaries (2026-06-07)
+
+- Silent RPC failure in `getRepDailySummaryForDate` — story accepts zeroed summary without blocking shift end; optional server logging not required v1.
+- Admin daily summary refetches on Realtime activity, not shift-end event — AC5 ties refresh to field activity; last knock/call during shift already triggers refetch before end.
+- Rep shift end reuses admin `getDailyRepSummary` via cross-feature import — no new migration; RLS scopes rep to own row; dedicated rep RPC optional cleanup.
+- Client `endShift()` does not Zod-validate `ShiftEndResponse` — matches project fetch+hooks convention.
+
+## Deferred from: code review of 7-8-admin-call-script-configuration (2026-06-07)
+
+- Client `fetchAdminCallScript` / `updateAdminCallScript` do not re-validate with Zod — matches project fetch+hooks convention.
+- `getCallScript` uses `limit(1)` instead of `.eq("id", 1)` — Story 5.7 deferral; singleton table.
+- Rep script refetch on calls panel mount only — Story 7.8 AC5 accepts reload/navigation v1.
+- `updated_by` set server-side but not shown in admin UI — not in story AC; audit UI optional future.

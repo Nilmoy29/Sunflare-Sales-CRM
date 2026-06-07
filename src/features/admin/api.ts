@@ -11,9 +11,17 @@ import type { ShiftBreadcrumbsResponse } from "@/lib/validators/shift-breadcrumb
 
 export async function fetchRecentActivity(
   limit = 50,
+  from?: string,
+  to?: string,
   signal?: AbortSignal,
 ): Promise<ActivityFeedResponse> {
   const params = new URLSearchParams({ limit: String(limit) });
+  if (from) {
+    params.set("from", from);
+  }
+  if (to) {
+    params.set("to", to);
+  }
   const res = await fetch(`/api/v1/admin/activity?${params.toString()}`, {
     credentials: "include",
     signal,
@@ -61,17 +69,14 @@ export async function fetchActivityItem(
 }
 
 export async function fetchDailyRepSummary(
-  date?: string,
+  from: string,
+  to: string,
   signal?: AbortSignal,
 ): Promise<DailyRepSummaryResponse> {
-  const params = new URLSearchParams();
-  if (date) {
-    params.set("date", date);
-  }
+  const params = new URLSearchParams({ from, to });
 
-  const query = params.toString();
   const res = await fetch(
-    `/api/v1/admin/dashboard/summary${query ? `?${query}` : ""}`,
+    `/api/v1/admin/dashboard/summary?${params.toString()}`,
     {
       credentials: "include",
       signal,

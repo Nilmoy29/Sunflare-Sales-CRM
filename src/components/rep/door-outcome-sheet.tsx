@@ -25,6 +25,7 @@ import {
 
 type DoorOutcomeSheetProps = {
   draft: KnockDraft;
+  territoryWarning?: string | null;
   onClose: () => void;
   onSuccess: (result: SubmitKnockResult) => void;
 };
@@ -47,9 +48,15 @@ function toNullableField(value: string): string | null {
 
 export function DoorOutcomeSheet({
   draft,
+  territoryWarning = null,
   onClose,
   onSuccess,
 }: DoorOutcomeSheetProps) {
+  const territoryWarningKey = `${draft.lat},${draft.lng},${territoryWarning ?? ""}`;
+  const [dismissedTerritoryWarningKey, setDismissedTerritoryWarningKey] =
+    useState<string | null>(null);
+  const territoryWarningDismissed =
+    dismissedTerritoryWarningKey === territoryWarningKey;
   const [address, setAddress] = useState("");
   const [suburb, setSuburb] = useState("");
   const [postcode, setPostcode] = useState("");
@@ -183,6 +190,19 @@ export function DoorOutcomeSheet({
         aria-labelledby="door-outcome-sheet-title"
         className="fixed inset-x-0 bottom-0 z-30 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-white p-4 pb-8 shadow-xl ring-1 ring-zinc-200"
       >
+        {territoryWarning && !territoryWarningDismissed ? (
+          <div className="mb-4 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900 ring-1 ring-amber-200">
+            <p className="flex-1">{territoryWarning}</p>
+            <button
+              type="button"
+              onClick={() => setDismissedTerritoryWarningKey(territoryWarningKey)}
+              className="shrink-0 font-medium underline hover:text-amber-950"
+            >
+              Dismiss
+            </button>
+          </div>
+        ) : null}
+
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <h2

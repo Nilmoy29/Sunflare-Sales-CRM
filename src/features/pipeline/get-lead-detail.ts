@@ -2,6 +2,10 @@ import {
   formatContactDisplayName,
   formatStageChangeDisplay,
 } from "@/features/pipeline/pipeline-stage-labels";
+import {
+  type CallLogTimelineItem,
+  parseCallLogTimelineRow,
+} from "@/lib/validators/call-logs";
 import { parseStageChangeContent } from "@/lib/validators/lead-activity";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -55,6 +59,18 @@ const FOLLOW_UP_DETAIL_SELECT = `
   completed,
   rep_id,
   profiles!follow_ups_rep_id_fkey ( name )
+`;
+
+const CALL_DETAIL_SELECT = `
+  id,
+  contact_id,
+  rep_id,
+  outcome,
+  duration_seconds,
+  notes,
+  called_at,
+  follow_up_at,
+  profiles!call_logs_rep_id_fkey ( name )
 `;
 
 function toIsoString(value: unknown): string | null {
@@ -148,7 +164,7 @@ function parseActivityRow(
       };
     }
     case "call":
-      return { kind: "call", ...base, content: content || "Call logged" };
+      return null;
     case "knock":
       return null;
     default:
@@ -241,26 +257,35 @@ export async function getLeadDetail(
     suburb: contacts?.suburb ?? null,
   });
 
-  const [knocksResult, activityResult, followUpsResult] = await Promise.all([
-    supabase
-      .from("door_knocks")
-      .select(KNOCK_DETAIL_SELECT)
-      .eq("contact_id", contact_id)
-      .order("knocked_at", { ascending: false }),
-    supabase
-      .from("lead_activity")
-      .select(ACTIVITY_DETAIL_SELECT)
-      .eq("lead_id", leadId)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("follow_ups")
-      .select(FOLLOW_UP_DETAIL_SELECT)
-      .eq("lead_id", leadId)
-      .order("due_at", { ascending: true }),
-  ]);
+  const [knocksResult, callsResult, activityResult, followUpsResult] =
+    await Promise.all([
+      supabase
+        .from("door_knocks")
+        .select(KNOCK_DETAIL_SELECT)
+        .eq("contact_id", contact_id)
+        .order("knocked_at", { ascending: false }),
+      supabase
+        .from("call_logs")
+        .select(CALL_DETAIL_SELECT)
+        .eq("contact_id", contact_id)
+        .order("called_at", { ascending: false }),
+      supabase
+        .from("lead_activity")
+        .select(ACTIVITY_DETAIL_SELECT)
+        .eq("lead_id", leadId)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("follow_ups")
+        .select(FOLLOW_UP_DETAIL_SELECT)
+        .eq("lead_id", leadId)
+        .order("due_at", { ascending: true }),
+    ]);
 
   if (knocksResult.error) {
     throw knocksResult.error;
+  }
+  if (callsResult.error) {
+    throw callsResult.error;
   }
   if (activityResult.error) {
     throw activityResult.error;
@@ -275,6 +300,10 @@ export async function getLeadDetail(
     )
     .filter((item): item is LeadDetailTimelineItem => item !== null);
 
+  const callItems: CallLogTimelineItem[] = (callsResult.data ?? [])
+    .map((call) => parseCallLogTimelineRow(call as Record<string, unknown>))
+    .filter((item): item is CallLogTimelineItem => item !== null);
+
   const activityItems = (activityResult.data ?? [])
     .map((activity) =>
       parseActivityRow(activity as Record<string, unknown>),
@@ -287,9 +316,12 @@ export async function getLeadDetail(
     )
     .filter((item): item is LeadDetailTimelineItem => item !== null);
 
-  const timeline = [...knockItems, ...activityItems, ...followUpItems].sort(
-    (a, b) => b.occurred_at.localeCompare(a.occurred_at),
-  );
+  const timeline = [
+    ...knockItems,
+    ...callItems,
+    ...activityItems,
+    ...followUpItems,
+  ].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at));
 
   return leadDetailResponseSchema.parse({
     lead: {
@@ -305,7 +337,7 @@ export async function getLeadDetail(
       created_at,
       lost_reason: lostReasonParsed.data,
     },
-    calls_available: false,
+    calls_available: true,
     timeline,
   });
 }

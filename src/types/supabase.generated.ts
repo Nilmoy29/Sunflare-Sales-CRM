@@ -66,6 +66,35 @@ export type Database = {
           },
         ]
       }
+      call_script: {
+        Row: {
+          body: string
+          id: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          body?: string
+          id?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          body?: string
+          id?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_script_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contacts: {
         Row: {
           address: string | null
@@ -410,7 +439,15 @@ export type Database = {
           territory_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_territory_id_fkey"
+            columns: ["territory_id"]
+            isOneToOne: false
+            referencedRelation: "territories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_subscriptions: {
         Row: {
@@ -479,6 +516,93 @@ export type Database = {
           },
         ]
       }
+      territories: {
+        Row: {
+          created_at: string
+          created_by_admin_id: string
+          id: string
+          name: string
+          notes: string | null
+          polygon_geojson: unknown
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_admin_id: string
+          id?: string
+          name: string
+          notes?: string | null
+          polygon_geojson: unknown
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by_admin_id?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          polygon_geojson?: unknown
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "territories_created_by_admin_id_fkey"
+            columns: ["created_by_admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      territory_assignments: {
+        Row: {
+          assigned_by: string
+          assigned_date: string
+          created_at: string
+          id: string
+          rep_id: string
+          territory_id: string
+        }
+        Insert: {
+          assigned_by: string
+          assigned_date: string
+          created_at?: string
+          id?: string
+          rep_id: string
+          territory_id: string
+        }
+        Update: {
+          assigned_by?: string
+          assigned_date?: string
+          created_at?: string
+          id?: string
+          rep_id?: string
+          territory_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "territory_assignments_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "territory_assignments_rep_id_fkey"
+            columns: ["rep_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "territory_assignments_territory_id_fkey"
+            columns: ["territory_id"]
+            isOneToOne: false
+            referencedRelation: "territories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -524,6 +648,34 @@ export type Database = {
           lng: number
           outcome: Database["public"]["Enums"]["door_outcome"]
           was_duplicate: boolean
+        }[]
+      }
+      create_territory: {
+        Args: { p_name: string; p_notes: string; p_polygon: Json }
+        Returns: {
+          created_at: string
+          geometry: Json
+          id: string
+          name: string
+          notes: string
+          updated_at: string
+        }[]
+      }
+      create_territory_assignment: {
+        Args: {
+          p_assigned_date: string
+          p_rep_id: string
+          p_territory_id: string
+        }
+        Returns: {
+          assigned_by: string
+          assigned_date: string
+          created_at: string
+          id: string
+          rep_id: string
+          rep_name: string
+          territory_id: string
+          territory_name: string
         }[]
       }
       find_contact_by_phone: {
@@ -616,6 +768,34 @@ export type Database = {
           rep_name: string
         }[]
       }
+      get_territories_for_admin: {
+        Args: never
+        Returns: {
+          created_at: string
+          geometry: Json
+          id: string
+          name: string
+          notes: string
+          updated_at: string
+        }[]
+      }
+      get_territory_assignments_for_admin: {
+        Args: {
+          p_assigned_date?: string
+          p_rep_id?: string
+          p_territory_id?: string
+        }
+        Returns: {
+          assigned_by: string
+          assigned_date: string
+          created_at: string
+          id: string
+          rep_id: string
+          rep_name: string
+          territory_id: string
+          territory_name: string
+        }[]
+      }
       is_admin: { Args: never; Returns: boolean }
       normalize_phone_digits: { Args: { p_phone: string }; Returns: string }
       promote_call_to_lead: {
@@ -637,6 +817,22 @@ export type Database = {
           phone: string
           postcode: string
           suburb: string
+        }[]
+      }
+      update_territory: {
+        Args: {
+          p_id: string
+          p_name?: string
+          p_notes?: string
+          p_polygon?: Json
+        }
+        Returns: {
+          created_at: string
+          geometry: Json
+          id: string
+          name: string
+          notes: string
+          updated_at: string
         }[]
       }
     }

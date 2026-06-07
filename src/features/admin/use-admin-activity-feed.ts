@@ -24,31 +24,25 @@ function prependItem(
     : next;
 }
 
-function mergeActivityItems(
-  primary: ActivityFeedItem[],
-  secondary: ActivityFeedItem[],
-): ActivityFeedItem[] {
-  const byId = new Map<string, ActivityFeedItem>();
-  for (const item of [...primary, ...secondary]) {
-    byId.set(item.id, item);
-  }
-  return Array.from(byId.values())
-    .sort(
-      (a, b) =>
-        new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime(),
-    )
-    .slice(0, ACTIVITY_FEED_MAX_ITEMS);
-}
-
 export function useAdminActivityFeed(options?: {
+  from: string;
+  to: string;
+  realtimeEnabled: boolean;
   onNewActivity?: () => void;
 }) {
+  const from = options?.from;
+  const to = options?.to;
+  const realtimeEnabled = options?.realtimeEnabled ?? false;
   const onNewActivity = options?.onNewActivity;
+  const rangeKey = from && to ? `${from}:${to}` : null;
+
   const [items, setItems] = useState<ActivityFeedItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const [realtimeConnected, setRealtimeConnected] = useState(false);
   const [realtimeError, setRealtimeError] = useState<string | null>(null);
+
+  const loading = Boolean(rangeKey) && loadedKey !== rangeKey;
 
   const enrichAndPrepend = useCallback(async (knockId: string) => {
     try {
@@ -60,6 +54,10 @@ export function useAdminActivityFeed(options?: {
   }, []);
 
   useEffect(() => {
+    if (!from || !to || !rangeKey) {
+      return;
+    }
+
     let cancelled = false;
     const controller = new AbortController();
 
@@ -67,13 +65,16 @@ export function useAdminActivityFeed(options?: {
       try {
         const result = await fetchRecentActivity(
           ACTIVITY_FEED_DEFAULT_LIMIT,
+          from,
+          to,
           controller.signal,
         );
         if (cancelled) {
           return;
         }
-        setItems((current) => mergeActivityItems(result.items, current));
+        setItems(result.items);
         setError(null);
+        setLoadedKey(rangeKey);
       } catch (e: unknown) {
         if (cancelled) {
           return;
@@ -82,10 +83,7 @@ export function useAdminActivityFeed(options?: {
         setError(
           e instanceof Error ? e.message : "Could not load activity feed",
         );
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        setLoadedKey(rangeKey);
       }
     }
 
@@ -95,9 +93,13 @@ export function useAdminActivityFeed(options?: {
       cancelled = true;
       controller.abort();
     };
-  }, []);
+  }, [from, to, rangeKey]);
 
   useEffect(() => {
+    if (!realtimeEnabled) {
+      return;
+    }
+
     const supabase = createClient();
     const channel = supabase
       .channel(REALTIME_CHANNEL)
@@ -127,13 +129,13 @@ export function useAdminActivityFeed(options?: {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [enrichAndPrepend, onNewActivity]);
+  }, [enrichAndPrepend, onNewActivity, realtimeEnabled]);
 
   return {
     items,
     loading,
     error,
-    realtimeConnected,
-    realtimeError,
+    realtimeConnected: realtimeEnabled && realtimeConnected,
+    realtimeError: realtimeEnabled ? realtimeError : null,
   };
 }

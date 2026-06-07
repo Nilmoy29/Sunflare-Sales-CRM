@@ -4,7 +4,13 @@ import {
   LOGIN_PATH,
 } from "@/lib/auth/paths";
 
-const PUBLIC_EXACT = new Set(["/", "/api/v1/health", FORBIDDEN_PATH]);
+const PUBLIC_EXACT = new Set([
+  "/",
+  "/api/v1/health",
+  "/api/auth/login",
+  "/api/auth/profile",
+  FORBIDDEN_PATH,
+]);
 
 const PUBLIC_PREFIXES = [
   LOGIN_PATH,

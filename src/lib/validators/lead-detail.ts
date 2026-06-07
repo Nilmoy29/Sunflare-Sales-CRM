@@ -1,5 +1,7 @@
 import { z } from "zod";
+import { callLogSummarySchema } from "@/lib/validators/call-logs";
 import {
+  callOutcomeSchema,
   doorOutcomeSchema,
   leadSourceSchema,
   leadStageSchema,
@@ -38,8 +40,24 @@ export const leadDetailKnockTimelineItemSchema = timelineBaseSchema.extend({
 
 export const leadDetailCallTimelineItemSchema = timelineBaseSchema.extend({
   kind: z.literal("call"),
-  content: z.string(),
+  outcome: callOutcomeSchema,
+  notes: z.string().nullable(),
+  duration_seconds: z.number().int().nullable(),
 });
+
+export const contactCallHistoryItemSchema = callLogSummarySchema.extend({
+  rep_name: z.string(),
+});
+
+export type ContactCallHistoryItem = z.infer<typeof contactCallHistoryItemSchema>;
+
+export const contactCallHistoryResponseSchema = z.object({
+  calls: z.array(contactCallHistoryItemSchema),
+});
+
+export type ContactCallHistoryResponse = z.infer<
+  typeof contactCallHistoryResponseSchema
+>;
 
 export const leadDetailNoteTimelineItemSchema = timelineBaseSchema.extend({
   kind: z.literal("note"),

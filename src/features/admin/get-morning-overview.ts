@@ -11,7 +11,7 @@ import {
 
 export async function getMorningOverview(): Promise<MorningOverviewResponse> {
   const date = yesterdaySydneyDateString();
-  const { rows } = await getDailyRepSummary(date);
+  const { rows } = await getDailyRepSummary(date, date);
 
   const totals = morningOverviewTotalsSchema.parse(
     rows.reduce(

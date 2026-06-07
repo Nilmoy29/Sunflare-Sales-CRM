@@ -4,19 +4,27 @@ import { useCallback, useEffect, useState } from "react";
 import { fetchLowActivityReps } from "@/features/admin/api";
 import type { LowActivityRep } from "@/lib/validators/dashboard-coaching";
 
-export function useLowActivityReps() {
+export function useLowActivityReps(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled ?? true;
   const [flagged, setFlagged] = useState<LowActivityRep[]>([]);
   const [windowMinutes, setWindowMinutes] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loadedKey, setLoadedKey] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
-  const loading = loadedKey !== refreshKey;
+  const loading = enabled && loadedKey !== refreshKey;
 
   const refetch = useCallback(() => {
+    if (!enabled) {
+      return;
+    }
     setRefreshKey((key) => key + 1);
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     let cancelled = false;
     const controller = new AbortController();
     const key = refreshKey;
@@ -51,13 +59,13 @@ export function useLowActivityReps() {
       cancelled = true;
       controller.abort();
     };
-  }, [refreshKey]);
+  }, [refreshKey, enabled]);
 
   return {
-    flagged,
-    windowMinutes,
+    flagged: enabled ? flagged : [],
+    windowMinutes: enabled ? windowMinutes : null,
     loading,
-    error,
+    error: enabled ? error : null,
     refetch,
   };
 }

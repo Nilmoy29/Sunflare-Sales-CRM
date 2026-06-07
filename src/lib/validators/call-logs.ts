@@ -54,6 +54,36 @@ export const createCallResponseSchema = z.object({
 
 export type CreateCallResponse = z.infer<typeof createCallResponseSchema>;
 
+const sydneyDateStringSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD");
+
+export const repDailyCallCountQuerySchema = z.object({
+  date: sydneyDateStringSchema.optional(),
+});
+
+export type RepDailyCallCountQuery = z.infer<
+  typeof repDailyCallCountQuerySchema
+>;
+
+export const repDailyCallCountResponseSchema = z.object({
+  date: sydneyDateStringSchema,
+  count: z.number().int().nonnegative(),
+});
+
+export type RepDailyCallCountResponse = z.infer<
+  typeof repDailyCallCountResponseSchema
+>;
+
+export function parseRepDailyCallCountSearchParams(
+  searchParams: URLSearchParams,
+) {
+  const date = searchParams.get("date");
+  return repDailyCallCountQuerySchema.safeParse({
+    date: date && date.length > 0 ? date : undefined,
+  });
+}
+
 export function parseCallLogSummary(
   row: Record<string, unknown>,
 ): CallLogSummary | null {
@@ -87,4 +117,62 @@ export function parseCallLogSummary(
   });
 
   return parsed.success ? parsed.data : null;
+}
+
+export type CallLogTimelineItem = {
+  kind: "call";
+  id: string;
+  occurred_at: string;
+  rep_name: string;
+  outcome: CallLogSummary["outcome"];
+  notes: string | null;
+  duration_seconds: number | null;
+};
+
+export function formatCallDurationMinutes(
+  durationSeconds: number | null,
+): string | null {
+  if (durationSeconds === null || durationSeconds <= 0) {
+    return null;
+  }
+
+  const minutes = Math.max(1, Math.round(durationSeconds / 60));
+  return `${minutes} min`;
+}
+
+export function parseCallLogTimelineRow(
+  row: Record<string, unknown>,
+): CallLogTimelineItem | null {
+  const profiles = row.profiles as { name?: string } | null;
+  const summary = parseCallLogSummary(row);
+
+  if (!summary || !profiles?.name) {
+    return null;
+  }
+
+  return {
+    kind: "call",
+    id: summary.id,
+    occurred_at: summary.called_at,
+    rep_name: profiles.name,
+    outcome: summary.outcome,
+    notes: summary.notes,
+    duration_seconds: summary.duration_seconds,
+  };
+}
+
+export function parseContactCallHistoryRow(
+  row: Record<string, unknown>,
+): (CallLogSummary & { rep_name: string }) | null {
+  const profiles = row.profiles as { name?: string } | null;
+  const summary = parseCallLogSummary(row);
+
+  if (!summary || !profiles?.name) {
+    return null;
+  }
+
+  return {
+    ...summary,
+    rep_name: profiles.name,
+  };
 }

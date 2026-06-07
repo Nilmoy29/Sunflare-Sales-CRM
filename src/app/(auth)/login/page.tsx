@@ -5,6 +5,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   inactive: "Your account is deactivated. Contact your administrator.",
   auth_callback: "Sign-in link expired or invalid. Try again.",
   profile_missing: "Your account profile is missing. Contact your administrator.",
+  invalid: "Enter a valid email and password.",
+  invalid_credentials: "Invalid email or password.",
 };
 
 type PageProps = {

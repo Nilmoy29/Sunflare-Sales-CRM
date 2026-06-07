@@ -1,4 +1,7 @@
-import type { ShiftSummary } from "@/lib/validators/shifts";
+import type {
+  ShiftEndResponse,
+  ShiftSummary,
+} from "@/lib/validators/shifts";
 
 async function parseJson<T>(res: Response): Promise<T> {
   const body = (await res.json()) as T;
@@ -39,13 +42,13 @@ export async function startShift(): Promise<ShiftSummary> {
   };
 }
 
-export async function endShift(): Promise<ShiftSummary> {
+export async function endShift(): Promise<ShiftEndResponse> {
   const res = await fetch("/api/v1/shifts/end", {
     method: "POST",
     credentials: "include",
   });
   const body = await parseJson<{
-    data?: ShiftSummary;
+    data?: ShiftEndResponse;
     error?: { code: string; message: string };
   }>(res);
 

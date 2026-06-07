@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { FORBIDDEN_PATH, LOGIN_PATH } from "@/lib/auth/paths";
 import type { Profile } from "@/types/database";
 import type { UserRole } from "@/lib/validators/enums";
 
@@ -32,7 +34,7 @@ export async function getAuthProfile(): Promise<AuthProfile | null> {
     .from("profiles")
     .select("id, role, active, name, phone, territory_id, start_date")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
   if (error || !data) {
     return null;
@@ -44,10 +46,10 @@ export async function getAuthProfile(): Promise<AuthProfile | null> {
 export async function requireAuthProfile(): Promise<AuthProfile> {
   const profile = await getAuthProfile();
   if (!profile) {
-    throw new Error("UNAUTHENTICATED");
+    redirect(LOGIN_PATH);
   }
   if (!profile.active) {
-    throw new Error("INACTIVE");
+    redirect(`${LOGIN_PATH}?error=inactive`);
   }
   return profile;
 }
@@ -55,7 +57,7 @@ export async function requireAuthProfile(): Promise<AuthProfile> {
 export async function requireRole(allowed: UserRole[]): Promise<AuthProfile> {
   const profile = await requireAuthProfile();
   if (!allowed.includes(profile.role)) {
-    throw new Error("FORBIDDEN");
+    redirect(FORBIDDEN_PATH);
   }
   return profile;
 }

@@ -2,7 +2,10 @@ import { apiError, apiSuccess } from "@/lib/api/response";
 import { requireRoleForApi } from "@/lib/auth/guards";
 import { getDailyRepSummary } from "@/features/admin/get-daily-rep-summary";
 import { formatSydneyDateString } from "@/features/knocks/format-knock-date";
-import { parseDailyRepSummarySearchParams } from "@/lib/validators/daily-rep-summary";
+import {
+  parseDailyRepSummarySearchParams,
+  resolveDailyRepSummaryRange,
+} from "@/lib/validators/daily-rep-summary";
 
 export async function GET(request: Request) {
   const auth = await requireRoleForApi(["admin"]);
@@ -21,11 +24,13 @@ export async function GET(request: Request) {
     );
   }
 
-  const date =
-    parsed.data.date ?? formatSydneyDateString(new Date());
+  const today = formatSydneyDateString(new Date());
+  const range = parsed.data.date || (parsed.data.from && parsed.data.to)
+    ? resolveDailyRepSummaryRange(parsed.data)
+    : { from: today, to: today };
 
   try {
-    const summary = await getDailyRepSummary(date);
+    const summary = await getDailyRepSummary(range.from, range.to);
     return apiSuccess(summary);
   } catch {
     return apiError(

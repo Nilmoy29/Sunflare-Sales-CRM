@@ -68,17 +68,21 @@ function parseKnockActivityRow(row: Record<string, unknown>): KnockActivityRow |
 
 export async function getRecentActivity(
   limit: number,
+  from?: string,
+  to?: string,
 ): Promise<ActivityFeedItem[]> {
   const supabase = await createClient();
   const today = formatSydneyDateString(new Date());
-  const from = startOfDaySydney(today);
-  const to = endOfDaySydney(today);
+  const rangeFrom = from ?? today;
+  const rangeTo = to ?? today;
+  const rangeStart = startOfDaySydney(rangeFrom);
+  const rangeEnd = endOfDaySydney(rangeTo);
 
   const { data, error } = await supabase
     .from("door_knocks")
     .select(KNOCK_ACTIVITY_SELECT)
-    .gte("knocked_at", from)
-    .lte("knocked_at", to)
+    .gte("knocked_at", rangeStart)
+    .lte("knocked_at", rangeEnd)
     .order("knocked_at", { ascending: false })
     .limit(limit);
 

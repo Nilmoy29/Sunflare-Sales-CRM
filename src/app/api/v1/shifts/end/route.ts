@@ -1,8 +1,10 @@
 import { apiError, apiSuccess } from "@/lib/api/response";
 import { requireRoleForApi } from "@/lib/auth/guards";
+import { formatSydneyDateString } from "@/features/knocks/format-knock-date";
+import { getRepDailySummaryForDate } from "@/features/shifts/get-rep-daily-summary";
 import { getActiveShiftForRep } from "@/features/shifts/queries";
 import { createClient } from "@/lib/supabase/server";
-import type { ShiftSummary } from "@/lib/validators/shifts";
+import { shiftEndResponseSchema } from "@/lib/validators/shifts";
 
 export async function POST() {
   const auth = await requireRoleForApi(["rep"]);
@@ -30,5 +32,38 @@ export async function POST() {
     return apiError("NO_ACTIVE_SHIFT", "No active shift to end", 404);
   }
 
-  return apiSuccess(data as ShiftSummary);
+  const closedShift = data as {
+    id: string;
+    started_at: string;
+    ended_at: string;
+  };
+
+  const date = formatSydneyDateString(new Date(endedAt));
+  const counts = await getRepDailySummaryForDate(auth.id, date);
+
+  const payload = {
+    id: closedShift.id,
+    started_at: closedShift.started_at,
+    ended_at: closedShift.ended_at,
+    daily_summary: {
+      date,
+      ...counts,
+    },
+  };
+
+  const parsed = shiftEndResponseSchema.safeParse(payload);
+  if (!parsed.success) {
+    return apiSuccess({
+      ...payload,
+      daily_summary: {
+        date,
+        doors: 0,
+        calls: 0,
+        leads_added: 0,
+        appointments_set: 0,
+      },
+    });
+  }
+
+  return apiSuccess(parsed.data);
 }

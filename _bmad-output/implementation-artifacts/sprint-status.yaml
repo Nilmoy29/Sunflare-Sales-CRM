@@ -1,5 +1,5 @@
 # generated: 2026-06-01
-# last_updated: 2026-06-06
+# last_updated: 2026-06-07
 # project: Sunflare
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-01
-last_updated: 2026-06-11
+last_updated: 2026-06-07
 project: Sunflare
 project_key: NOKEY
 tracking_system: file-system
@@ -86,31 +86,31 @@ development_status:
   4-9-lost-reasons-and-lead-reassignment: done
   epic-4-retrospective: done
 
-  epic-5: in-progress
+  epic-5: done
   5-1-calllog-schema-and-rls: done
   5-2-contact-search-and-create: done
   5-3-log-a-call-with-outcome: done
-  5-4-promote-call-to-lead: review
-  5-5-contact-call-activity-stream: backlog
-  5-6-daily-call-counters: backlog
-  5-7-call-scripts-and-click-to-dial: backlog
-  epic-5-retrospective: optional
+  5-4-promote-call-to-lead: done
+  5-5-contact-call-activity-stream: done
+  5-6-daily-call-counters: done
+  5-7-call-scripts-and-click-to-dial: done
+  epic-5-retrospective: done
 
-  epic-6: backlog
-  6-1-territory-and-assignment-schema: backlog
-  6-2-draw-and-save-territories: backlog
-  6-3-assign-territory-to-rep-by-date: backlog
-  6-4-show-assigned-territory-on-rep-map: backlog
-  6-5-coverage-heatmap-layer: backlog
-  epic-6-retrospective: optional
+  epic-6: done
+  6-1-territory-and-assignment-schema: done
+  6-2-draw-and-save-territories: done
+  6-3-assign-territory-to-rep-by-date: done
+  6-4-show-assigned-territory-on-rep-map: done
+  6-5-coverage-heatmap-layer: done
+  epic-6-retrospective: done
 
-  epic-7: backlog
-  7-1-global-date-range-control: backlog
-  7-2-funnel-conversion-chart: backlog
-  7-3-team-leaderboard: backlog
-  7-4-rep-deep-dive-dashboard: backlog
-  7-5-geographic-yield-by-suburb: backlog
-  7-6-csv-export: backlog
-  7-7-end-of-shift-daily-summaries: backlog
-  7-8-admin-call-script-configuration: backlog
-  epic-7-retrospective: optional
+  epic-7: done
+  7-1-global-date-range-control: done
+  7-2-funnel-conversion-chart: done
+  7-3-team-leaderboard: done
+  7-4-rep-deep-dive-dashboard: done
+  7-5-geographic-yield-by-suburb: done
+  7-6-csv-export: done
+  7-7-end-of-shift-daily-summaries: done
+  7-8-admin-call-script-configuration: done
+  epic-7-retrospective: done

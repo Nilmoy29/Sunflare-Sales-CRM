@@ -34,6 +34,9 @@ const BREADCRUMB_LINE_LAYER_ID = "admin-breadcrumbs-line";
 const BREADCRUMB_POINT_LAYER_ID = "admin-breadcrumbs-point";
 const BREADCRUMB_COLOR = "#3b82f6";
 
+const HEATMAP_SOURCE_ID = "admin-knocks-heatmap";
+const HEATMAP_LAYER_ID = "admin-knocks-heatmap-layer";
+
 const KNOCKS_SOURCE_ID = "admin-knocks";
 const CLUSTER_LAYER_ID = "admin-knocks-clusters";
 const CLUSTER_COUNT_LAYER_ID = "admin-knocks-cluster-count";
@@ -57,6 +60,8 @@ type AdminMapBreadcrumbs = {
 type AdminMapCanvasProps = {
   filters: AdminMapFilters;
   refreshKey?: number;
+  heatmapEnabled?: boolean;
+  heatmapOpacity?: number;
   breadcrumbs?: AdminMapBreadcrumbs;
 };
 
@@ -192,6 +197,8 @@ function knockFromFeatureProperties(
 export function AdminMapCanvas({
   filters,
   refreshKey = 0,
+  heatmapEnabled = false,
+  heatmapOpacity = 0.6,
   breadcrumbs = {
     enabled: false,
     points: [],
@@ -222,6 +229,16 @@ export function AdminMapCanvas({
     }
 
     const source = map.getSource(KNOCKS_SOURCE_ID) as GeoJSONSource | undefined;
+    source?.setData(adminKnocksToFeatureCollection(nextKnocks));
+  }, []);
+
+  const syncHeatmapToMap = useCallback((nextKnocks: AdminKnockPin[]) => {
+    const map = mapRef.current;
+    if (!map || !mapReadyRef.current) {
+      return;
+    }
+
+    const source = map.getSource(HEATMAP_SOURCE_ID) as GeoJSONSource | undefined;
     source?.setData(adminKnocksToFeatureCollection(nextKnocks));
   }, []);
 
@@ -304,6 +321,59 @@ export function AdminMapCanvas({
             "circle-radius": 6,
             "circle-stroke-width": 2,
             "circle-stroke-color": "#ffffff",
+          },
+        });
+
+        map.addSource(HEATMAP_SOURCE_ID, {
+          type: "geojson",
+          data: emptyFeatureCollection(),
+        });
+
+        map.addLayer({
+          id: HEATMAP_LAYER_ID,
+          type: "heatmap",
+          source: HEATMAP_SOURCE_ID,
+          paint: {
+            "heatmap-weight": 1,
+            "heatmap-intensity": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              9,
+              1,
+              15,
+              3,
+            ],
+            "heatmap-radius": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              9,
+              15,
+              15,
+              25,
+            ],
+            "heatmap-opacity": 0.6,
+            "heatmap-color": [
+              "interpolate",
+              ["linear"],
+              ["heatmap-density"],
+              0,
+              "rgba(33,102,172,0)",
+              0.2,
+              "rgb(103,169,207)",
+              0.4,
+              "rgb(209,229,240)",
+              0.6,
+              "rgb(253,219,199)",
+              0.8,
+              "rgb(239,138,98)",
+              1,
+              "rgb(178,24,43)",
+            ],
+          },
+          layout: {
+            visibility: "none",
           },
         });
 
@@ -437,7 +507,26 @@ export function AdminMapCanvas({
       return;
     }
     syncKnocksToMap(knocks);
-  }, [knocks, mapLoaded, syncKnocksToMap]);
+    syncHeatmapToMap(knocks);
+  }, [knocks, mapLoaded, syncKnocksToMap, syncHeatmapToMap]);
+
+  useEffect(() => {
+    if (!mapLoaded) {
+      return;
+    }
+
+    const map = mapRef.current;
+    if (!map || !mapReadyRef.current || !map.getLayer(HEATMAP_LAYER_ID)) {
+      return;
+    }
+
+    map.setPaintProperty(HEATMAP_LAYER_ID, "heatmap-opacity", heatmapOpacity);
+    map.setLayoutProperty(
+      HEATMAP_LAYER_ID,
+      "visibility",
+      heatmapEnabled ? "visible" : "none",
+    );
+  }, [heatmapEnabled, heatmapOpacity, mapLoaded]);
 
   useEffect(() => {
     if (!mapLoaded) {

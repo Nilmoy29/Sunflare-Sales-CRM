@@ -1,6 +1,7 @@
 import { apiError, apiSuccess } from "@/lib/api/response";
 import { requireRoleForApi } from "@/lib/auth/guards";
 import { getRecentActivity } from "@/features/admin/get-recent-activity";
+import { formatSydneyDateString } from "@/features/knocks/format-knock-date";
 import { parseActivityFeedSearchParams } from "@/lib/validators/activity-feed";
 
 export async function GET(request: Request) {
@@ -20,8 +21,12 @@ export async function GET(request: Request) {
     );
   }
 
+  const today = formatSydneyDateString(new Date());
+  const from = parsed.data.from ?? today;
+  const to = parsed.data.to ?? today;
+
   try {
-    const items = await getRecentActivity(parsed.data.limit);
+    const items = await getRecentActivity(parsed.data.limit, from, to);
     return apiSuccess({ items });
   } catch {
     return apiError(

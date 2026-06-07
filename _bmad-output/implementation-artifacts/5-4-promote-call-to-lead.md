@@ -4,7 +4,7 @@ baseline_commit: NO_VCS
 
 # Story 5.4: Promote Call to Lead
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -103,6 +103,13 @@ so that phone prospects enter the same funnel as doors.
   - [x] Manual: Promoted lead visible on rep Kanban
   - [x] Manual: Admin promote POST → 403
   - [x] `npm run build` && `npm run lint`
+
+### Review Findings
+
+- [x] [Review][Patch] Promote affordance rendered above call form — user logged at bottom then had to scroll up [`calls-panel-shell.tsx`] — fixed: notice + promote moved below `CallLogForm`.
+- [x] [Review][Defer] Logging a second call without promoting hides promote UI for earlier unpromoted interested call — edge case; promote API still works by call id.
+- [x] [Review][Defer] `promoteCallResponseSchema` defined but not used in route parse — response built from RPC parse; acceptable v1.
+- [x] [Review][Defer] `promotedCallIds` not cleared on contact switch — harmless; `lastLoggedCall` reset drives UI.
 
 ## Dev Notes
 
@@ -316,6 +323,15 @@ Composer
 - Calls panel: promote button after promotable call log; success notice + pipeline link.
 - Explicit tap promote — no auto-promote in `create_call_log`.
 - `npm run lint` and `npm run build` pass.
+- Code review: promote notice/button moved below call form for natural post-submit flow.
+
+### Senior Developer Review (AI)
+
+**Outcome:** Approved (1 patch applied)  
+**Date:** 2026-06-11  
+**Layers:** Blind Hunter, Edge Case Hunter, Acceptance Auditor
+
+**Summary:** `promote_call_to_lead` RPC mirrors 2.9 idempotent pattern; rep-only API; explicit tap promote (not auto in `create_call_log`); Kanban picks up `source=call` leads. Scope boundaries held. Patch: promote UI below form.
 
 ### File List
 
@@ -331,8 +347,9 @@ Composer
 ## Change Log
 
 - 2026-06-10: Story 5.4 implemented — promote call to pipeline lead (FR27, FR37).
+- 2026-06-11: Code review — promote UI moved below call form.
 
 ## Story Completion Status
 
-- **Status:** review
-- **Completion note:** Call promotion complete; ready for code review before Story 5.5 activity stream.
+- **Status:** done
+- **Completion note:** Call promotion approved; ready for Story 5.5 activity stream.

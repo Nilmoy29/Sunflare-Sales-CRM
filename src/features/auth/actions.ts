@@ -2,17 +2,10 @@
 
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import {
-  getRoleHomePath,
-  isSafeNextPath,
-  LOGIN_PATH,
-} from "@/lib/auth/paths";
+import { LOGIN_PATH } from "@/lib/auth/paths";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
-import type { UserRole } from "@/lib/validators/enums";
 import {
   inviteAcceptSchema,
-  loginSchema,
   passwordResetRequestSchema,
   passwordResetUpdateSchema,
   profileUpdateSchema,
@@ -20,7 +13,6 @@ import {
 
 export type LoginFormState = {
   error?: string;
-  redirectTo?: string;
 };
 
 export type ProfileFormState = {
@@ -42,69 +34,6 @@ export type InviteAcceptState = {
   error?: string;
   success?: string;
 };
-
-type LoginProfile = {
-  role: UserRole;
-  active: boolean;
-};
-
-export async function loginAction(
-  _prev: LoginFormState,
-  formData: FormData,
-): Promise<LoginFormState> {
-  const parsed = loginSchema.safeParse({
-    email: formData.get("email"),
-    password: formData.get("password"),
-  });
-
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
-  }
-
-  const supabase = await createClient();
-  const { error: signInError } = await supabase.auth.signInWithPassword({
-    email: parsed.data.email,
-    password: parsed.data.password,
-  });
-
-  if (signInError) {
-    return { error: "Invalid email or password" };
-  }
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return { error: "Sign-in failed. Please try again." };
-  }
-
-  const adminClient = createAdminClient();
-  const { data: profile } = await adminClient
-    .from("profiles")
-    .select("role, active")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  const loginProfile = profile as LoginProfile | null;
-  if (!loginProfile) {
-    await supabase.auth.signOut();
-    return { error: "Profile not found. Contact your administrator." };
-  }
-  if (!loginProfile.active) {
-    await supabase.auth.signOut();
-    return { error: "Your account is deactivated." };
-  }
-
-  const next = formData.get("next");
-  const nextPath = typeof next === "string" ? next : null;
-  const redirectTo = isSafeNextPath(nextPath)
-    ? nextPath
-    : getRoleHomePath(loginProfile.role);
-
-  // Client navigates after action completes so auth cookies are committed
-  // before middleware runs on the destination route.
-  return { redirectTo };
-}
 
 export async function requestPasswordResetAction(
   _prev: ResetRequestState,

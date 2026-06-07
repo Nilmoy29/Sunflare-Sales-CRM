@@ -28,8 +28,14 @@ export default async function AdminLayout({
           <Link className="text-sm text-zinc-600 underline hover:text-zinc-900" href="/admin/map">
             Map
           </Link>
+          <Link className="text-sm text-zinc-600 underline hover:text-zinc-900" href="/admin/territories">
+            Territories
+          </Link>
           <Link className="text-sm text-zinc-600 underline hover:text-zinc-900" href="/admin/team">
             Team management
+          </Link>
+          <Link className="text-sm text-zinc-600 underline hover:text-zinc-900" href="/admin/settings">
+            Settings
           </Link>
           <SignOutButton />
         </div>

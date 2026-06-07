@@ -1,7 +1,12 @@
 "use client";
 
-import { useDailyRepSummary } from "@/features/admin/use-daily-rep-summary";
-import { formatSydneyDateString } from "@/features/knocks/format-knock-date";
+import Link from "next/link";
+import { useCallback } from "react";
+import { CsvExportButton } from "@/components/admin/csv-export-button";
+import { useDashboardDateRange } from "@/features/dashboard/dashboard-date-range-context";
+import { dailyRepSummaryToCsv } from "@/lib/csv/dashboard-export-mappers";
+import { exportDashboardReport } from "@/lib/csv/export-dashboard-report";
+import type { DailyRepSummaryRow } from "@/lib/validators/daily-rep-summary";
 
 const COLUMNS = [
   { key: "doors", short: "D", label: "Doors knocked" },
@@ -12,34 +17,38 @@ const COLUMNS = [
 
 type DailyRepSummaryGridProps = {
   flaggedRepIds?: ReadonlySet<string>;
+  rows: DailyRepSummaryRow[];
+  loading: boolean;
+  error: string | null;
 };
 
 export function DailyRepSummaryGrid({
   flaggedRepIds,
+  rows,
+  loading,
+  error,
 }: DailyRepSummaryGridProps) {
-  const { date, setDate, rows, loading, error } = useDailyRepSummary();
-  const today = formatSydneyDateString(new Date());
-  const highlightToday = date === today;
+  const { from, to, label, isToday } = useDashboardDateRange();
+  const isSingleDay = from === to;
+  const title = isSingleDay ? "Daily rep summary" : "Rep summary";
+
+  const handleExport = useCallback(() => {
+    const { headers, rows: csvRows } = dailyRepSummaryToCsv(rows);
+    exportDashboardReport("daily-rep-summary", from, to, headers, csvRows);
+  }, [from, rows, to]);
+
+  const exportDisabled = loading || !!error || rows.length === 0;
 
   return (
     <section className="rounded-lg border border-zinc-200 bg-white">
-      <div className="border-b border-zinc-200 px-4 py-3">
-        <h2 className="text-lg font-semibold text-zinc-900">Daily rep summary</h2>
-        <label className="mt-3 block">
-          <span className="sr-only">Summary date</span>
-          <input
-            type="date"
-            value={date}
-            onChange={(event) => {
-              const next = event.target.value;
-              if (!next) {
-                return;
-              }
-              setDate(next);
-            }}
-            className="w-full rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900"
-          />
-        </label>
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-zinc-200 px-4 py-3">
+        <div>
+          <h2 className="text-lg font-semibold text-zinc-900">{title}</h2>
+          {!isSingleDay ? (
+            <p className="mt-1 text-sm text-zinc-600">{label}</p>
+          ) : null}
+        </div>
+        <CsvExportButton disabled={exportDisabled} onExport={handleExport} />
       </div>
 
       <div className="p-4">
@@ -96,7 +105,7 @@ export function DailyRepSummaryGrid({
               <tbody className="divide-y divide-zinc-100">
                 {rows.map((row) => {
                   const isFlagged =
-                    highlightToday && flaggedRepIds?.has(row.rep_id);
+                    isToday && flaggedRepIds?.has(row.rep_id);
                   return (
                   <tr
                     key={row.rep_id}
@@ -110,7 +119,12 @@ export function DailyRepSummaryGrid({
                       scope="row"
                       className="py-2 pr-2 font-medium text-zinc-900"
                     >
-                      {row.rep_name}
+                      <Link
+                        href={`/admin/reps/${row.rep_id}`}
+                        className="underline decoration-zinc-300 underline-offset-2 hover:text-zinc-700 hover:decoration-zinc-500"
+                      >
+                        {row.rep_name}
+                      </Link>
                     </th>
                     <td className="py-2 px-1 text-center tabular-nums text-zinc-800">
                       {row.doors}

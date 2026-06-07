@@ -18,6 +18,13 @@ import {
   type MapBbox,
   type PendingKnockPin,
 } from "@/lib/validators/knocks";
+import type { RepTerritoryOverlay } from "@/lib/validators/territories";
+
+const REP_TERRITORIES_SOURCE_ID = "rep-territories";
+const REP_TERRITORIES_FILL_LAYER_ID = "rep-territories-fill";
+const REP_TERRITORIES_LINE_LAYER_ID = "rep-territories-line";
+
+const REP_TERRITORY_FILL_COLOR = "#10b981";
 
 const KNOCKS_SOURCE_ID = "knocks";
 const CLUSTER_LAYER_ID = "knocks-clusters";
@@ -40,9 +47,26 @@ type MapCanvasProps = {
   geoWarning?: string | null;
   knockRefreshKey?: number;
   pendingKnocks?: PendingKnockPin[];
+  territoryOverlays?: RepTerritoryOverlay[];
   onMapClick?: (coords: { lat: number; lng: number }) => void;
   onPinClick?: (coords: { lat: number; lng: number }) => void;
 };
+
+function territoriesToFeatureCollection(
+  territories: RepTerritoryOverlay[],
+): GeoJSON.FeatureCollection {
+  return {
+    type: "FeatureCollection",
+    features: territories.map((territory) => ({
+      type: "Feature",
+      geometry: territory.geometry,
+      properties: {
+        id: territory.id,
+        name: territory.name,
+      },
+    })),
+  };
+}
 
 function boundsToBbox(bounds: {
   getWest: () => number;
@@ -105,6 +129,7 @@ export function MapCanvas({
   geoWarning = null,
   knockRefreshKey = 0,
   pendingKnocks = [],
+  territoryOverlays = [],
   onMapClick,
   onPinClick,
 }: MapCanvasProps) {
@@ -141,6 +166,21 @@ export function MapCanvas({
 
       const source = map.getSource(KNOCKS_SOURCE_ID) as GeoJSONSource | undefined;
       source?.setData(knocksToFeatureCollection(nextKnocks, nextPending));
+    },
+    [],
+  );
+
+  const syncTerritoriesToMap = useCallback(
+    (nextTerritories: RepTerritoryOverlay[]) => {
+      const map = mapRef.current;
+      if (!map || !mapReadyRef.current) {
+        return;
+      }
+
+      const source = map.getSource(REP_TERRITORIES_SOURCE_ID) as
+        | GeoJSONSource
+        | undefined;
+      source?.setData(territoriesToFeatureCollection(nextTerritories));
     },
     [],
   );
@@ -194,6 +234,31 @@ export function MapCanvas({
         if (cancelled) {
           return;
         }
+
+        map.addSource(REP_TERRITORIES_SOURCE_ID, {
+          type: "geojson",
+          data: emptyFeatureCollection(),
+        });
+
+        map.addLayer({
+          id: REP_TERRITORIES_FILL_LAYER_ID,
+          type: "fill",
+          source: REP_TERRITORIES_SOURCE_ID,
+          paint: {
+            "fill-color": REP_TERRITORY_FILL_COLOR,
+            "fill-opacity": 0.22,
+          },
+        });
+
+        map.addLayer({
+          id: REP_TERRITORIES_LINE_LAYER_ID,
+          type: "line",
+          source: REP_TERRITORIES_SOURCE_ID,
+          paint: {
+            "line-color": REP_TERRITORY_FILL_COLOR,
+            "line-width": 2,
+          },
+        });
 
         map.addSource(KNOCKS_SOURCE_ID, {
           type: "geojson",
@@ -335,7 +400,14 @@ export function MapCanvas({
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [token, syncKnocksToMap]);
+  }, [token, syncKnocksToMap, syncTerritoriesToMap]);
+
+  useEffect(() => {
+    if (!mapLoaded) {
+      return;
+    }
+    syncTerritoriesToMap(territoryOverlays);
+  }, [territoryOverlays, mapLoaded, syncTerritoriesToMap]);
 
   useEffect(() => {
     if (!mapLoaded) {

@@ -5,12 +5,13 @@ import { LeadNoteCompose } from "@/components/pipeline/lead-note-compose";
 import { formatNextActionCountdown } from "@/features/pipeline/format-pipeline-dates";
 import { formatStageChangeDisplay } from "@/features/pipeline/pipeline-stage-labels";
 import { formatKnockHistoryDate } from "@/features/knocks/format-knock-date";
+import { CALL_OUTCOME_LABELS } from "@/lib/call-outcome-labels";
 import { DOOR_OUTCOME_LABELS } from "@/lib/geo/door-outcome-colors";
+import { formatCallDurationMinutes } from "@/lib/validators/call-logs";
 import type { LeadDetailTimelineItem } from "@/lib/validators/lead-detail";
 
 type LeadDetailTimelineProps = {
   timeline: LeadDetailTimelineItem[];
-  callsAvailable: boolean;
   onAddNote?: (content: string) => Promise<void>;
   onScheduleFollowUp?: (input: {
     due_at: string;
@@ -19,9 +20,6 @@ type LeadDetailTimelineProps = {
   followUpComposeDisabled?: boolean;
   showPushPrompt?: boolean;
 };
-
-const CALLS_EMPTY_COPY =
-  "No calls logged yet — call tracking arrives in a future release.";
 
 function sortNewestFirst<T extends LeadDetailTimelineItem>(items: T[]): T[] {
   return [...items].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at));
@@ -114,12 +112,19 @@ function renderStageChangeItem(
 }
 
 function renderCallItem(item: Extract<LeadDetailTimelineItem, { kind: "call" }>) {
+  const duration = formatCallDurationMinutes(item.duration_seconds);
+  const metaParts = [
+    item.rep_name,
+    formatKnockHistoryDate(item.occurred_at),
+    duration,
+  ].filter(Boolean);
+
   return (
     <TimelineItemCard
       key={item.id}
-      title="Call"
-      meta={`${item.rep_name} · ${formatKnockHistoryDate(item.occurred_at)}`}
-      body={item.content}
+      title={CALL_OUTCOME_LABELS[item.outcome]}
+      meta={metaParts.join(" · ")}
+      body={item.notes || undefined}
     />
   );
 }
@@ -142,7 +147,6 @@ function renderFollowUpItem(
 
 export function LeadDetailTimeline({
   timeline,
-  callsAvailable,
   onAddNote,
   onScheduleFollowUp,
   followUpComposeDisabled = false,
@@ -181,9 +185,7 @@ export function LeadDetailTimeline({
     ),
   );
 
-  const callsEmptyCopy = callsAvailable
-    ? "No calls logged yet."
-    : CALLS_EMPTY_COPY;
+  const callsEmptyCopy = "No calls logged yet.";
 
   return (
     <div className="flex flex-col gap-6">

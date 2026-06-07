@@ -53,3 +53,14 @@ export type FollowUpUpdate = TablesUpdate<"follow_ups">;
 /** Row shape for `public.call_logs` */
 export type CallLog = Tables<"call_logs">;
 export type CallLogInsert = TablesInsert<"call_logs">;
+export type CallLogUpdate = TablesUpdate<"call_logs">;
+
+/** Row shape for `public.territories` */
+export type Territory = Tables<"territories">;
+export type TerritoryInsert = TablesInsert<"territories">;
+export type TerritoryUpdate = TablesUpdate<"territories">;
+
+/** Row shape for `public.territory_assignments` */
+export type TerritoryAssignment = Tables<"territory_assignments">;
+export type TerritoryAssignmentInsert = TablesInsert<"territory_assignments">;
+export type TerritoryAssignmentUpdate = TablesUpdate<"territory_assignments">;

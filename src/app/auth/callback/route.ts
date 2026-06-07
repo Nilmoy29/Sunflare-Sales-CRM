@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createRouteHandlerClient } from "@/lib/supabase/route-handler";
 
 /** Exchange auth code for session (SSR cookie flow). */
 export async function GET(request: Request) {
@@ -11,8 +11,10 @@ export async function GET(request: Request) {
   const recoveryDestination = "/reset-password/update";
   const inviteDestination = "/invite/accept";
 
-  const supabase = await createClient();
-  const withInviteCookie = async (response: NextResponse) => {
+  const withInviteCookie = async (
+    response: NextResponse,
+    supabase: Awaited<ReturnType<typeof createRouteHandlerClient>>["supabase"],
+  ) => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -31,14 +33,24 @@ export async function GET(request: Request) {
   };
 
   if (code) {
+    const response = NextResponse.redirect(`${origin}${next}`);
+    const { supabase } = await createRouteHandlerClient(response);
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      const response = NextResponse.redirect(`${origin}${next}`);
-      return next.startsWith("/invite") ? withInviteCookie(response) : response;
+      return next.startsWith("/invite")
+        ? withInviteCookie(response, supabase)
+        : response;
     }
   }
 
   if (tokenHash && type) {
+    const destination = next.startsWith("/reset-password")
+      ? next
+      : next.startsWith("/invite")
+        ? next
+        : recoveryDestination;
+    const response = NextResponse.redirect(`${origin}${destination}`);
+    const { supabase } = await createRouteHandlerClient(response);
     const { error } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
       type: type as
@@ -50,14 +62,8 @@ export async function GET(request: Request) {
         | "email",
     });
     if (!error) {
-      const destination = next.startsWith("/reset-password")
-        ? next
-        : next.startsWith("/invite")
-          ? next
-          : recoveryDestination;
-      const response = NextResponse.redirect(`${origin}${destination}`);
       return destination.startsWith("/invite")
-        ? withInviteCookie(response)
+        ? withInviteCookie(response, supabase)
         : response;
     }
   }

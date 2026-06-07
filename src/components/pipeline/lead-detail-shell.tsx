@@ -160,7 +160,6 @@ export function LeadDetailShell({
 
           <LeadDetailTimeline
             timeline={data.timeline}
-            callsAvailable={data.calls_available}
             onAddNote={handleAddNote}
             onScheduleFollowUp={handleScheduleFollowUp}
             followUpComposeDisabled={reloading}

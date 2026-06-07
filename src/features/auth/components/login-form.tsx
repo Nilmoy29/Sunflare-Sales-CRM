@@ -1,33 +1,95 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { loginAction, type LoginFormState } from "@/features/auth/actions";
-
-const initialState: LoginFormState = {};
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { getRoleHomePath, isSafeNextPath } from "@/lib/auth/paths";
+import { loginSchema } from "@/lib/validators/auth";
 
 type LoginFormProps = {
   nextPath?: string;
   initialError?: string;
 };
 
-export function LoginForm({ nextPath, initialError }: LoginFormProps) {
-  const router = useRouter();
-  const [state, formAction, pending] = useActionState(loginAction, {
-    ...initialState,
-    error: initialError,
-  });
+type LoginProfile = {
+  role: "admin" | "rep";
+  active: boolean;
+};
 
-  useEffect(() => {
-    if (state.redirectTo) {
-      router.push(state.redirectTo);
-      router.refresh();
+export function LoginForm({ nextPath, initialError }: LoginFormProps) {
+  const [error, setError] = useState(initialError);
+  const [pending, setPending] = useState(false);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (pending) return;
+
+    const form = event.currentTarget;
+    const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+    const password = (form.elements.namedItem("password") as HTMLInputElement)
+      .value;
+
+    const parsed = loginSchema.safeParse({ email, password });
+    if (!parsed.success) {
+      setError("Enter a valid email and password.");
+      return;
     }
-  }, [router, state.redirectTo]);
+
+    setPending(true);
+    setError(undefined);
+
+    const supabase = createClient();
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: parsed.data.email,
+      password: parsed.data.password,
+    });
+
+    if (signInError) {
+      setError("Invalid email or password.");
+      setPending(false);
+      return;
+    }
+
+    // Ensure session cookies are written before the server profile lookup.
+    await supabase.auth.getSession();
+
+    const profileRes = await fetch("/api/auth/profile", {
+      credentials: "same-origin",
+    });
+
+    if (!profileRes.ok) {
+      await supabase.auth.signOut();
+      if (profileRes.status === 404) {
+        setError(
+          "Your account profile is missing. Contact your administrator.",
+        );
+      } else {
+        setError("Sign in failed. Try again.");
+      }
+      setPending(false);
+      return;
+    }
+
+    const profile = (await profileRes.json()) as LoginProfile;
+
+    if (!profile.active) {
+      await supabase.auth.signOut();
+      setError("Your account is deactivated. Contact your administrator.");
+      setPending(false);
+      return;
+    }
+
+    const destination = isSafeNextPath(nextPath)
+      ? nextPath
+      : getRoleHomePath(profile.role);
+
+    window.location.assign(destination);
+  }
 
   return (
-    <form action={formAction} className="flex w-full max-w-sm flex-col gap-4">
-      {nextPath ? <input type="hidden" name="next" value={nextPath} /> : null}
+    <form
+      onSubmit={handleSubmit}
+      className="flex w-full max-w-sm flex-col gap-4"
+    >
       <div className="flex flex-col gap-1">
         <label htmlFor="email" className="text-sm font-medium text-zinc-700">
           Email
@@ -38,7 +100,8 @@ export function LoginForm({ nextPath, initialError }: LoginFormProps) {
           type="email"
           autoComplete="email"
           required
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200"
+          disabled={pending}
+          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200 disabled:opacity-60"
         />
       </div>
       <div className="flex flex-col gap-1">
@@ -52,12 +115,13 @@ export function LoginForm({ nextPath, initialError }: LoginFormProps) {
           autoComplete="current-password"
           required
           minLength={8}
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200"
+          disabled={pending}
+          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200 disabled:opacity-60"
         />
       </div>
-      {state.error ? (
+      {error ? (
         <p className="text-sm text-red-600" role="alert">
-          {state.error}
+          {error}
         </p>
       ) : null}
       <button

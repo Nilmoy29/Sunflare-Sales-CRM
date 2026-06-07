@@ -1,7 +1,10 @@
+import type { CallScriptResponse } from "@/lib/validators/call-script";
 import type {
   CreateCallBody,
   CreateCallResponse,
+  RepDailyCallCountResponse,
 } from "@/lib/validators/call-logs";
+import type { ContactCallHistoryResponse } from "@/lib/validators/lead-detail";
 import type { PromoteCallResponse } from "@/lib/validators/leads";
 import type {
   ContactSearchResponse,
@@ -22,6 +25,132 @@ export type CreateContactApiResult =
   | { status: "ok"; contact: ContactSummary }
   | { status: "duplicate"; contact: ContactSummary }
   | { status: "error"; message: string };
+
+export async function fetchCallScript(
+  signal?: AbortSignal,
+): Promise<CallScriptResponse> {
+  const res = await fetch("/api/v1/calls/script", {
+    credentials: "include",
+    signal,
+  });
+
+  const body = (await res.json()) as {
+    data?: CallScriptResponse;
+    error?: { code: string; message: string };
+  };
+
+  if (!res.ok) {
+    throw new Error(body.error?.message ?? "Failed to load call script");
+  }
+
+  if (!body.data) {
+    throw new Error("Invalid call script response");
+  }
+
+  return body.data;
+}
+
+export async function fetchAdminCallScript(
+  signal?: AbortSignal,
+): Promise<CallScriptResponse> {
+  const res = await fetch("/api/v1/admin/calls/script", {
+    credentials: "include",
+    signal,
+  });
+
+  const body = (await res.json()) as {
+    data?: CallScriptResponse;
+    error?: { code: string; message: string };
+  };
+
+  if (!res.ok) {
+    throw new Error(body.error?.message ?? "Failed to load call script");
+  }
+
+  if (!body.data) {
+    throw new Error("Invalid call script response");
+  }
+
+  return body.data;
+}
+
+export async function updateAdminCallScript(
+  body: string,
+): Promise<CallScriptResponse & { updated_at: string }> {
+  const res = await fetch("/api/v1/admin/calls/script", {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ body }),
+  });
+
+  const responseBody = (await res.json()) as {
+    data?: CallScriptResponse & { updated_at: string };
+    error?: { code: string; message: string };
+  };
+
+  if (!res.ok) {
+    throw new Error(responseBody.error?.message ?? "Failed to save call script");
+  }
+
+  if (!responseBody.data?.updated_at) {
+    throw new Error("Invalid call script response");
+  }
+
+  return responseBody.data;
+}
+
+export async function fetchRepDailyCallCount(
+  signal?: AbortSignal,
+  date?: string,
+): Promise<RepDailyCallCountResponse> {
+  const params = date ? new URLSearchParams({ date }) : undefined;
+  const query = params ? `?${params.toString()}` : "";
+  const res = await fetch(`/api/v1/calls/daily-count${query}`, {
+    credentials: "include",
+    signal,
+  });
+
+  const body = (await res.json()) as {
+    data?: RepDailyCallCountResponse;
+    error?: { code: string; message: string };
+  };
+
+  if (!res.ok) {
+    throw new Error(body.error?.message ?? "Failed to load daily call count");
+  }
+
+  if (!body.data) {
+    throw new Error("Invalid daily call count response");
+  }
+
+  return body.data;
+}
+
+export async function fetchContactCallHistory(
+  contactId: string,
+  signal?: AbortSignal,
+): Promise<ContactCallHistoryResponse> {
+  const res = await fetch(`/api/v1/contacts/${contactId}/calls`, {
+    credentials: "include",
+    signal,
+  });
+
+  const body = (await res.json()) as {
+    data?: ContactCallHistoryResponse;
+    error?: { code: string; message: string };
+  };
+
+  if (!res.ok) {
+    throw new Error(body.error?.message ?? "Failed to load call history");
+  }
+
+  if (!body.data) {
+    throw new Error("Invalid call history response");
+  }
+
+  return body.data;
+}
 
 export async function fetchContactSearch(
   query: string,

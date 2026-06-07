@@ -4,12 +4,17 @@ import { useEffect, useState } from "react";
 import { fetchMorningOverview } from "@/features/admin/api";
 import type { MorningOverviewResponse } from "@/lib/validators/dashboard-coaching";
 
-export function useMorningOverview() {
+export function useMorningOverview(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled ?? true;
   const [overview, setOverview] = useState<MorningOverviewResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loaded, setLoaded] = useState(!enabled);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     let cancelled = false;
     const controller = new AbortController();
 
@@ -21,6 +26,7 @@ export function useMorningOverview() {
         }
         setOverview(result);
         setError(null);
+        setLoaded(true);
       } catch (e: unknown) {
         if (cancelled) {
           return;
@@ -31,10 +37,7 @@ export function useMorningOverview() {
         setError(
           e instanceof Error ? e.message : "Could not load morning overview",
         );
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        setLoaded(true);
       }
     }
 
@@ -44,7 +47,11 @@ export function useMorningOverview() {
       cancelled = true;
       controller.abort();
     };
-  }, []);
+  }, [enabled]);
 
-  return { overview, loading, error };
+  return {
+    overview: enabled ? overview : null,
+    loading: enabled && !loaded,
+    error: enabled ? error : null,
+  };
 }
