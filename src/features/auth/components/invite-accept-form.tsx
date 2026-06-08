@@ -42,7 +42,7 @@ export function InviteAcceptForm({ initialError }: InviteAcceptFormProps) {
           name="name"
           type="text"
           required
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200"
+          className="min-h-11 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200"
         />
       </div>
 
@@ -54,7 +54,7 @@ export function InviteAcceptForm({ initialError }: InviteAcceptFormProps) {
           id="phone"
           name="phone"
           type="tel"
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200"
+          className="min-h-11 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200"
         />
       </div>
 
@@ -69,7 +69,7 @@ export function InviteAcceptForm({ initialError }: InviteAcceptFormProps) {
           required
           minLength={8}
           autoComplete="new-password"
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200"
+          className="min-h-11 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200"
         />
       </div>
 
@@ -87,7 +87,7 @@ export function InviteAcceptForm({ initialError }: InviteAcceptFormProps) {
           required
           minLength={8}
           autoComplete="new-password"
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200"
+          className="min-h-11 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200"
         />
       </div>
 

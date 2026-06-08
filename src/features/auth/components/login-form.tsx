@@ -101,7 +101,7 @@ export function LoginForm({ nextPath, initialError }: LoginFormProps) {
           autoComplete="email"
           required
           disabled={pending}
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200 disabled:opacity-60"
+          className="min-h-11 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200 disabled:opacity-60"
         />
       </div>
       <div className="flex flex-col gap-1">
@@ -116,7 +116,7 @@ export function LoginForm({ nextPath, initialError }: LoginFormProps) {
           required
           minLength={8}
           disabled={pending}
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200 disabled:opacity-60"
+          className="min-h-11 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-200 disabled:opacity-60"
         />
       </div>
       {error ? (
@@ -127,7 +127,7 @@ export function LoginForm({ nextPath, initialError }: LoginFormProps) {
       <button
         type="submit"
         disabled={pending}
-        className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60"
+        className="min-h-11 rounded-lg bg-zinc-900 px-4 text-base font-medium text-white hover:bg-zinc-800 disabled:opacity-60"
       >
         {pending ? "Signing in…" : "Sign in"}
       </button>

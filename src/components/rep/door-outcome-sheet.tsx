@@ -188,7 +188,7 @@ export function DoorOutcomeSheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby="door-outcome-sheet-title"
-        className="fixed inset-x-0 bottom-0 z-30 max-h-[85vh] overflow-y-auto rounded-t-2xl border-t border-zinc-300 bg-white p-4 pb-8 shadow-xl"
+        className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-2xl border-t border-zinc-300 bg-white p-4 sheet-bottom shadow-xl"
       >
         {territoryWarning && !territoryWarningDismissed ? (
           <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950">

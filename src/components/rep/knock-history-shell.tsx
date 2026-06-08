@@ -37,7 +37,7 @@ export function KnockHistoryShell() {
   const allOutcomesSelected = filters.outcomes === null;
 
   return (
-    <main className="flex flex-1 flex-col gap-6 bg-white p-4 md:p-8">
+    <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-white p-4 sm:gap-6 md:p-8">
       <div>
         <h1 className="text-2xl font-semibold text-zinc-950">Knock history</h1>
         <p className="mt-1 text-sm text-zinc-800">

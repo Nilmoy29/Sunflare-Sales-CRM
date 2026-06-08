@@ -148,7 +148,7 @@ export function RepMapShiftShell() {
               <OfflinePendingIndicator count={pendingCount} />
               {saveNotice ? (
                 <p
-                  className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-950 shadow-lg"
+                  className="max-w-[min(100%,20rem)] rounded-lg border border-zinc-300 bg-white px-4 py-2 text-center text-sm font-semibold text-zinc-950 shadow-lg"
                   role="status"
                   aria-live="polite"
                 >
@@ -181,29 +181,31 @@ export function RepMapShiftShell() {
             ) : null}
           </>
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-white p-8 text-center">
-            <h1 className="text-2xl font-semibold text-zinc-950">Rep map</h1>
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-white p-6 text-center sm:p-8">
+            <h1 className="text-xl font-semibold text-zinc-950 sm:text-2xl">
+              Rep map
+            </h1>
             <p className="max-w-md text-sm text-zinc-800">
               Start your shift to open the map, see your live location, and log
               door knocks on the route.
             </p>
           </div>
         )}
+        <ShiftControls
+          isActive={isActive}
+          loading={loading}
+          busy={busy}
+          error={error}
+          geoWarning={geoWarning}
+          pingWarning={pingWarning}
+          onStart={() => {
+            void onStart();
+          }}
+          onEnd={() => {
+            void onEnd();
+          }}
+        />
       </main>
-      <ShiftControls
-        isActive={isActive}
-        loading={loading}
-        busy={busy}
-        error={error}
-        geoWarning={geoWarning}
-        pingWarning={pingWarning}
-        onStart={() => {
-          void onStart();
-        }}
-        onEnd={() => {
-          void onEnd();
-        }}
-      />
       {lastEndedSummary ? (
         <ShiftEndSummarySheet
           summary={lastEndedSummary}

@@ -17,7 +17,7 @@ export function LogKnockButton({
     disabledReason ?? (disabled ? "Location unavailable" : null);
 
   return (
-    <div className="fixed bottom-20 left-4 z-10 flex max-w-[11rem] flex-col items-start gap-1">
+    <div className="absolute bottom-[5.25rem] left-4 z-10 flex max-w-[min(11rem,45vw)] flex-col items-start gap-1">
       <button
         type="button"
         onClick={onClick}

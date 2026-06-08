@@ -75,7 +75,7 @@ export function ContactQuickAddSheet({
       <form
         role="dialog"
         aria-labelledby="contact-quick-add-title"
-        className="fixed inset-x-0 bottom-0 z-30 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-white p-4 pb-8 shadow-xl ring-1 ring-zinc-200"
+        className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-white p-4 sheet-bottom shadow-xl ring-1 ring-zinc-200"
         onSubmit={handleSubmit}
       >
         <div className="mb-4 flex items-center justify-between">

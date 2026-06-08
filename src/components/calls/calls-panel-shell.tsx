@@ -125,9 +125,9 @@ export function CallsPanelShell() {
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-4 bg-white p-4 md:p-6">
+    <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-white p-4 md:p-6">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900">Calls</h1>
+        <h1 className="text-xl font-semibold text-zinc-900 sm:text-2xl">Calls</h1>
         {dailyCallCountError ? (
           <p className="mt-2 text-sm text-red-600" role="alert">
             {dailyCallCountError}

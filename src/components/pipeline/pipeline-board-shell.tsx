@@ -31,12 +31,12 @@ export function PipelineBoardShell({
 
   return (
     <main
-      className={`flex flex-1 flex-col gap-6 bg-white p-4 ${
+      className={`flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-white p-4 sm:gap-6 ${
         layout === "desktop" ? "md:p-8" : "md:p-6"
       }`}
     >
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900">{title}</h1>
+        <h1 className="text-xl font-semibold text-zinc-900 sm:text-2xl">{title}</h1>
         <p className="mt-1 text-sm text-zinc-600">{description}</p>
       </div>
 

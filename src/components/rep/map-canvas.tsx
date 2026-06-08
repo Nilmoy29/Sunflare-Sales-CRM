@@ -499,7 +499,7 @@ export function MapCanvas({
         type="button"
         onClick={recenter}
         disabled={!userLocation}
-        className="fixed bottom-6 left-4 z-10 flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-950 shadow-lg hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
+        className="absolute bottom-4 left-4 z-10 flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-950 shadow-lg hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60 touch-manipulation"
         aria-label="Recenter map on my location"
       >
         Recenter

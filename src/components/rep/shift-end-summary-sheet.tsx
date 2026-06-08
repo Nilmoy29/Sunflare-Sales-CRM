@@ -27,7 +27,7 @@ export function ShiftEndSummarySheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby="shift-end-summary-title"
-        className="fixed inset-x-0 bottom-0 z-30 rounded-t-2xl border-t border-zinc-300 bg-white p-4 pb-8 shadow-xl"
+        className="fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-t border-zinc-300 bg-white p-4 sheet-bottom shadow-xl"
       >
         <h2
           id="shift-end-summary-title"

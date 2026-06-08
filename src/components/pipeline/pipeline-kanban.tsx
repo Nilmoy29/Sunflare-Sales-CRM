@@ -50,7 +50,7 @@ type PendingLostMove = {
   lead: PipelineLeadCard;
 };
 
-const COLUMN_WIDTH_CLASS = "w-[260px] shrink-0";
+const COLUMN_WIDTH_CLASS = "w-[min(85vw,260px)] shrink-0 snap-start";
 
 function resolveDropStage(
   overId: string | undefined,
@@ -315,8 +315,8 @@ export function PipelineKanban({
           void handleDragEnd(event);
         }}
       >
-        <div className="overflow-x-auto pb-2">
-          <div className="flex min-w-max gap-4">
+        <div className="-mx-4 overflow-x-auto px-4 pb-2 snap-x snap-mandatory scroll-px-4 sm:mx-0 sm:px-0">
+          <div className="flex min-w-max gap-3 sm:gap-4">
             {PIPELINE_STAGE_ORDER.map((stage) => (
               <PipelineColumn
                 key={stage}
