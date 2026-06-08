@@ -1,5 +1,5 @@
-/** Sydney CBD — sensible AU default before geolocation resolves. */
-export const DEFAULT_MAP_CENTER: [number, number] = [151.2093, -33.8688];
+/** Hobart, Tasmania — default before geolocation resolves. */
+export const DEFAULT_MAP_CENTER: [number, number] = [147.3272, -42.8821];
 
 export const DEFAULT_MAP_ZOOM = 13;
 

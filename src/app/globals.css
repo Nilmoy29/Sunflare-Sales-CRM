@@ -34,15 +34,8 @@ body {
   color-scheme: light;
   --background: #ffffff;
   --foreground: #09090b;
-  --rep-mobile-nav-height: 3.5rem;
   background-color: #ffffff;
   color: #09090b;
-}
-
-@media (min-width: 768px) {
-  .rep-theme {
-    --rep-mobile-nav-height: 0px;
-  }
 }
 
 @utility pb-safe {

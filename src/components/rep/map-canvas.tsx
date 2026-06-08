@@ -42,6 +42,7 @@ const INTERACTIVE_LAYERS = [
 ];
 
 const MOVEEND_DEBOUNCE_MS = 300;
+const USER_LOCATION_ZOOM = 16;
 
 type MapCanvasProps = {
   userLocation: RepLocation | null;
@@ -140,6 +141,10 @@ export function MapCanvas({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onMapClickRef = useRef(onMapClick);
   const onPinClickRef = useRef(onPinClick);
+  const userLocationRef = useRef(userLocation);
+  const hasCenteredOnUserRef = useRef(false);
+
+  userLocationRef.current = userLocation;
 
   const token = getMapboxAccessToken();
   const tokenIssue = getMapboxClientTokenIssue();
@@ -223,13 +228,21 @@ export function MapCanvas({
 
       mapboxgl.accessToken = token;
 
-      const initialCenter = DEFAULT_MAP_CENTER;
+      const loc = userLocationRef.current;
+      const initialCenter: [number, number] = loc
+        ? [loc.lng, loc.lat]
+        : DEFAULT_MAP_CENTER;
+      const initialZoom = loc ? USER_LOCATION_ZOOM : DEFAULT_MAP_ZOOM;
+
+      if (loc) {
+        hasCenteredOnUserRef.current = true;
+      }
 
       const map = new mapboxgl.Map({
         container: containerRef.current,
         style: DEFAULT_MAP_STYLE,
         center: initialCenter,
-        zoom: DEFAULT_MAP_ZOOM,
+        zoom: initialZoom,
       });
 
       mapRef.current = map;
@@ -403,6 +416,7 @@ export function MapCanvas({
 
     return () => {
       cancelled = true;
+      hasCenteredOnUserRef.current = false;
       mapReadyRef.current = false;
       setMapLoaded(false);
       setMapError(null);
@@ -435,6 +449,23 @@ export function MapCanvas({
     updateUserMarker(userLocation.lat, userLocation.lng);
   }, [userLocation, mapLoaded, updateUserMarker]);
 
+  useEffect(() => {
+    if (!mapLoaded || !userLocation || hasCenteredOnUserRef.current) {
+      return;
+    }
+
+    const map = mapRef.current;
+    if (!map) {
+      return;
+    }
+
+    hasCenteredOnUserRef.current = true;
+    map.flyTo({
+      center: [userLocation.lng, userLocation.lat],
+      zoom: USER_LOCATION_ZOOM,
+    });
+  }, [userLocation, mapLoaded]);
+
   const recenter = useCallback(() => {
     const map = mapRef.current;
     if (!map || !userLocation) {
@@ -443,7 +474,7 @@ export function MapCanvas({
 
     map.flyTo({
       center: [userLocation.lng, userLocation.lat],
-      zoom: 16,
+      zoom: USER_LOCATION_ZOOM,
     });
   }, [userLocation]);
 

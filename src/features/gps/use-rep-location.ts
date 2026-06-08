@@ -25,14 +25,24 @@ export function useRepLocation(enabled: boolean) {
       return;
     }
 
+    const applyPosition = (position: GeolocationPosition) => {
+      setUserLocation({
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      });
+      setWatchGeoWarning(null);
+    };
+
+    navigator.geolocation.getCurrentPosition(applyPosition, () => {
+      // watchPosition may still succeed if this timed out or was denied once
+    }, {
+      enableHighAccuracy: true,
+      maximumAge: 10_000,
+      timeout: 15_000,
+    });
+
     const watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        setUserLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-        setWatchGeoWarning(null);
-      },
+      applyPosition,
       (e) => {
         setWatchGeoWarning(
           e instanceof GeolocationPositionError
