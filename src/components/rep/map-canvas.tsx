@@ -11,6 +11,7 @@ import {
   DEFAULT_MAP_STYLE,
   DEFAULT_MAP_ZOOM,
   getMapboxAccessToken,
+  getMapboxClientTokenIssue,
 } from "@/lib/geo/mapbox";
 import {
   clampMapBbox,
@@ -141,8 +142,10 @@ export function MapCanvas({
   const onPinClickRef = useRef(onPinClick);
 
   const token = getMapboxAccessToken();
+  const tokenIssue = getMapboxClientTokenIssue();
   const [bbox, setBbox] = useState<MapBbox | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   const { knocks, loading, error, truncated } = useMapKnocks(
     bbox,
@@ -205,11 +208,12 @@ export function MapCanvas({
   }, []);
 
   useEffect(() => {
-    if (!token || !containerRef.current) {
+    if (tokenIssue || !token || !containerRef.current) {
       return;
     }
 
     let cancelled = false;
+    setMapError(null);
 
     void (async () => {
       const mapboxgl = (await import("mapbox-gl")).default;
@@ -229,6 +233,13 @@ export function MapCanvas({
       });
 
       mapRef.current = map;
+
+      map.on("error", (event) => {
+        const message =
+          event.error?.message ??
+          "Map tiles failed to load. Check your Mapbox public token.";
+        setMapError(message);
+      });
 
       map.on("load", () => {
         if (cancelled) {
@@ -394,13 +405,14 @@ export function MapCanvas({
       cancelled = true;
       mapReadyRef.current = false;
       setMapLoaded(false);
+      setMapError(null);
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [token, syncKnocksToMap, syncTerritoriesToMap]);
+  }, [token, tokenIssue, syncKnocksToMap, syncTerritoriesToMap]);
 
   useEffect(() => {
     if (!mapLoaded) {
@@ -435,20 +447,41 @@ export function MapCanvas({
     });
   }, [userLocation]);
 
-  if (!token) {
+  if (tokenIssue === "missing") {
     return (
-      <div className="flex h-full flex-1 flex-col items-center justify-center gap-3 bg-zinc-50 p-8 text-center">
-        <p className="text-lg font-semibold text-zinc-900">Mapbox not configured</p>
-        <p className="max-w-md text-sm text-zinc-600">
+      <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center gap-3 bg-white p-8 text-center">
+        <p className="text-lg font-semibold text-zinc-950">Mapbox not configured</p>
+        <p className="max-w-md text-sm text-zinc-800">
           Add{" "}
           <code className="rounded bg-zinc-100 px-1 py-0.5">
             NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
           </code>{" "}
-          to <code className="rounded bg-zinc-100 px-1 py-0.5">.env.local</code>{" "}
-          when you have credentials. See{" "}
-          <span className="font-medium">docs/SETUP_KEYS.md</span> for setup
-          steps. Shift controls and the knock pins API work without the map
-          token. Tap-to-log requires the map once a token is configured.
+          (a public <code className="rounded bg-zinc-100 px-1 py-0.5">pk.</code>{" "}
+          token) to <code className="rounded bg-zinc-100 px-1 py-0.5">.env.local</code>.
+          See <span className="font-medium">docs/SETUP_KEYS.md</span>.
+        </p>
+      </div>
+    );
+  }
+
+  if (tokenIssue === "secret_token") {
+    return (
+      <div className="flex h-full min-h-0 flex-1 flex-col items-center justify-center gap-3 bg-white p-8 text-center">
+        <p className="text-lg font-semibold text-zinc-950">Wrong Mapbox token for the map</p>
+        <p className="max-w-md text-sm text-zinc-800">
+          <code className="rounded bg-zinc-100 px-1 py-0.5">
+            NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
+          </code>{" "}
+          must be a <strong>public</strong> token (
+          <code className="rounded bg-zinc-100 px-1 py-0.5">pk.</code>
+          ) with map scopes such as{" "}
+          <code className="rounded bg-zinc-100 px-1 py-0.5">STYLES:READ</code> and{" "}
+          <code className="rounded bg-zinc-100 px-1 py-0.5">STYLES:TILES</code>.
+          Your secret token (
+          <code className="rounded bg-zinc-100 px-1 py-0.5">sk.</code>
+          ) belongs in{" "}
+          <code className="rounded bg-zinc-100 px-1 py-0.5">MAPBOX_SECRET_TOKEN</code>{" "}
+          for address lookup only.
         </p>
       </div>
     );
@@ -456,37 +489,46 @@ export function MapCanvas({
 
   return (
     <div className="relative h-full min-h-0 w-full flex-1">
-      <div ref={containerRef} className="h-full w-full" aria-label="Rep map" />
+      <div
+        ref={containerRef}
+        className="h-full min-h-[240px] w-full"
+        aria-label="Rep map"
+      />
 
       <button
         type="button"
         onClick={recenter}
         disabled={!userLocation}
-        className="fixed bottom-6 left-4 z-10 flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-white px-4 py-2 text-sm font-semibold text-zinc-900 shadow-lg ring-1 ring-zinc-200 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
+        className="fixed bottom-6 left-4 z-10 flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-950 shadow-lg hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
         aria-label="Recenter map on my location"
       >
         Recenter
       </button>
 
-      {(loading || error || truncated || geoWarning) && (
+      {(mapError || loading || error || truncated || geoWarning) && (
         <div className="pointer-events-none absolute left-4 top-4 z-10 flex max-w-xs flex-col gap-2">
+          {mapError ? (
+            <p className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm font-medium text-red-950 shadow-sm">
+              {mapError}
+            </p>
+          ) : null}
           {geoWarning ? (
-            <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900 shadow-sm ring-1 ring-amber-200">
+            <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950 shadow-sm">
               {geoWarning}
             </p>
           ) : null}
           {loading ? (
-            <p className="rounded-lg bg-white/95 px-3 py-2 text-sm text-zinc-700 shadow-sm ring-1 ring-zinc-200">
+            <p className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-900 shadow-sm">
               Loading pins…
             </p>
           ) : null}
           {error ? (
-            <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900 shadow-sm ring-1 ring-amber-200">
+            <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950 shadow-sm">
               {error}
             </p>
           ) : null}
           {truncated ? (
-            <p className="rounded-lg bg-white/95 px-3 py-2 text-sm text-zinc-700 shadow-sm ring-1 ring-zinc-200">
+            <p className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-900 shadow-sm">
               Showing the 500 most recent pins in this area.
             </p>
           ) : null}

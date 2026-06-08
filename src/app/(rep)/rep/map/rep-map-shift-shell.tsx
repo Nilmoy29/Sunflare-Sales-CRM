@@ -24,7 +24,7 @@ const MapCanvas = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex flex-1 items-center justify-center text-sm text-zinc-600">
+      <div className="flex flex-1 items-center justify-center bg-white text-sm font-medium text-zinc-800">
         Loading map…
       </div>
     ),
@@ -148,7 +148,7 @@ export function RepMapShiftShell() {
               <OfflinePendingIndicator count={pendingCount} />
               {saveNotice ? (
                 <p
-                  className="rounded-lg bg-zinc-900/90 px-4 py-2 text-sm font-medium text-white shadow-lg"
+                  className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-950 shadow-lg"
                   role="status"
                   aria-live="polite"
                 >
@@ -181,9 +181,9 @@ export function RepMapShiftShell() {
             ) : null}
           </>
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-            <h1 className="text-2xl font-semibold text-zinc-900">Rep map</h1>
-            <p className="max-w-md text-sm text-zinc-600">
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-white p-8 text-center">
+            <h1 className="text-2xl font-semibold text-zinc-950">Rep map</h1>
+            <p className="max-w-md text-sm text-zinc-800">
               Start your shift to open the map, see your live location, and log
               door knocks on the route.
             </p>

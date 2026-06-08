@@ -31,7 +31,7 @@ export function PipelineBoardShell({
 
   return (
     <main
-      className={`flex flex-1 flex-col gap-6 p-4 ${
+      className={`flex flex-1 flex-col gap-6 bg-white p-4 ${
         layout === "desktop" ? "md:p-8" : "md:p-6"
       }`}
     >

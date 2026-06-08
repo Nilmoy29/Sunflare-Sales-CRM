@@ -10,8 +10,23 @@ export function getMapboxAccessToken(): string | null {
   return token || null;
 }
 
+/** Returns why the client map token is unusable, if any. */
+export function getMapboxClientTokenIssue():
+  | "missing"
+  | "secret_token"
+  | null {
+  const token = getMapboxAccessToken();
+  if (!token) {
+    return "missing";
+  }
+  if (token.startsWith("sk.")) {
+    return "secret_token";
+  }
+  return null;
+}
+
 export function isMapboxConfigured(): boolean {
-  return getMapboxAccessToken() !== null;
+  return getMapboxClientTokenIssue() === null;
 }
 
 /** Server-only — Mapbox Geocoding API (Story 2.6). */

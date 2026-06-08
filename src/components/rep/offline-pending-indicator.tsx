@@ -16,7 +16,7 @@ export function OfflinePendingIndicator({ count }: OfflinePendingIndicatorProps)
 
   return (
     <p
-      className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white shadow-sm"
+      className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-semibold text-zinc-950 shadow-md"
       aria-live="polite"
     >
       {label}

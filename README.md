@@ -44,6 +44,7 @@ Migrations in `supabase/migrations/` enable PostGIS, frozen PRD enums, `profiles
 | `npm run build` | Production build (uses `--webpack` for Serwist PWA service worker) |
 | `npm run lint` | ESLint |
 | `npm run start` | Start production server |
+| `npm run smoke` | Epic 1–7 smoke test (API + page checks; requires test users in `.env.local`) |
 
 ## Documentation
 

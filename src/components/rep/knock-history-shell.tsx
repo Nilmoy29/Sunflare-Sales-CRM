@@ -7,7 +7,7 @@ import {
 } from "@/features/knocks/format-knock-date";
 import { useKnockHistory } from "@/features/knocks/use-knock-history";
 import {
-  DOOR_OUTCOME_COLORS,
+  DOOR_OUTCOME_BUTTON_COLORS,
   DOOR_OUTCOME_LABELS,
 } from "@/lib/geo/door-outcome-colors";
 import { DOOR_OUTCOMES } from "@/lib/validators/enums";
@@ -37,12 +37,12 @@ export function KnockHistoryShell() {
   const allOutcomesSelected = filters.outcomes === null;
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-4 md:p-8">
+    <main className="flex flex-1 flex-col gap-6 bg-white p-4 md:p-8">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900">Knock history</h1>
-        <p className="mt-1 text-sm text-zinc-600">
+        <h1 className="text-2xl font-semibold text-zinc-950">Knock history</h1>
+        <p className="mt-1 text-sm text-zinc-800">
           Review your past door knocks.{" "}
-          <Link className="underline hover:text-zinc-900" href="/rep/map">
+          <Link className="font-medium underline decoration-zinc-400 underline-offset-2 hover:text-zinc-950" href="/rep/map">
             Back to map
           </Link>
         </p>
@@ -58,7 +58,7 @@ export function KnockHistoryShell() {
             type="date"
             value={filters.from}
             onChange={(e) => setFilters({ from: e.target.value })}
-            className="min-h-11 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900"
+            className="min-h-11 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950"
           />
         </div>
         <div className="space-y-1">
@@ -70,7 +70,7 @@ export function KnockHistoryShell() {
             type="date"
             value={filters.to}
             onChange={(e) => setFilters({ to: e.target.value })}
-            className="min-h-11 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900"
+            className="min-h-11 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950"
           />
         </div>
       </div>
@@ -84,7 +84,7 @@ export function KnockHistoryShell() {
             className={`min-h-11 rounded-lg px-3 py-2 text-sm font-semibold ring-2 ${
               allOutcomesSelected
                 ? "bg-zinc-900 text-white ring-zinc-900"
-                : "bg-white text-zinc-700 ring-zinc-200 hover:bg-zinc-50"
+                : "bg-white text-zinc-800 ring-zinc-300 hover:bg-zinc-50"
             }`}
             aria-pressed={allOutcomesSelected}
           >
@@ -99,9 +99,9 @@ export function KnockHistoryShell() {
                 type="button"
                 onClick={() => toggleOutcome(outcome)}
                 className={`min-h-11 rounded-lg px-3 py-2 text-sm font-semibold text-white ring-2 ${
-                  selected ? "ring-zinc-900" : "ring-transparent opacity-80"
+                  selected ? "ring-zinc-950" : "ring-zinc-300"
                 }`}
-                style={{ backgroundColor: DOOR_OUTCOME_COLORS[outcome] }}
+                style={{ backgroundColor: DOOR_OUTCOME_BUTTON_COLORS[outcome] }}
                 aria-pressed={selected}
               >
                 {DOOR_OUTCOME_LABELS[outcome]}
@@ -112,17 +112,17 @@ export function KnockHistoryShell() {
       </div>
 
       {error ? (
-        <p className="rounded-lg bg-zinc-50 px-3 py-2 text-sm text-zinc-600 ring-1 ring-zinc-200">
+        <p className="rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-800">
           {error}
         </p>
       ) : null}
 
       {loading && knocks.length === 0 ? (
-        <p className="text-sm text-zinc-500">Loading knocks…</p>
+        <p className="text-sm font-medium text-zinc-700">Loading knocks…</p>
       ) : null}
 
       {!loading && knocks.length === 0 && !error ? (
-        <p className="rounded-lg bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-600 ring-1 ring-zinc-200">
+        <p className="rounded-lg border border-zinc-300 bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-800">
           No knocks in this range
         </p>
       ) : null}
@@ -132,26 +132,26 @@ export function KnockHistoryShell() {
           {knocks.map((knock) => (
             <li
               key={knock.id}
-              className="rounded-lg bg-white p-4 ring-1 ring-zinc-200"
+              className="rounded-lg border border-zinc-300 bg-white p-4"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span
                   className="rounded-md px-2 py-0.5 text-xs font-semibold text-white"
                   style={{
-                    backgroundColor: DOOR_OUTCOME_COLORS[knock.outcome],
+                    backgroundColor: DOOR_OUTCOME_BUTTON_COLORS[knock.outcome],
                   }}
                 >
                   {DOOR_OUTCOME_LABELS[knock.outcome]}
                 </span>
-                <span className="text-sm text-zinc-600">
+                <span className="text-sm text-zinc-800">
                   {formatKnockHistoryDate(knock.knocked_at)}
                 </span>
               </div>
-              <p className="mt-2 text-sm font-medium text-zinc-900">
+              <p className="mt-2 text-sm font-semibold text-zinc-950">
                 {formatKnockAddress(knock)}
               </p>
               {knock.notes ? (
-                <p className="mt-1 text-sm text-zinc-600">
+                <p className="mt-1 text-sm text-zinc-800">
                   {truncateNotes(knock.notes)}
                 </p>
               ) : null}
@@ -165,7 +165,7 @@ export function KnockHistoryShell() {
           type="button"
           onClick={loadMore}
           disabled={loading}
-          className="min-h-11 rounded-lg border border-zinc-200 px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
+          className="min-h-11 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-50 disabled:opacity-60"
         >
           {loading ? "Loading…" : "Load more"}
         </button>

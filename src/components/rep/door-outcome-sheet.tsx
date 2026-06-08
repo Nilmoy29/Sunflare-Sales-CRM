@@ -9,7 +9,7 @@ import {
 import { submitKnock, type SubmitKnockResult } from "@/features/knocks/submit-knock";
 import { usePriorKnocks } from "@/features/knocks/use-prior-knocks";
 import {
-  DOOR_OUTCOME_COLORS,
+  DOOR_OUTCOME_BUTTON_COLORS,
   DOOR_OUTCOME_LABELS,
 } from "@/lib/geo/door-outcome-colors";
 import type { DoorOutcome } from "@/lib/validators/enums";
@@ -188,10 +188,10 @@ export function DoorOutcomeSheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby="door-outcome-sheet-title"
-        className="fixed inset-x-0 bottom-0 z-30 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-white p-4 pb-8 shadow-xl ring-1 ring-zinc-200"
+        className="fixed inset-x-0 bottom-0 z-30 max-h-[85vh] overflow-y-auto rounded-t-2xl border-t border-zinc-300 bg-white p-4 pb-8 shadow-xl"
       >
         {territoryWarning && !territoryWarningDismissed ? (
-          <div className="mb-4 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900 ring-1 ring-amber-200">
+          <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950">
             <p className="flex-1">{territoryWarning}</p>
             <button
               type="button"
@@ -207,11 +207,11 @@ export function DoorOutcomeSheet({
           <div>
             <h2
               id="door-outcome-sheet-title"
-              className="text-lg font-semibold text-zinc-900"
+              className="text-lg font-semibold text-zinc-950"
             >
               Log door knock
             </h2>
-            <p className="mt-1 font-mono text-sm text-zinc-600">
+            <p className="mt-1 font-mono text-sm text-zinc-800">
               {draft.lat.toFixed(6)}, {draft.lng.toFixed(6)}
             </p>
           </div>
@@ -219,7 +219,7 @@ export function DoorOutcomeSheet({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-60"
+            className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-zinc-800 hover:bg-zinc-100 hover:text-zinc-950 disabled:opacity-60"
             aria-label="Close"
           >
             <span aria-hidden className="text-2xl leading-none">
@@ -240,7 +240,7 @@ export function DoorOutcomeSheet({
 
         {!historyOffline && duplicateAlert ? (
           <div
-            className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-950 ring-1 ring-amber-200"
+            className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950"
             role="status"
           >
             Already knocked today by {duplicateAlert.rep_name} at{" "}
@@ -253,23 +253,23 @@ export function DoorOutcomeSheet({
           <div className="mb-4 space-y-2">
             <p className="text-sm font-medium text-zinc-900">Prior knocks</p>
             {historyLoading ? (
-              <p className="text-sm text-zinc-500">Loading history…</p>
+              <p className="text-sm font-medium text-zinc-700">Loading history…</p>
             ) : (
               <ul className="space-y-2">
                 {priorKnocks.map((knock) => (
                   <li
                     key={knock.id}
-                    className="flex items-center justify-between gap-2 rounded-lg bg-zinc-50 px-3 py-2 text-sm ring-1 ring-zinc-200"
+                    className="flex items-center justify-between gap-2 rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm"
                   >
                     <span
                       className="rounded-md px-2 py-0.5 text-xs font-semibold text-white"
                       style={{
-                        backgroundColor: DOOR_OUTCOME_COLORS[knock.outcome],
+                        backgroundColor: DOOR_OUTCOME_BUTTON_COLORS[knock.outcome],
                       }}
                     >
                       {DOOR_OUTCOME_LABELS[knock.outcome]}
                     </span>
-                    <span className="text-zinc-600">
+                    <span className="text-zinc-800">
                       {formatKnockHistoryDate(knock.knocked_at)}
                     </span>
                     <span className="font-medium text-zinc-900">
@@ -285,7 +285,7 @@ export function DoorOutcomeSheet({
         <div className="space-y-3">
           <p className="text-sm font-medium text-zinc-900">Address</p>
           {geocodeLoading ? (
-            <p className="text-sm text-zinc-500">Looking up address…</p>
+            <p className="text-sm font-medium text-zinc-700">Looking up address…</p>
           ) : null}
           <div className="space-y-2">
             <label htmlFor="knock-address" className="sr-only">
@@ -299,7 +299,7 @@ export function DoorOutcomeSheet({
               disabled={addressFieldsDisabled}
               maxLength={ADDRESS_MAX_LENGTH}
               placeholder="Street address"
-              className="min-h-11 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 disabled:bg-zinc-50"
+              className="min-h-11 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 disabled:bg-zinc-50"
             />
             <div className="grid grid-cols-2 gap-2">
               <div>
@@ -314,7 +314,7 @@ export function DoorOutcomeSheet({
                   disabled={addressFieldsDisabled}
                   maxLength={SUBURB_MAX_LENGTH}
                   placeholder="Suburb"
-                  className="min-h-11 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 disabled:bg-zinc-50"
+                  className="min-h-11 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 disabled:bg-zinc-50"
                 />
               </div>
               <div>
@@ -330,13 +330,13 @@ export function DoorOutcomeSheet({
                   disabled={addressFieldsDisabled}
                   maxLength={POSTCODE_MAX_LENGTH}
                   placeholder="Postcode"
-                  className="min-h-11 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 disabled:bg-zinc-50"
+                  className="min-h-11 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 disabled:bg-zinc-50"
                 />
               </div>
             </div>
           </div>
           {geocodeHint ? (
-            <p className="rounded-lg bg-zinc-50 px-3 py-2 text-sm text-zinc-600 ring-1 ring-zinc-200">
+            <p className="rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-800">
               {geocodeHint}
             </p>
           ) : null}
@@ -354,10 +354,10 @@ export function DoorOutcomeSheet({
                   onClick={() => setSelectedOutcome(outcome)}
                   disabled={submitting}
                   className={`min-h-11 rounded-lg px-3 py-2 text-sm font-semibold text-white shadow-sm ring-2 disabled:opacity-60 ${
-                    selected ? "ring-zinc-900" : "ring-transparent"
+                    selected ? "ring-zinc-950" : "ring-zinc-300"
                   }`}
                   style={{
-                    backgroundColor: DOOR_OUTCOME_COLORS[outcome],
+                    backgroundColor: DOOR_OUTCOME_BUTTON_COLORS[outcome],
                   }}
                   aria-pressed={selected}
                 >
@@ -388,7 +388,7 @@ export function DoorOutcomeSheet({
             disabled={submitting}
             maxLength={NOTES_MAX_LENGTH}
             rows={2}
-            className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900"
+            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950"
             placeholder="Quick notes…"
           />
         </div>
@@ -411,7 +411,7 @@ export function DoorOutcomeSheet({
         </div>
 
         {error ? (
-          <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900 ring-1 ring-amber-200">
+          <p className="mt-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950">
             {error}
           </p>
         ) : null}
@@ -421,7 +421,7 @@ export function DoorOutcomeSheet({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="min-h-11 flex-1 rounded-lg border border-zinc-200 px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
+            className="min-h-11 flex-1 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-50 disabled:opacity-60"
           >
             Cancel
           </button>

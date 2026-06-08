@@ -19,4 +19,14 @@ export const CALL_OUTCOME_COLORS = {
   callback_scheduled: "#3b82f6",
 } as const satisfies Record<CallOutcome, string>;
 
+/** Darker shades for buttons — white label text meets contrast outdoors. */
+export const CALL_OUTCOME_BUTTON_COLORS = {
+  answered_interested: "#15803d",
+  answered_not_interested: "#b91c1c",
+  voicemail: "#a16207",
+  no_answer: "#475569",
+  wrong_number: "#c2410c",
+  callback_scheduled: "#1d4ed8",
+} as const satisfies Record<CallOutcome, string>;
+
 export { CALL_OUTCOMES };

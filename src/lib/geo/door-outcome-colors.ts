@@ -11,6 +11,16 @@ export const DOOR_OUTCOME_COLORS = {
   already_has_solar: "#a855f7",
 } as const satisfies Record<DoorOutcome, string>;
 
+/** Darker shades for buttons — white label text meets contrast outdoors. */
+export const DOOR_OUTCOME_BUTTON_COLORS = {
+  interested: "#15803d",
+  not_home: "#a16207",
+  not_interested: "#b91c1c",
+  do_not_knock: "#1f2937",
+  callback_requested: "#1d4ed8",
+  already_has_solar: "#7e22ce",
+} as const satisfies Record<DoorOutcome, string>;
+
 export const DOOR_OUTCOME_LABELS = {
   interested: "Interested",
   not_home: "Not home",

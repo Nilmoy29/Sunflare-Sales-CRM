@@ -104,7 +104,9 @@ where id = '<paste-user-uuid-from-auth-users>';
 3. Default public scopes are fine for client map display
 4. Copy token → `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` in `.env.local`
 
-**Secret** token (Story 2.6 — reverse geocoding): same page, create a second token with **Geocoding API** scope only → `MAPBOX_SECRET_TOKEN` in `.env.local`. Never expose this token to the browser.
+**Important:** The browser map requires a **public** token (`pk.…`) with map scopes (e.g. `STYLES:READ`, `STYLES:TILES`). Do not put your secret token here — the map will stay black.
+
+**Secret** token (Story 2.6 — reverse geocoding): create a **second** token with secret scopes → `MAPBOX_SECRET_TOKEN` in `.env.local`. Never expose this token to the browser.
 
 Without `MAPBOX_SECRET_TOKEN`, reps can still log knocks and type addresses manually; the map UI only needs `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN`.
 

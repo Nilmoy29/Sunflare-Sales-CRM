@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createCall } from "@/features/calls/api";
 import {
-  CALL_OUTCOME_COLORS,
+  CALL_OUTCOME_BUTTON_COLORS,
   CALL_OUTCOME_LABELS,
   CALL_OUTCOMES,
 } from "@/lib/call-outcome-labels";
@@ -125,10 +125,10 @@ export function CallLogForm({ contactId, onLogged }: CallLogFormProps) {
                 onClick={() => setSelectedOutcome(outcome)}
                 disabled={submitting}
                 className={`min-h-11 rounded-lg px-3 py-2 text-sm font-semibold text-white shadow-sm ring-2 disabled:opacity-60 ${
-                  selected ? "ring-zinc-900" : "ring-transparent"
+                  selected ? "ring-zinc-950" : "ring-zinc-300"
                 }`}
                 style={{
-                  backgroundColor: CALL_OUTCOME_COLORS[outcome],
+                  backgroundColor: CALL_OUTCOME_BUTTON_COLORS[outcome],
                 }}
                 aria-pressed={selected}
               >

@@ -33,20 +33,20 @@ export function ShiftControls({
       {warnings.map((message) => (
         <p
           key={message}
-          className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900 shadow-sm ring-1 ring-amber-200"
+          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950 shadow-sm"
         >
           {message}
         </p>
       ))}
 
-      <div className="rounded-xl bg-white p-3 shadow-lg ring-1 ring-zinc-200">
+      <div className="rounded-xl border border-zinc-300 bg-white p-3 shadow-lg">
         {loading ? (
-          <p className="min-h-11 min-w-11 px-3 py-2 text-sm text-zinc-600">
+          <p className="min-h-11 min-w-11 px-3 py-2 text-sm font-medium text-zinc-800">
             Loading shift…
           </p>
         ) : isActive ? (
           <div className="flex flex-col gap-2">
-            <p className="flex items-center gap-2 text-sm font-medium text-emerald-700">
+            <p className="flex items-center gap-2 text-sm font-semibold text-emerald-800">
               <span
                 className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500"
                 aria-hidden

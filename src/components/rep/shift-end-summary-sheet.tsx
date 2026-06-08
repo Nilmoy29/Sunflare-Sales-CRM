@@ -27,52 +27,52 @@ export function ShiftEndSummarySheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby="shift-end-summary-title"
-        className="fixed inset-x-0 bottom-0 z-30 rounded-t-2xl bg-white p-4 pb-8 shadow-xl ring-1 ring-zinc-200"
+        className="fixed inset-x-0 bottom-0 z-30 rounded-t-2xl border-t border-zinc-300 bg-white p-4 pb-8 shadow-xl"
       >
         <h2
           id="shift-end-summary-title"
-          className="text-lg font-semibold text-zinc-900"
+          className="text-lg font-semibold text-zinc-950"
         >
           Shift complete
         </h2>
-        <p className="mt-1 text-sm text-zinc-600">{subtitle}</p>
+        <p className="mt-1 text-sm text-zinc-800">{subtitle}</p>
 
         <dl className="mt-4 grid grid-cols-2 gap-3">
-          <div className="rounded-lg bg-zinc-50 px-3 py-2 ring-1 ring-zinc-200">
-            <dt className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+          <div className="rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2">
+            <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-700">
               Doors
             </dt>
-            <dd className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900">
+            <dd className="mt-1 text-2xl font-semibold tabular-nums text-zinc-950">
               {summary.doors}
             </dd>
           </div>
-          <div className="rounded-lg bg-zinc-50 px-3 py-2 ring-1 ring-zinc-200">
-            <dt className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+          <div className="rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2">
+            <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-700">
               Calls
             </dt>
-            <dd className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900">
+            <dd className="mt-1 text-2xl font-semibold tabular-nums text-zinc-950">
               {summary.calls}
             </dd>
           </div>
-          <div className="rounded-lg bg-zinc-50 px-3 py-2 ring-1 ring-zinc-200">
-            <dt className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+          <div className="rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2">
+            <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-700">
               Leads
             </dt>
-            <dd className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900">
+            <dd className="mt-1 text-2xl font-semibold tabular-nums text-zinc-950">
               {summary.leads_added}
             </dd>
           </div>
-          <div className="rounded-lg bg-zinc-50 px-3 py-2 ring-1 ring-zinc-200">
-            <dt className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+          <div className="rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2">
+            <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-700">
               Appts
             </dt>
-            <dd className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900">
+            <dd className="mt-1 text-2xl font-semibold tabular-nums text-zinc-950">
               {summary.appointments_set}
             </dd>
           </div>
         </dl>
 
-        <p className="mt-4 text-sm text-zinc-600">
+        <p className="mt-4 text-sm text-zinc-800">
           {summary.doors} doors · {summary.calls} calls · {summary.leads_added}{" "}
           leads · {summary.appointments_set} appts
         </p>
