@@ -4,7 +4,7 @@ baseline_commit: NO_VCS
 
 # Story 1.5: Admin User Management
 
-Status: review
+Status: done
 
 ## Story
 
@@ -155,5 +155,5 @@ Codex 5.3
 
 ## Story Completion Status
 
-- **Status:** review
+- **Status:** done
 - **Completion note:** Admin user management workflow implemented with server-enforced role checks and passing build.

@@ -6,7 +6,7 @@ import {
   fetchCurrentShift,
   startShift,
 } from "@/features/shifts/api";
-import type { RepDailySummary, ShiftSummary } from "@/lib/validators/shifts";
+import type { RepShiftSummary, ShiftSummary } from "@/lib/validators/shifts";
 
 export function useActiveShift() {
   const [shift, setShift] = useState<ShiftSummary | null>(null);
@@ -14,7 +14,7 @@ export function useActiveShift() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastEndedSummary, setLastEndedSummary] =
-    useState<RepDailySummary | null>(null);
+    useState<RepShiftSummary | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,7 +67,7 @@ export function useActiveShift() {
     try {
       const result = await endShift();
       setShift(null);
-      setLastEndedSummary(result.daily_summary);
+      setLastEndedSummary(result.shift_summary);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to end shift");
     } finally {

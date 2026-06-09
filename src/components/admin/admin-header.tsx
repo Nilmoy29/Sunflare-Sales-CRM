@@ -37,7 +37,7 @@ export function AdminHeader({ name }: AdminHeaderProps) {
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
             Admin
           </p>
-          <p className="truncate text-sm font-medium">{name}</p>
+          <p className="truncate text-sm font-medium text-zinc-900">{name}</p>
         </div>
 
         <nav

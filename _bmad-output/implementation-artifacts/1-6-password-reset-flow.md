@@ -4,7 +4,7 @@ baseline_commit: NO_VCS
 
 # Story 1.6: Password Reset Flow
 
-Status: review
+Status: done
 
 ## Story
 
@@ -138,5 +138,5 @@ Codex 5.3
 
 ## Story Completion Status
 
-- **Status:** review
+- **Status:** done
 - **Completion note:** Password reset flow implemented with clear invalid-link handling and passing build.

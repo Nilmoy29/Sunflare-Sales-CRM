@@ -851,6 +851,9 @@ export type Database = {
         | "do_not_knock"
         | "callback_requested"
         | "already_has_solar"
+        | "decision_maker_missing"
+        | "selling_the_house"
+        | "rental"
       lead_activity_type: "note" | "stage_change" | "call" | "knock"
       lead_source: "d2d" | "call"
       lead_stage:
@@ -1005,6 +1008,9 @@ export const Constants = {
         "do_not_knock",
         "callback_requested",
         "already_has_solar",
+        "decision_maker_missing",
+        "selling_the_house",
+        "rental",
       ],
       lead_activity_type: ["note", "stage_change", "call", "knock"],
       lead_source: ["d2d", "call"],

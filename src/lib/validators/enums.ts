@@ -13,6 +13,9 @@ export const DOOR_OUTCOMES = [
   "do_not_knock",
   "callback_requested",
   "already_has_solar",
+  "decision_maker_missing",
+  "selling_the_house",
+  "rental",
 ] as const;
 export const doorOutcomeSchema = z.enum(DOOR_OUTCOMES);
 export type DoorOutcome = z.infer<typeof doorOutcomeSchema>;

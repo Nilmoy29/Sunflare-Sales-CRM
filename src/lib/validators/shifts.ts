@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { sydneyDateStringSchema } from "@/lib/validators/dashboard-date-range";
+import { doorOutcomeSchema } from "@/lib/validators/enums";
 
 /** ~2 minutes — NFR7 */
 export const GPS_PING_INTERVAL_MS = 120_000;
@@ -14,21 +15,32 @@ export const shiftSummarySchema = z.object({
 
 export type ShiftSummary = z.infer<typeof shiftSummarySchema>;
 
-export const repDailySummarySchema = z.object({
+export const doorOutcomeCountSchema = z.object({
+  outcome: doorOutcomeSchema,
+  count: countSchema,
+});
+
+export type DoorOutcomeCount = z.infer<typeof doorOutcomeCountSchema>;
+
+export const repShiftSummarySchema = z.object({
   date: sydneyDateStringSchema,
   doors: countSchema,
+  door_outcomes: z.array(doorOutcomeCountSchema),
   calls: countSchema,
   leads_added: countSchema,
   appointments_set: countSchema,
 });
 
-export type RepDailySummary = z.infer<typeof repDailySummarySchema>;
+export type RepShiftSummary = z.infer<typeof repShiftSummarySchema>;
+
+/** @deprecated Use RepShiftSummary */
+export type RepDailySummary = RepShiftSummary;
 
 export const shiftEndResponseSchema = z.object({
   id: z.string().uuid(),
   started_at: z.string(),
   ended_at: z.string(),
-  daily_summary: repDailySummarySchema,
+  shift_summary: repShiftSummarySchema,
 });
 
 export type ShiftEndResponse = z.infer<typeof shiftEndResponseSchema>;

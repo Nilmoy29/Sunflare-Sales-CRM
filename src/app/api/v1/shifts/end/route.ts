@@ -1,7 +1,7 @@
 import { apiError, apiSuccess } from "@/lib/api/response";
 import { requireRoleForApi } from "@/lib/auth/guards";
 import { formatSydneyDateString } from "@/features/knocks/format-knock-date";
-import { getRepDailySummaryForDate } from "@/features/shifts/get-rep-daily-summary";
+import { getRepShiftSummary } from "@/features/shifts/get-rep-shift-summary";
 import { getActiveShiftForRep } from "@/features/shifts/queries";
 import { createClient } from "@/lib/supabase/server";
 import { shiftEndResponseSchema } from "@/lib/validators/shifts";
@@ -39,13 +39,17 @@ export async function POST() {
   };
 
   const date = formatSydneyDateString(new Date(endedAt));
-  const counts = await getRepDailySummaryForDate(auth.id, date);
+  const counts = await getRepShiftSummary(
+    auth.id,
+    closedShift.started_at,
+    closedShift.ended_at,
+  );
 
   const payload = {
     id: closedShift.id,
     started_at: closedShift.started_at,
     ended_at: closedShift.ended_at,
-    daily_summary: {
+    shift_summary: {
       date,
       ...counts,
     },
@@ -55,9 +59,10 @@ export async function POST() {
   if (!parsed.success) {
     return apiSuccess({
       ...payload,
-      daily_summary: {
+      shift_summary: {
         date,
         doors: 0,
+        door_outcomes: [],
         calls: 0,
         leads_added: 0,
         appointments_set: 0,

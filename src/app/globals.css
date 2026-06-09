@@ -29,8 +29,9 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
-/* Field rep UI — always light with high contrast for outdoor / sunlight use */
-.rep-theme {
+/* Field rep + admin UI — always light with high contrast (ignore OS dark mode) */
+.rep-theme,
+.admin-theme {
   color-scheme: light;
   --background: #ffffff;
   --foreground: #09090b;
@@ -47,24 +48,29 @@ body {
 }
 
 @media (prefers-color-scheme: dark) {
-  .rep-theme {
+  .rep-theme,
+  .admin-theme {
     --background: #ffffff;
     --foreground: #09090b;
   }
 }
 
-.rep-theme .text-zinc-500 {
+.rep-theme .text-zinc-500,
+.admin-theme .text-zinc-500 {
   color: var(--color-zinc-700);
 }
 
-.rep-theme .text-zinc-600 {
+.rep-theme .text-zinc-600,
+.admin-theme .text-zinc-600 {
   color: var(--color-zinc-800);
 }
 
-.rep-theme .border-zinc-200 {
+.rep-theme .border-zinc-200,
+.admin-theme .border-zinc-200 {
   border-color: var(--color-zinc-300);
 }
 
-.rep-theme .ring-zinc-200 {
+.rep-theme .ring-zinc-200,
+.admin-theme .ring-zinc-200 {
   --tw-ring-color: var(--color-zinc-300);
 }

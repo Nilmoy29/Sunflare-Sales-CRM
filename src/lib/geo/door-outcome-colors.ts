@@ -9,6 +9,9 @@ export const DOOR_OUTCOME_COLORS = {
   do_not_knock: "#374151",
   callback_requested: "#3b82f6",
   already_has_solar: "#a855f7",
+  decision_maker_missing: "#f97316",
+  selling_the_house: "#14b8a6",
+  rental: "#ec4899",
 } as const satisfies Record<DoorOutcome, string>;
 
 /** Darker shades for buttons — white label text meets contrast outdoors. */
@@ -19,6 +22,9 @@ export const DOOR_OUTCOME_BUTTON_COLORS = {
   do_not_knock: "#1f2937",
   callback_requested: "#1d4ed8",
   already_has_solar: "#7e22ce",
+  decision_maker_missing: "#c2410c",
+  selling_the_house: "#0f766e",
+  rental: "#be185d",
 } as const satisfies Record<DoorOutcome, string>;
 
 export const DOOR_OUTCOME_LABELS = {
@@ -28,6 +34,9 @@ export const DOOR_OUTCOME_LABELS = {
   do_not_knock: "Do not knock",
   callback_requested: "Callback",
   already_has_solar: "Has solar",
+  decision_maker_missing: "Decision maker missing",
+  selling_the_house: "Selling the house",
+  rental: "Rental",
 } as const satisfies Record<DoorOutcome, string>;
 
 const DEFAULT_PIN_COLOR = "#64748b";

@@ -4,7 +4,7 @@ baseline_commit: NO_VCS
 
 # Story 1.4: Rep Profile Fields and Self View
 
-Status: review
+Status: done
 
 ## Story
 
@@ -149,5 +149,5 @@ Codex 5.3
 
 ## Story Completion Status
 
-- **Status:** review
+- **Status:** done
 - **Completion note:** Rep profile self-view/edit implemented with MCP-backed schema update and passing build.

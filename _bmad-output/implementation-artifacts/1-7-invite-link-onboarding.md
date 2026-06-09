@@ -4,7 +4,7 @@ baseline_commit: NO_VCS
 
 # Story 1.7: Invite Link Onboarding
 
-Status: review
+Status: done
 
 ## Story
 
@@ -149,5 +149,5 @@ Codex 5.3
 
 ## Story Completion Status
 
-- **Status:** review
+- **Status:** done
 - **Completion note:** Invite onboarding flow implemented and verified with production build.
