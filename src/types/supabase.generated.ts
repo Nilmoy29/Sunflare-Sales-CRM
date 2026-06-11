@@ -608,6 +608,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      count_rep_interested_leads: {
+        Args: { p_from: string; p_rep_id: string; p_to: string }
+        Returns: number
+      }
       create_call_log: {
         Args: {
           p_contact_id: string
@@ -701,6 +705,24 @@ export type Database = {
           rep_name: string
         }[]
       }
+      get_admin_funnel_conversion: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          count: number
+          label: string
+          sort_order: number
+          stage_key: string
+        }[]
+      }
+      get_admin_geographic_yield: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          doors: number
+          interested: number
+          leads_added: number
+          suburb: string
+        }[]
+      }
       get_admin_knocks_in_bbox: {
         Args: {
           p_east: number
@@ -736,6 +758,25 @@ export type Database = {
           shift_started_at: string
         }[]
       }
+      get_admin_rep_activity_trend: {
+        Args: { p_from: string; p_rep_id: string; p_to: string }
+        Returns: {
+          activity_date: string
+          appointments_set: number
+          calls: number
+          doors: number
+          leads_added: number
+        }[]
+      }
+      get_admin_rep_pipeline_snapshot: {
+        Args: { p_rep_id: string }
+        Returns: {
+          count: number
+          label: string
+          sort_order: number
+          stage_key: string
+        }[]
+      }
       get_knocks_in_bbox: {
         Args: {
           p_east: number
@@ -766,6 +807,14 @@ export type Database = {
           outcome: Database["public"]["Enums"]["door_outcome"]
           rep_id: string
           rep_name: string
+        }[]
+      }
+      get_rep_territories_for_date: {
+        Args: { p_assigned_date: string }
+        Returns: {
+          geometry: Json
+          id: string
+          name: string
         }[]
       }
       get_territories_for_admin: {
@@ -805,6 +854,10 @@ export type Database = {
           lead_created: boolean
           lead_id: string
         }[]
+      }
+      rep_can_knock_contact: {
+        Args: { p_contact_id: string }
+        Returns: boolean
       }
       search_contacts_for_calls: {
         Args: { p_limit?: number; p_query: string }

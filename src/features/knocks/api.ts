@@ -2,6 +2,7 @@ import type {
   AdminKnockPin,
   CreateKnockBody,
   CreateKnockResponse,
+  KnockHistoryItem,
   KnockHistoryQuery,
   KnockHistoryResponse,
   KnockPin,
@@ -9,6 +10,7 @@ import type {
   MapBbox,
   SyncKnockItem,
   SyncKnockResult,
+  UpdateKnockBody,
 } from "@/lib/validators/knocks";
 import type { DoorOutcome } from "@/lib/validators/enums";
 import type { ReverseGeocodeResult } from "@/lib/validators/geocode";
@@ -25,8 +27,8 @@ export type KnocksInBboxResponse = {
 
 export type AdminKnocksInBboxParams = {
   bbox: MapBbox;
-  from: string;
-  to: string;
+  from: string | null;
+  to: string | null;
   repIds: string[] | null;
   outcomes: DoorOutcome[] | null;
 };
@@ -72,9 +74,14 @@ export async function fetchAdminKnocksInBbox(
 ): Promise<AdminKnocksInBboxResponse> {
   const searchParams = new URLSearchParams({
     bbox: bboxToQuery(params.bbox),
-    from: params.from,
-    to: params.to,
   });
+
+  if (params.from) {
+    searchParams.set("from", params.from);
+  }
+  if (params.to) {
+    searchParams.set("to", params.to);
+  }
 
   if (params.repIds !== null) {
     for (const repId of params.repIds) {
@@ -228,6 +235,67 @@ export async function fetchKnocksNear(
   }
 
   return body.data;
+}
+
+export type UpdateKnockApiResult =
+  | { status: "ok"; knock: KnockHistoryItem }
+  | { status: "error"; message: string };
+
+export type DeleteKnockApiResult =
+  | { status: "ok" }
+  | { status: "error"; message: string };
+
+export async function updateKnock(
+  knockId: string,
+  payload: UpdateKnockBody,
+): Promise<UpdateKnockApiResult> {
+  const res = await fetch(`/api/v1/knocks/${knockId}`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const body = (await res.json()) as {
+    data?: { knock: KnockHistoryItem };
+    error?: { code: string; message: string };
+  };
+
+  if (!res.ok) {
+    return {
+      status: "error",
+      message: body.error?.message ?? "Failed to update knock",
+    };
+  }
+
+  if (!body.data?.knock) {
+    return { status: "error", message: "Invalid update response" };
+  }
+
+  return { status: "ok", knock: body.data.knock };
+}
+
+export async function deleteKnock(
+  knockId: string,
+): Promise<DeleteKnockApiResult> {
+  const res = await fetch(`/api/v1/knocks/${knockId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  const body = (await res.json()) as {
+    data?: { ok: boolean };
+    error?: { code: string; message: string };
+  };
+
+  if (!res.ok) {
+    return {
+      status: "error",
+      message: body.error?.message ?? "Failed to delete knock",
+    };
+  }
+
+  return { status: "ok" };
 }
 
 export async function fetchMyKnocks(

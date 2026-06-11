@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+} from "react";
 import type {
   FilterSpecification,
   GeoJSONSource,
@@ -24,16 +30,63 @@ const TERRITORIES_FILL_LAYER_ID = "territories-fill";
 const TERRITORIES_LINE_LAYER_ID = "territories-line";
 const TERRITORIES_SELECTED_FILL_LAYER_ID = "territories-selected-fill";
 const TERRITORIES_SELECTED_LINE_LAYER_ID = "territories-selected-line";
+const PENDING_SOURCE_ID = "territory-pending";
+const PENDING_FILL_LAYER_ID = "territory-pending-fill";
+const PENDING_LINE_LAYER_ID = "territory-pending-line";
 
 const TERRITORY_FILL_COLOR = "#3b82f6";
 const TERRITORY_SELECTED_COLOR = "#f59e0b";
+const TERRITORY_PENDING_COLOR = "#8b5cf6";
+
+export type TerritoryDrawToolHandle = {
+  getDrawnPolygon: () => GeoJsonPolygon | null;
+};
 
 type TerritoryDrawToolProps = {
   territories: TerritorySummary[];
   selectedId: string | null;
   drawEnabled: boolean;
+  pendingPolygon: GeoJsonPolygon | null;
   onPolygonDrawn: (polygon: GeoJsonPolygon) => void;
 };
+
+function firstDrawLayerId(map: MapboxMap): string | undefined {
+  const layers = map.getStyle()?.layers ?? [];
+  return layers.find((layer) => layer.id.includes("gl-draw"))?.id;
+}
+
+function polygonFromDraw(
+  draw: import("@mapbox/mapbox-gl-draw").default,
+): GeoJsonPolygon | null {
+  const feature = draw
+    .getAll()
+    .features.find((item) => item.geometry?.type === "Polygon");
+
+  if (!feature?.geometry || feature.geometry.type !== "Polygon") {
+    return null;
+  }
+
+  return feature.geometry as GeoJsonPolygon;
+}
+
+function pendingPolygonToFeatureCollection(
+  polygon: GeoJsonPolygon | null,
+): GeoJSON.FeatureCollection {
+  if (!polygon) {
+    return { type: "FeatureCollection", features: [] };
+  }
+
+  return {
+    type: "FeatureCollection",
+    features: [
+      {
+        type: "Feature",
+        geometry: polygon,
+        properties: { pending: true },
+      },
+    ],
+  };
+}
 
 function territoriesToFeatureCollection(
   territories: TerritorySummary[],
@@ -49,6 +102,25 @@ function territoriesToFeatureCollection(
       },
     })),
   };
+}
+
+type MapboxDrawControl = import("@mapbox/mapbox-gl-draw").default;
+
+function safeDrawMode(draw: MapboxDrawControl, mode: string): void {
+  try {
+    if (draw.getMode() === mode) {
+      return;
+    }
+    draw.changeMode(mode);
+  } catch {
+    try {
+      if (draw.getMode() !== "simple_select") {
+        draw.changeMode("simple_select");
+      }
+    } catch {
+      // Draw may be mid-transition; ignore stale mode errors.
+    }
+  }
 }
 
 function boundsForTerritory(territory: TerritorySummary): [[number, number], [number, number]] {
@@ -71,18 +143,40 @@ function boundsForTerritory(territory: TerritorySummary): [[number, number], [nu
   ];
 }
 
-export function TerritoryDrawTool({
-  territories,
-  selectedId,
-  drawEnabled,
-  onPolygonDrawn,
-}: TerritoryDrawToolProps) {
+export const TerritoryDrawTool = forwardRef<
+  TerritoryDrawToolHandle,
+  TerritoryDrawToolProps
+>(function TerritoryDrawTool(
+  {
+    territories,
+    selectedId,
+    drawEnabled,
+    pendingPolygon,
+    onPolygonDrawn,
+  },
+  ref,
+) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapboxMap | null>(null);
   const drawRef = useRef<import("@mapbox/mapbox-gl-draw").default | null>(null);
   const mapReadyRef = useRef(false);
   const drawEnabledRef = useRef(drawEnabled);
+  const isCapturingRef = useRef(false);
   const onPolygonDrawnRef = useRef(onPolygonDrawn);
+  const pendingPolygonRef = useRef(pendingPolygon);
+
+  useImperativeHandle(ref, () => ({
+    getDrawnPolygon: () => {
+      const draw = drawRef.current;
+      if (draw) {
+        const fromDraw = polygonFromDraw(draw);
+        if (fromDraw) {
+          return fromDraw;
+        }
+      }
+      return pendingPolygonRef.current;
+    },
+  }));
 
   const token = getMapboxAccessToken();
 
@@ -93,6 +187,10 @@ export function TerritoryDrawTool({
   useEffect(() => {
     drawEnabledRef.current = drawEnabled;
   }, [drawEnabled]);
+
+  useEffect(() => {
+    pendingPolygonRef.current = pendingPolygon;
+  }, [pendingPolygon]);
 
   const syncTerritoriesToMap = useCallback((nextTerritories: TerritorySummary[]) => {
     const map = mapRef.current;
@@ -131,8 +229,8 @@ export function TerritoryDrawTool({
       const draw = new MapboxDraw({
         displayControlsDefault: false,
         controls: {
-          polygon: true,
-          trash: true,
+          polygon: false,
+          trash: false,
         },
         defaultMode: "simple_select",
       });
@@ -146,70 +244,125 @@ export function TerritoryDrawTool({
           return;
         }
 
+        map.doubleClickZoom.disable();
+
+        const beforeDraw = firstDrawLayerId(map);
+
         map.addSource(TERRITORIES_SOURCE_ID, {
           type: "geojson",
           data: territoriesToFeatureCollection([]),
         });
 
-        map.addLayer({
-          id: TERRITORIES_FILL_LAYER_ID,
-          type: "fill",
-          source: TERRITORIES_SOURCE_ID,
-          paint: {
-            "fill-color": TERRITORY_FILL_COLOR,
-            "fill-opacity": 0.28,
-          },
+        map.addSource(PENDING_SOURCE_ID, {
+          type: "geojson",
+          data: pendingPolygonToFeatureCollection(null),
         });
 
-        map.addLayer({
-          id: TERRITORIES_LINE_LAYER_ID,
-          type: "line",
-          source: TERRITORIES_SOURCE_ID,
-          paint: {
-            "line-color": TERRITORY_FILL_COLOR,
-            "line-width": 2,
+        map.addLayer(
+          {
+            id: TERRITORIES_FILL_LAYER_ID,
+            type: "fill",
+            source: TERRITORIES_SOURCE_ID,
+            paint: {
+              "fill-color": TERRITORY_FILL_COLOR,
+              "fill-opacity": 0.28,
+            },
           },
-        });
+          beforeDraw,
+        );
 
-        map.addLayer({
-          id: TERRITORIES_SELECTED_FILL_LAYER_ID,
-          type: "fill",
-          source: TERRITORIES_SOURCE_ID,
-          filter: ["==", ["get", "id"], ""],
-          paint: {
-            "fill-color": TERRITORY_SELECTED_COLOR,
-            "fill-opacity": 0.35,
+        map.addLayer(
+          {
+            id: TERRITORIES_LINE_LAYER_ID,
+            type: "line",
+            source: TERRITORIES_SOURCE_ID,
+            paint: {
+              "line-color": TERRITORY_FILL_COLOR,
+              "line-width": 2,
+            },
           },
-        });
+          beforeDraw,
+        );
 
-        map.addLayer({
-          id: TERRITORIES_SELECTED_LINE_LAYER_ID,
-          type: "line",
-          source: TERRITORIES_SOURCE_ID,
-          filter: ["==", ["get", "id"], ""],
-          paint: {
-            "line-color": TERRITORY_SELECTED_COLOR,
-            "line-width": 3,
+        map.addLayer(
+          {
+            id: TERRITORIES_SELECTED_FILL_LAYER_ID,
+            type: "fill",
+            source: TERRITORIES_SOURCE_ID,
+            filter: ["==", ["get", "id"], ""],
+            paint: {
+              "fill-color": TERRITORY_SELECTED_COLOR,
+              "fill-opacity": 0.35,
+            },
           },
-        });
+          beforeDraw,
+        );
+
+        map.addLayer(
+          {
+            id: TERRITORIES_SELECTED_LINE_LAYER_ID,
+            type: "line",
+            source: TERRITORIES_SOURCE_ID,
+            filter: ["==", ["get", "id"], ""],
+            paint: {
+              "line-color": TERRITORY_SELECTED_COLOR,
+              "line-width": 3,
+            },
+          },
+          beforeDraw,
+        );
+
+        map.addLayer(
+          {
+            id: PENDING_FILL_LAYER_ID,
+            type: "fill",
+            source: PENDING_SOURCE_ID,
+            paint: {
+              "fill-color": TERRITORY_PENDING_COLOR,
+              "fill-opacity": 0.35,
+            },
+          },
+          beforeDraw,
+        );
+
+        map.addLayer(
+          {
+            id: PENDING_LINE_LAYER_ID,
+            type: "line",
+            source: PENDING_SOURCE_ID,
+            paint: {
+              "line-color": TERRITORY_PENDING_COLOR,
+              "line-width": 3,
+              "line-dasharray": [2, 1],
+            },
+          },
+          beforeDraw,
+        );
 
         mapReadyRef.current = true;
 
         if (drawEnabledRef.current) {
-          draw.changeMode("draw_polygon");
+          safeDrawMode(draw, "draw_polygon");
         }
       });
 
       map.on("draw.create", (event: { features: GeoJSON.Feature[] }) => {
+        if (isCapturingRef.current) {
+          return;
+        }
+
         const feature = event.features[0];
         if (!feature?.geometry || feature.geometry.type !== "Polygon") {
           return;
         }
 
-        draw.deleteAll();
-        draw.changeMode("simple_select");
-
+        isCapturingRef.current = true;
         onPolygonDrawnRef.current(feature.geometry as GeoJsonPolygon);
+
+        requestAnimationFrame(() => {
+          safeDrawMode(draw, "simple_select");
+          isCapturingRef.current = false;
+        });
       });
     })();
 
@@ -247,17 +400,55 @@ export function TerritoryDrawTool({
   }, [selectedId]);
 
   useEffect(() => {
-    const draw = drawRef.current;
-    if (!draw) {
+    const map = mapRef.current;
+    if (!map || !mapReadyRef.current) {
       return;
     }
 
-    if (drawEnabled) {
-      draw.changeMode("draw_polygon");
-    } else {
-      draw.changeMode("simple_select");
+    const territoryVisibility = drawEnabled ? "none" : "visible";
+
+    for (const layerId of [
+      TERRITORIES_FILL_LAYER_ID,
+      TERRITORIES_LINE_LAYER_ID,
+      TERRITORIES_SELECTED_FILL_LAYER_ID,
+      TERRITORIES_SELECTED_LINE_LAYER_ID,
+    ]) {
+      if (map.getLayer(layerId)) {
+        map.setLayoutProperty(layerId, "visibility", territoryVisibility);
+      }
     }
   }, [drawEnabled]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReadyRef.current) {
+      return;
+    }
+
+    const source = map.getSource(PENDING_SOURCE_ID) as GeoJSONSource | undefined;
+    source?.setData(pendingPolygonToFeatureCollection(pendingPolygon));
+  }, [pendingPolygon]);
+
+  useEffect(() => {
+    const draw = drawRef.current;
+    if (!draw || !mapReadyRef.current) {
+      return;
+    }
+
+    if (drawEnabled && !pendingPolygon) {
+      try {
+        draw.deleteAll();
+      } catch {
+        // Feature may already be cleared after capture.
+      }
+      safeDrawMode(draw, "draw_polygon");
+      return;
+    }
+
+    if (!drawEnabled && draw.getMode() === "draw_polygon") {
+      safeDrawMode(draw, "simple_select");
+    }
+  }, [drawEnabled, pendingPolygon]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -303,4 +494,4 @@ export function TerritoryDrawTool({
       />
     </div>
   );
-}
+});

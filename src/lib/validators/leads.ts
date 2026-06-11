@@ -1,10 +1,7 @@
 import { z } from "zod";
 import { leadSourceSchema, leadStageSchema } from "@/lib/validators/enums";
 
-export const PROMOTABLE_DOOR_OUTCOMES = [
-  "interested",
-  "callback_requested",
-] as const;
+export const PROMOTABLE_DOOR_OUTCOMES = ["interested"] as const;
 
 export const promotableDoorOutcomeSchema = z.enum(PROMOTABLE_DOOR_OUTCOMES);
 
@@ -16,10 +13,7 @@ export function isPromotableDoorOutcome(
   return promotableDoorOutcomeSchema.safeParse(outcome).success;
 }
 
-export const PROMOTABLE_CALL_OUTCOMES = [
-  "answered_interested",
-  "callback_scheduled",
-] as const;
+export const PROMOTABLE_CALL_OUTCOMES = ["answered_interested"] as const;
 
 export const promotableCallOutcomeSchema = z.enum(PROMOTABLE_CALL_OUTCOMES);
 

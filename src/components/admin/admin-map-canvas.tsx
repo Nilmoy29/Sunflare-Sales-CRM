@@ -24,6 +24,7 @@ import {
 } from "@/lib/geo/mapbox";
 import {
   clampMapBbox,
+  maxSpanBboxAround,
   type AdminKnockPin,
   type MapBbox,
 } from "@/lib/validators/knocks";
@@ -49,6 +50,9 @@ const INTERACTIVE_LAYERS = [
 ];
 
 const MOVEEND_DEBOUNCE_MS = 300;
+const FIT_BOUNDS_PADDING = 48;
+const FIT_BOUNDS_MAX_ZOOM = 16;
+const MIN_BOUNDS_PAD_DEGREES = 0.002;
 
 type AdminMapBreadcrumbs = {
   enabled: boolean;
@@ -77,6 +81,38 @@ function boundsToBbox(bounds: {
     east: bounds.getEast(),
     north: bounds.getNorth(),
   });
+}
+
+function initialSearchBbox(): MapBbox {
+  return maxSpanBboxAround(DEFAULT_MAP_CENTER[0], DEFAULT_MAP_CENTER[1]);
+}
+
+function knockBounds(
+  knocks: AdminKnockPin[],
+): [[number, number], [number, number]] | null {
+  if (knocks.length === 0) {
+    return null;
+  }
+
+  let west = knocks[0]!.lng;
+  let east = knocks[0]!.lng;
+  let south = knocks[0]!.lat;
+  let north = knocks[0]!.lat;
+
+  for (const knock of knocks) {
+    west = Math.min(west, knock.lng);
+    east = Math.max(east, knock.lng);
+    south = Math.min(south, knock.lat);
+    north = Math.max(north, knock.lat);
+  }
+
+  const lngPad = Math.max((east - west) * 0.1, MIN_BOUNDS_PAD_DEGREES);
+  const latPad = Math.max((north - south) * 0.1, MIN_BOUNDS_PAD_DEGREES);
+
+  return [
+    [west - lngPad, south - latPad],
+    [east + lngPad, north + latPad],
+  ];
 }
 
 function emptyFeatureCollection(): GeoJSON.FeatureCollection {
@@ -210,6 +246,7 @@ export function AdminMapCanvas({
   const mapRef = useRef<MapboxMap | null>(null);
   const popupRef = useRef<Popup | null>(null);
   const mapReadyRef = useRef(false);
+  const hasFittedToKnocksRef = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const token = getMapboxAccessToken();
@@ -436,11 +473,7 @@ export function AdminMapCanvas({
 
         mapReadyRef.current = true;
         setMapLoaded(true);
-
-        const bounds = map.getBounds();
-        if (bounds) {
-          setBbox(boundsToBbox(bounds));
-        }
+        setBbox(initialSearchBbox());
 
         map.on("click", (e) => {
           if (!mapReadyRef.current) {
@@ -503,12 +536,38 @@ export function AdminMapCanvas({
   }, [token, syncKnocksToMap]);
 
   useEffect(() => {
+    hasFittedToKnocksRef.current = false;
+    if (mapReadyRef.current) {
+      setBbox(initialSearchBbox());
+    }
+  }, [refreshKey]);
+
+  useEffect(() => {
     if (!mapLoaded) {
       return;
     }
     syncKnocksToMap(knocks);
     syncHeatmapToMap(knocks);
   }, [knocks, mapLoaded, syncKnocksToMap, syncHeatmapToMap]);
+
+  useEffect(() => {
+    if (!mapLoaded || knocks.length === 0 || hasFittedToKnocksRef.current) {
+      return;
+    }
+
+    const map = mapRef.current;
+    const bounds = knockBounds(knocks);
+    if (!map || !bounds) {
+      return;
+    }
+
+    hasFittedToKnocksRef.current = true;
+    map.fitBounds(bounds, {
+      padding: FIT_BOUNDS_PADDING,
+      maxZoom: FIT_BOUNDS_MAX_ZOOM,
+      duration: 0,
+    });
+  }, [knocks, mapLoaded]);
 
   useEffect(() => {
     if (!mapLoaded) {

@@ -28,6 +28,17 @@ export const mapBboxSchema = z
 
 export type MapBbox = z.infer<typeof mapBboxSchema>;
 
+/** Expands to the maximum server-allowed span centered on a point. */
+export function maxSpanBboxAround(lng: number, lat: number): MapBbox {
+  const half = MAX_BBOX_SPAN_DEGREES / 2;
+  return clampMapBbox({
+    west: lng - half,
+    south: lat - half,
+    east: lng + half,
+    north: lat + half,
+  });
+}
+
 /** Shrinks viewport bbox to the server-allowed span (centered). */
 export function clampMapBbox(bbox: MapBbox): MapBbox {
   let { west, south, east, north } = bbox;
@@ -249,10 +260,37 @@ export const knockHistoryItemSchema = z.object({
   lat: z.number(),
   lng: z.number(),
   notes: z.string().nullable(),
+  follow_up_at: z.string().nullable(),
+  has_linked_lead: z.boolean(),
   address: z.string().nullable(),
   suburb: z.string().nullable(),
   postcode: z.string().nullable(),
 });
+
+export const updateKnockBodySchema = z.object({
+  outcome: doorOutcomeSchema,
+  notes: z
+    .string()
+    .trim()
+    .max(NOTES_MAX_LENGTH)
+    .optional()
+    .nullable()
+    .transform((value) => (value ? value : null)),
+  follow_up_at: z
+    .string()
+    .datetime({ offset: true })
+    .optional()
+    .nullable()
+    .transform((value) => (value ? value : null)),
+});
+
+export type UpdateKnockBody = z.infer<typeof updateKnockBodySchema>;
+
+export const updateKnockResponseSchema = z.object({
+  knock: knockHistoryItemSchema,
+});
+
+export type UpdateKnockResponse = z.infer<typeof updateKnockResponseSchema>;
 
 export type KnockHistoryItem = z.infer<typeof knockHistoryItemSchema>;
 
@@ -284,14 +322,20 @@ export type AdminKnocksResponse = z.infer<typeof adminKnocksResponseSchema>;
 export const adminKnocksQuerySchema = z
   .object({
     bbox: mapBboxSchema,
-    from: sydneyDateStringSchema,
-    to: sydneyDateStringSchema,
+    from: sydneyDateStringSchema.nullable().optional(),
+    to: sydneyDateStringSchema.nullable().optional(),
     rep: z.array(z.string().uuid()).default([]),
     outcome: z.array(doorOutcomeSchema).default([]),
   })
-  .refine((data) => data.from <= data.to, {
-    message: "from must be on or before to",
-  });
+  .refine(
+    (data) => {
+      if (!data.from || !data.to) {
+        return true;
+      }
+      return data.from <= data.to;
+    },
+    { message: "from must be on or before to" },
+  );
 
 export type AdminKnocksQuery = z.infer<typeof adminKnocksQuerySchema>;
 
@@ -307,10 +351,13 @@ export function parseAdminKnocksSearchParams(searchParams: URLSearchParams) {
   const reps = searchParams.getAll("rep");
   const outcomes = searchParams.getAll("outcome");
 
+  const fromParam = searchParams.get("from");
+  const toParam = searchParams.get("to");
+
   const parsed = adminKnocksQuerySchema.safeParse({
     bbox: bboxParsed.data,
-    from: searchParams.get("from"),
-    to: searchParams.get("to"),
+    from: fromParam && fromParam.length > 0 ? fromParam : null,
+    to: toParam && toParam.length > 0 ? toParam : null,
     rep: reps.length > 0 ? reps : [],
     outcome: outcomes.length > 0 ? outcomes : [],
   });

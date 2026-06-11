@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchContactCallHistory } from "@/features/calls/api";
 import type { ContactCallHistoryItem } from "@/lib/validators/lead-detail";
 
@@ -72,10 +72,20 @@ export function useContactCallHistory(
     };
   }, [contactId, requestKey]);
 
+  const replaceCall = useCallback((call: ContactCallHistoryItem) => {
+    setCalls((prev) => prev.map((item) => (item.id === call.id ? call : item)));
+  }, []);
+
+  const removeCall = useCallback((callId: string) => {
+    setCalls((prev) => prev.filter((item) => item.id !== callId));
+  }, []);
+
   return {
     calls: pending && contactChanged ? [] : calls,
     loading: initialLoading,
     reloading: !initialLoading && pending,
     error: contactId ? error : null,
+    replaceCall,
+    removeCall,
   };
 }

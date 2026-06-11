@@ -48,9 +48,43 @@ export const createCallBodySchema = z.object({
 
 export type CreateCallBody = z.infer<typeof createCallBodySchema>;
 
+export const updateCallBodySchema = z.object({
+  outcome: callOutcomeSchema,
+  duration_minutes: z
+    .number()
+    .int("Duration must be a whole number of minutes")
+    .min(0, "Duration cannot be negative")
+    .max(CALL_DURATION_MINUTES_MAX)
+    .optional()
+    .nullable(),
+  notes: z
+    .string()
+    .trim()
+    .max(CALL_NOTES_MAX_LENGTH)
+    .optional()
+    .nullable()
+    .transform((value) => (value ? value : null)),
+  follow_up_at: z
+    .string()
+    .datetime({ offset: true })
+    .optional()
+    .nullable()
+    .transform((value) => (value ? value : null)),
+});
+
+export type UpdateCallBody = z.infer<typeof updateCallBodySchema>;
+
 export const createCallResponseSchema = z.object({
   call: callLogSummarySchema,
 });
+
+export const updateCallResponseSchema = z.object({
+  call: callLogSummarySchema.extend({
+    has_linked_lead: z.boolean(),
+  }),
+});
+
+export type UpdateCallResponse = z.infer<typeof updateCallResponseSchema>;
 
 export type CreateCallResponse = z.infer<typeof createCallResponseSchema>;
 
@@ -163,9 +197,13 @@ export function parseCallLogTimelineRow(
 
 export function parseContactCallHistoryRow(
   row: Record<string, unknown>,
-): (CallLogSummary & { rep_name: string }) | null {
+): (CallLogSummary & { rep_name: string; has_linked_lead: boolean }) | null {
   const profiles = row.profiles as { name?: string } | null;
   const summary = parseCallLogSummary(row);
+  const leads = row.leads as { id?: string }[] | { id?: string } | null;
+  const hasLinkedLead = Array.isArray(leads)
+    ? leads.length > 0
+    : Boolean(leads?.id);
 
   if (!summary || !profiles?.name) {
     return null;
@@ -174,5 +212,6 @@ export function parseContactCallHistoryRow(
   return {
     ...summary,
     rep_name: profiles.name,
+    has_linked_lead: hasLinkedLead,
   };
 }

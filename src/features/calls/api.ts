@@ -3,7 +3,9 @@ import type {
   CreateCallBody,
   CreateCallResponse,
   RepDailyCallCountResponse,
+  UpdateCallBody,
 } from "@/lib/validators/call-logs";
+import type { ContactCallHistoryItem } from "@/lib/validators/lead-detail";
 import type { ContactCallHistoryResponse } from "@/lib/validators/lead-detail";
 import type { PromoteCallResponse } from "@/lib/validators/leads";
 import type {
@@ -15,6 +17,14 @@ import type {
 
 export type CreateCallApiResult =
   | { status: "ok"; call: CreateCallResponse["call"] }
+  | { status: "error"; message: string };
+
+export type UpdateCallApiResult =
+  | { status: "ok"; call: ContactCallHistoryItem }
+  | { status: "error"; message: string };
+
+export type DeleteCallApiResult =
+  | { status: "ok" }
   | { status: "error"; message: string };
 
 export type PromoteCallApiResult =
@@ -245,6 +255,59 @@ export async function createCall(
   }
 
   return { status: "ok", call: body.data.call };
+}
+
+export async function updateCall(
+  callLogId: string,
+  payload: UpdateCallBody,
+): Promise<UpdateCallApiResult> {
+  const res = await fetch(`/api/v1/calls/${callLogId}`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const body = (await res.json()) as {
+    data?: { call: ContactCallHistoryItem };
+    error?: { code: string; message: string };
+  };
+
+  if (!res.ok) {
+    return {
+      status: "error",
+      message: body.error?.message ?? "Failed to update call",
+    };
+  }
+
+  if (!body.data?.call) {
+    return { status: "error", message: "Invalid update response" };
+  }
+
+  return { status: "ok", call: body.data.call };
+}
+
+export async function deleteCall(
+  callLogId: string,
+): Promise<DeleteCallApiResult> {
+  const res = await fetch(`/api/v1/calls/${callLogId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  const body = (await res.json()) as {
+    data?: { ok: boolean };
+    error?: { code: string; message: string };
+  };
+
+  if (!res.ok) {
+    return {
+      status: "error",
+      message: body.error?.message ?? "Failed to delete call",
+    };
+  }
+
+  return { status: "ok" };
 }
 
 export async function promoteCall(

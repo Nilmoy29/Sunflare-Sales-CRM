@@ -25,7 +25,7 @@ function RepDeepDiveContent({ rep, reps }: RepDeepDiveShellProps) {
   const pipeline = useRepPipelineSnapshot(rep.id);
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-4 md:p-8">
+    <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-4 md:p-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <Link

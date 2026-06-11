@@ -34,7 +34,11 @@ function formatDailyCallCountLabel(value: number): string {
   return value === 1 ? "1 call today" : `${value} calls today`;
 }
 
-export function CallsPanelShell() {
+type CallsPanelShellProps = {
+  currentRepId: string;
+};
+
+export function CallsPanelShell({ currentRepId }: CallsPanelShellProps) {
   const [query, setQuery] = useState("");
   const [selectedContact, setSelectedContact] =
     useState<ContactSearchResult | null>(null);
@@ -65,6 +69,8 @@ export function CallsPanelShell() {
     loading: callHistoryLoading,
     reloading: callHistoryReloading,
     error: callHistoryError,
+    replaceCall,
+    removeCall,
   } = useContactCallHistory(selectedContact?.id ?? null, refreshKey);
   const trimmedQuery = query.trim();
   const showHint = trimmedQuery.length < CONTACT_SEARCH_MIN_LENGTH;
@@ -311,8 +317,11 @@ export function CallsPanelShell() {
           ) : null}
           <ContactCallHistory
             calls={callHistory}
+            currentRepId={currentRepId}
             loading={callHistoryLoading || callHistoryReloading}
             error={callHistoryError}
+            onCallUpdated={replaceCall}
+            onCallDeleted={removeCall}
           />
         </section>
       ) : null}

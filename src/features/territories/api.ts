@@ -23,6 +23,10 @@ export type UpdateTerritoryApiResult =
   | { status: "ok"; territory: TerritorySummary }
   | { status: "error"; message: string };
 
+export type DeleteTerritoryApiResult =
+  | { status: "ok" }
+  | { status: "error"; message: string };
+
 export async function fetchTerritories(
   signal?: AbortSignal,
 ): Promise<TerritoriesListResponse> {
@@ -104,6 +108,29 @@ export async function updateTerritory(
   }
 
   return { status: "ok", territory: body.data.territory };
+}
+
+export async function deleteTerritory(
+  id: string,
+): Promise<DeleteTerritoryApiResult> {
+  const res = await fetch(`/api/v1/territories/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  const body = (await res.json()) as {
+    data?: { ok: boolean };
+    error?: { code: string; message: string };
+  };
+
+  if (!res.ok) {
+    return {
+      status: "error",
+      message: body.error?.message ?? "Could not delete territory",
+    };
+  }
+
+  return { status: "ok" };
 }
 
 export type CreateTerritoryAssignmentApiResult =

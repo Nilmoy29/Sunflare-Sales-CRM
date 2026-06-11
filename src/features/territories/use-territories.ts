@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   createTerritory,
+  deleteTerritory,
   fetchTerritories,
   updateTerritory,
 } from "@/features/territories/api";
@@ -86,6 +87,15 @@ export function useTerritories() {
     return result;
   }, []);
 
+  const remove = useCallback(async (id: string) => {
+    const result = await deleteTerritory(id);
+    if (result.status === "error") {
+      return result;
+    }
+    setTerritories((prev) => prev.filter((territory) => territory.id !== id));
+    return result;
+  }, []);
+
   return {
     territories,
     loading,
@@ -93,5 +103,6 @@ export function useTerritories() {
     refresh,
     create,
     update,
+    remove,
   };
 }

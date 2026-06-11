@@ -6,8 +6,8 @@ import type { DoorOutcome } from "@/lib/validators/enums";
 import type { AdminKnockPin, MapBbox } from "@/lib/validators/knocks";
 
 export type AdminMapFilters = {
-  from: string;
-  to: string;
+  from: string | null;
+  to: string | null;
   repIds: string[] | null;
   outcomes: DoorOutcome[] | null;
 };
@@ -23,7 +23,9 @@ function loadKey(
     filters.outcomes === null
       ? "all"
       : filters.outcomes.slice().sort().join(",");
-  return `${bbox.west},${bbox.south},${bbox.east},${bbox.north}:${filters.from}:${filters.to}:${repPart}:${outcomePart}:${refreshKey}`;
+  const fromPart = filters.from ?? "all";
+  const toPart = filters.to ?? "all";
+  return `${bbox.west},${bbox.south},${bbox.east},${bbox.north}:${fromPart}:${toPart}:${repPart}:${outcomePart}:${refreshKey}`;
 }
 
 export function useAdminMapKnocks(

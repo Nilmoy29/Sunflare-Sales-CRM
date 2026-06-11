@@ -1,11 +1,16 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   TerritoryAssignmentsPanel,
   type TerritoryRep,
 } from "@/components/admin/territory-assignments-panel";
-import { TerritoryDrawTool } from "@/components/admin/territory-draw-tool";
+import {
+  TerritoryDrawTool,
+  type TerritoryDrawToolHandle,
+} from "@/components/admin/territory-draw-tool";
+import { createTerritoryAssignment } from "@/features/territories/api";
+import { formatSydneyDateString } from "@/features/knocks/format-knock-date";
 import { useTerritories } from "@/features/territories/use-territories";
 import {
   TERRITORY_NAME_MAX_LENGTH,
@@ -20,8 +25,13 @@ type TerritoryShellProps = {
   reps: TerritoryRep[];
 };
 
+function defaultAssignDate(): string {
+  return formatSydneyDateString(new Date());
+}
+
 export function TerritoryShell({ reps }: TerritoryShellProps) {
-  const { territories, loading, error, create, update } = useTerritories();
+  const { territories, loading, error, create, update, remove } =
+    useTerritories();
   const [view, setView] = useState<ShellView>("zones");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formMode, setFormMode] = useState<FormMode>("idle");
@@ -31,8 +41,12 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
   );
   const [name, setName] = useState("");
   const [notes, setNotes] = useState("");
+  const [assignRepId, setAssignRepId] = useState("");
+  const [assignDate, setAssignDate] = useState(defaultAssignDate);
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const drawToolRef = useRef<TerritoryDrawToolHandle>(null);
 
   const resetForm = useCallback(() => {
     setFormMode("idle");
@@ -40,6 +54,8 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
     setPendingPolygon(null);
     setName("");
     setNotes("");
+    setAssignRepId("");
+    setAssignDate(defaultAssignDate());
     setFormError(null);
   }, []);
 
@@ -60,6 +76,8 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
     setPendingPolygon(null);
     setName("");
     setNotes("");
+    setAssignRepId("");
+    setAssignDate(defaultAssignDate());
     setFormError(null);
   }, []);
 
@@ -76,10 +94,33 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
         setPendingPolygon(null);
         setName(territory?.name ?? "");
         setNotes(territory?.notes ?? "");
+        setAssignRepId("");
+        setAssignDate(defaultAssignDate());
         setFormError(null);
       }
     },
     [territories, view],
+  );
+
+  const assignRepToTerritory = useCallback(
+    async (territoryId: string) => {
+      if (!assignRepId) {
+        return { status: "skipped" as const };
+      }
+
+      const result = await createTerritoryAssignment({
+        territory_id: territoryId,
+        rep_id: assignRepId,
+        assigned_date: assignDate,
+      });
+
+      if (result.status === "error") {
+        return result;
+      }
+
+      return { status: "ok" as const, assignment: result.assignment };
+    },
+    [assignDate, assignRepId],
   );
 
   const handlePolygonDrawn = useCallback((polygon: GeoJsonPolygon) => {
@@ -93,9 +134,18 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
     setFormError(null);
 
     if (formMode === "create") {
-      if (!pendingPolygon) {
-        setFormError("Draw a polygon on the map before saving.");
+      const polygon =
+        pendingPolygon ?? drawToolRef.current?.getDrawnPolygon() ?? null;
+
+      if (!polygon) {
+        setFormError(
+          "Draw a polygon on the map (click points, then double-click or click the first point to close), then save.",
+        );
         return;
+      }
+
+      if (!pendingPolygon) {
+        setPendingPolygon(polygon);
       }
 
       const trimmedName = name.trim();
@@ -108,7 +158,7 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
       const result = await create({
         name: trimmedName,
         notes: notes.trim() || null,
-        polygon: pendingPolygon,
+        polygon,
       });
       setSaving(false);
 
@@ -117,10 +167,23 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
         return;
       }
 
+      const assignResult = await assignRepToTerritory(result.territory.id);
+      if (assignResult.status === "error") {
+        setSelectedId(result.territory.id);
+        setFormMode("edit");
+        setPendingPolygon(null);
+        setDrawEnabled(false);
+        setFormError(
+          `Territory saved, but assignment failed: ${assignResult.message}`,
+        );
+        return;
+      }
+
       setSelectedId(result.territory.id);
       setFormMode("edit");
       setPendingPolygon(null);
       setDrawEnabled(false);
+      setAssignRepId("");
       return;
     }
 
@@ -143,9 +206,21 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
         return;
       }
 
+      const assignResult = await assignRepToTerritory(selectedId);
+      if (assignResult.status === "error") {
+        setFormError(
+          `Territory updated, but assignment failed: ${assignResult.message}`,
+        );
+        return;
+      }
+
       setFormError(null);
+      if (assignResult.status === "ok") {
+        setAssignRepId("");
+      }
     }
   }, [
+    assignRepToTerritory,
     create,
     formMode,
     name,
@@ -155,15 +230,45 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
     update,
   ]);
 
+  const handleDelete = useCallback(async () => {
+    if (!selectedId || formMode !== "edit") {
+      return;
+    }
+
+    const territory = territories.find((item) => item.id === selectedId);
+    const label = territory?.name ?? "this territory";
+
+    if (
+      !window.confirm(
+        `Delete "${label}"? All dated assignments for this zone will be removed.`,
+      )
+    ) {
+      return;
+    }
+
+    setFormError(null);
+    setDeleting(true);
+    const result = await remove(selectedId);
+    setDeleting(false);
+
+    if (result.status === "error") {
+      setFormError(result.message);
+      return;
+    }
+
+    resetForm();
+    setSelectedId(null);
+  }, [formMode, remove, resetForm, selectedId, territories]);
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-      <aside className="flex w-full shrink-0 flex-col gap-4 border-b border-zinc-200 bg-white p-4 lg:w-80 lg:border-b-0 lg:border-r">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
+      <aside className="flex w-full shrink-0 flex-col gap-4 border-b border-zinc-200 bg-white p-4 lg:min-h-0 lg:w-80 lg:overflow-y-auto lg:border-b-0 lg:border-r">
         <div>
           <h1 className="text-lg font-semibold text-zinc-900">Territories</h1>
           <p className="mt-1 text-sm text-zinc-600">
             {view === "zones"
-              ? "Draw canvassing zones and add manager notes."
-              : "Assign zones to reps by date."}
+              ? "Draw zones, assign a rep, and add manager notes."
+              : "Review and manage rep assignments by date."}
           </p>
         </div>
 
@@ -216,7 +321,7 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
               <p className="text-sm text-zinc-500">No territories yet.</p>
             ) : null}
 
-            <ul className="flex max-h-48 flex-col gap-2 overflow-y-auto lg:max-h-none lg:flex-1">
+            <ul className="flex flex-col gap-2">
               {territories.map((territory) => (
                 <li key={territory.id}>
                   <button
@@ -247,11 +352,17 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
                   {formMode === "create" ? "Save new territory" : "Edit territory"}
                 </p>
 
-                {formMode === "create" && !pendingPolygon ? (
-                  <p className="text-sm text-zinc-600">
-                    {drawEnabled
-                      ? "Click polygon points on the map, then double-click to finish."
-                      : "Use the map draw control or click Draw new zone."}
+                {formMode === "create" ? (
+                  <p
+                    className={`text-sm ${
+                      pendingPolygon ? "text-emerald-700" : "text-zinc-600"
+                    }`}
+                  >
+                    {pendingPolygon
+                      ? "Polygon captured — add a name and save."
+                      : drawEnabled
+                        ? "Click points on the map, then double-click or click the first point to close the shape."
+                        : "Click Draw new zone, then draw on the map."}
                   </p>
                 ) : null}
 
@@ -281,15 +392,61 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
                   />
                 </label>
 
+                <div className="space-y-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3">
+                  <p className="text-sm font-medium text-zinc-900">
+                    Assign rep to this zone
+                  </p>
+
+                  <label className="block text-sm">
+                    <span className="font-medium text-zinc-800">Rep</span>
+                    <select
+                      value={assignRepId}
+                      onChange={(event) => setAssignRepId(event.target.value)}
+                      disabled={reps.length === 0}
+                      className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2"
+                    >
+                      <option value="">Select rep…</option>
+                      {reps.map((rep) => (
+                        <option key={rep.id} value={rep.id}>
+                          {rep.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="block text-sm">
+                    <span className="font-medium text-zinc-800">
+                      Canvass date
+                    </span>
+                    <input
+                      type="date"
+                      value={assignDate}
+                      onChange={(event) =>
+                        setAssignDate(
+                          event.target.value || defaultAssignDate(),
+                        )
+                      }
+                      disabled={!assignRepId}
+                      className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 disabled:opacity-60"
+                    />
+                  </label>
+
+                  <p className="text-xs text-zinc-600">
+                    {formMode === "create"
+                      ? "Optional — assign when you save the new zone."
+                      : "Optional — assign or re-assign when you save changes."}
+                  </p>
+                </div>
+
                 {formError ? (
                   <p className="text-sm text-red-700">{formError}</p>
                 ) : null}
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={() => void handleSave()}
-                    disabled={saving}
+                    disabled={saving || deleting}
                     className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60"
                   >
                     {saving ? "Saving…" : "Save"}
@@ -297,10 +454,21 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
+                    disabled={saving || deleting}
+                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
                   >
                     Cancel
                   </button>
+                  {formMode === "edit" ? (
+                    <button
+                      type="button"
+                      onClick={() => void handleDelete()}
+                      disabled={saving || deleting}
+                      className="rounded-lg border border-red-300 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
+                    >
+                      {deleting ? "Deleting…" : "Delete zone"}
+                    </button>
+                  ) : null}
                 </div>
               </div>
             ) : null}
@@ -316,12 +484,16 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
         )}
       </aside>
 
-      <TerritoryDrawTool
-        territories={territories}
-        selectedId={selectedId}
-        drawEnabled={view === "zones" && drawEnabled}
-        onPolygonDrawn={handlePolygonDrawn}
-      />
+      <div className="relative min-h-[420px] shrink-0 flex-1 lg:min-h-0 lg:shrink">
+        <TerritoryDrawTool
+          ref={drawToolRef}
+          territories={territories}
+          selectedId={selectedId}
+          drawEnabled={view === "zones" && drawEnabled}
+          pendingPolygon={pendingPolygon}
+          onPolygonDrawn={handlePolygonDrawn}
+        />
+      </div>
     </div>
   );
 }

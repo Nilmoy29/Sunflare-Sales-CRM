@@ -47,6 +47,7 @@ export const leadDetailCallTimelineItemSchema = timelineBaseSchema.extend({
 
 export const contactCallHistoryItemSchema = callLogSummarySchema.extend({
   rep_name: z.string(),
+  has_linked_lead: z.boolean(),
 });
 
 export type ContactCallHistoryItem = z.infer<typeof contactCallHistoryItemSchema>;

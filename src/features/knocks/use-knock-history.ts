@@ -132,6 +132,16 @@ export function useKnockHistory() {
     setFiltersState((prev) => ({ ...prev, outcomes: null, offset: 0 }));
   }, []);
 
+  const replaceKnock = useCallback((knock: KnockHistoryItem) => {
+    setKnocks((prev) =>
+      prev.map((item) => (item.id === knock.id ? knock : item)),
+    );
+  }, []);
+
+  const removeKnock = useCallback((knockId: string) => {
+    setKnocks((prev) => prev.filter((item) => item.id !== knockId));
+  }, []);
+
   return {
     knocks,
     loading,
@@ -142,5 +152,7 @@ export function useKnockHistory() {
     loadMore,
     toggleOutcome,
     selectAllOutcomes,
+    replaceKnock,
+    removeKnock,
   };
 }

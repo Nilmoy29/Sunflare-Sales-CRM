@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import { KnockEditSheet } from "@/components/rep/knock-edit-sheet";
+import { deleteKnock } from "@/features/knocks/api";
 import {
   formatKnockAddress,
   formatKnockHistoryDate,
@@ -11,6 +14,7 @@ import {
   DOOR_OUTCOME_LABELS,
 } from "@/lib/geo/door-outcome-colors";
 import { DOOR_OUTCOMES } from "@/lib/validators/enums";
+import type { KnockHistoryItem } from "@/lib/validators/knocks";
 
 const NOTES_PREVIEW_LENGTH = 80;
 
@@ -32,9 +36,39 @@ export function KnockHistoryShell() {
     loadMore,
     toggleOutcome,
     selectAllOutcomes,
+    replaceKnock,
+    removeKnock,
   } = useKnockHistory();
 
+  const [editingKnock, setEditingKnock] = useState<KnockHistoryItem | null>(
+    null,
+  );
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
   const allOutcomesSelected = filters.outcomes === null;
+
+  async function handleDelete(knockId: string) {
+    if (deletingId) {
+      return;
+    }
+
+    setDeletingId(knockId);
+    setActionError(null);
+
+    const result = await deleteKnock(knockId);
+
+    setDeletingId(null);
+    setConfirmDeleteId(null);
+
+    if (result.status === "error") {
+      setActionError(result.message);
+      return;
+    }
+
+    removeKnock(knockId);
+  }
 
   return (
     <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-white p-4 sm:gap-6 md:p-8">
@@ -42,7 +76,10 @@ export function KnockHistoryShell() {
         <h1 className="text-2xl font-semibold text-zinc-950">Knock history</h1>
         <p className="mt-1 text-sm text-zinc-800">
           Review your past door knocks.{" "}
-          <Link className="font-medium underline decoration-zinc-400 underline-offset-2 hover:text-zinc-950" href="/rep/map">
+          <Link
+            className="font-medium underline decoration-zinc-400 underline-offset-2 hover:text-zinc-950"
+            href="/rep/map"
+          >
             Back to map
           </Link>
         </p>
@@ -117,6 +154,12 @@ export function KnockHistoryShell() {
         </p>
       ) : null}
 
+      {actionError ? (
+        <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950" role="alert">
+          {actionError}
+        </p>
+      ) : null}
+
       {loading && knocks.length === 0 ? (
         <p className="text-sm font-medium text-zinc-700">Loading knocks…</p>
       ) : null}
@@ -155,6 +198,58 @@ export function KnockHistoryShell() {
                   {truncateNotes(knock.notes)}
                 </p>
               ) : null}
+              {knock.has_linked_lead ? (
+                <p className="mt-2 text-xs text-zinc-600">
+                  Linked to pipeline lead
+                </p>
+              ) : null}
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActionError(null);
+                    setEditingKnock(knock);
+                  }}
+                  className="min-h-10 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-semibold text-zinc-900 hover:bg-zinc-50"
+                >
+                  Edit
+                </button>
+                {knock.has_linked_lead ? (
+                  <span className="self-center text-xs text-zinc-500">
+                    Cannot delete while linked to a lead
+                  </span>
+                ) : confirmDeleteId === knock.id ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => void handleDelete(knock.id)}
+                      disabled={deletingId === knock.id}
+                      className="min-h-10 rounded-lg bg-red-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-800 disabled:opacity-60"
+                    >
+                      {deletingId === knock.id ? "Deleting…" : "Confirm delete"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteId(null)}
+                      disabled={deletingId === knock.id}
+                      className="min-h-10 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-semibold text-zinc-900 hover:bg-zinc-50 disabled:opacity-60"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActionError(null);
+                      setConfirmDeleteId(knock.id);
+                    }}
+                    className="min-h-10 rounded-lg border border-red-300 px-3 py-1.5 text-sm font-semibold text-red-800 hover:bg-red-50"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
             </li>
           ))}
         </ul>
@@ -169,6 +264,17 @@ export function KnockHistoryShell() {
         >
           {loading ? "Loading…" : "Load more"}
         </button>
+      ) : null}
+
+      {editingKnock ? (
+        <KnockEditSheet
+          knock={editingKnock}
+          onClose={() => setEditingKnock(null)}
+          onSaved={(knock) => {
+            replaceKnock(knock);
+            setEditingKnock(null);
+          }}
+        />
       ) : null}
     </main>
   );

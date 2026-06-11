@@ -1,18 +1,27 @@
 import { createClient } from "@/lib/supabase/server";
 import {
-  endOfDaySydney,
-  startOfDaySydney,
-} from "@/features/knocks/format-knock-date";
-import {
   knockHistoryItemSchema,
-  knockHistoryResponseSchema,
-  type KnockHistoryQuery,
-  type KnockHistoryResponse,
+  type KnockHistoryItem,
+  type UpdateKnockBody,
 } from "@/lib/validators/knocks";
+
+export class KnockNotFoundError extends Error {
+  constructor() {
+    super("Knock not found");
+    this.name = "KnockNotFoundError";
+  }
+}
+
+export class KnockUpdateConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "KnockUpdateConflictError";
+  }
+}
 
 type KnockRow = {
   id: string;
-  outcome: KnockHistoryResponse["knocks"][number]["outcome"];
+  outcome: KnockHistoryItem["outcome"];
   knocked_at: string;
   lat: number;
   lng: number;
@@ -26,7 +35,7 @@ type KnockRow = {
   leads: { id: string }[] | null;
 };
 
-function parseKnockRow(row: KnockRow) {
+function parseKnockRow(row: KnockRow): KnockHistoryItem {
   const contact = row.contacts;
   return knockHistoryItemSchema.parse({
     id: row.id,
@@ -51,43 +60,45 @@ function parseKnockRow(row: KnockRow) {
   });
 }
 
-export async function getMyKnocks(
-  repId: string,
-  query: KnockHistoryQuery,
-): Promise<KnockHistoryResponse> {
+export async function updateKnockForRep(
+  knockId: string,
+  body: UpdateKnockBody,
+): Promise<KnockHistoryItem> {
   const supabase = await createClient();
-  const rangeStart = startOfDaySydney(query.from);
-  const rangeEnd = endOfDaySydney(query.to);
-  const fetchLimit = query.limit + 1;
+  const { error } = await supabase.rpc("update_door_knock", {
+    p_id: knockId,
+    p_outcome: body.outcome,
+    p_notes: body.notes,
+    p_follow_up_at: body.follow_up_at,
+  } as never);
 
-  let builder = supabase
+  if (error) {
+    if (error.code === "P0002") {
+      throw new KnockNotFoundError();
+    }
+    if (error.code === "23514") {
+      throw new KnockUpdateConflictError(
+        error.message ?? "Cannot update this knock",
+      );
+    }
+    throw error;
+  }
+
+  const { data, error: fetchError } = await supabase
     .from("door_knocks")
     .select(
       "id, outcome, knocked_at, lat, lng, notes, follow_up_at, contacts ( address, suburb, postcode ), leads ( id )",
     )
-    .eq("rep_id", repId)
-    .gte("knocked_at", rangeStart)
-    .lte("knocked_at", rangeEnd)
-    .order("knocked_at", { ascending: false })
-    .range(query.offset, query.offset + fetchLimit - 1);
+    .eq("id", knockId)
+    .maybeSingle();
 
-  if (query.outcome.length > 0) {
-    builder = builder.in("outcome", query.outcome);
+  if (fetchError) {
+    throw fetchError;
   }
 
-  const { data, error } = await builder;
-
-  if (error) {
-    throw error;
+  if (!data) {
+    throw new KnockNotFoundError();
   }
 
-  const rows = (data ?? []) as KnockRow[];
-  const truncated = rows.length > query.limit;
-  const pageRows = truncated ? rows.slice(0, query.limit) : rows;
-
-  return knockHistoryResponseSchema.parse({
-    knocks: pageRows.map(parseKnockRow),
-    total: null,
-    truncated,
-  });
+  return parseKnockRow(data as KnockRow);
 }

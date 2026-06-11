@@ -14,7 +14,8 @@ const CONTACT_CALL_HISTORY_SELECT = `
   notes,
   called_at,
   follow_up_at,
-  profiles!call_logs_rep_id_fkey ( name )
+  profiles!call_logs_rep_id_fkey ( name ),
+  leads ( id )
 `;
 
 export async function getContactCallHistory(

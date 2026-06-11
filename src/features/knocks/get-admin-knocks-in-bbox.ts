@@ -20,8 +20,8 @@ export async function getAdminKnocksInBbox(
     p_south: bbox.south,
     p_east: bbox.east,
     p_north: bbox.north,
-    p_from: startOfDaySydney(from),
-    p_to: endOfDaySydney(to),
+    p_from: from ? startOfDaySydney(from) : null,
+    p_to: to ? endOfDaySydney(to) : null,
     p_rep_ids: rep.length > 0 ? rep : null,
     p_outcomes: outcome.length > 0 ? outcome : null,
   } as never);

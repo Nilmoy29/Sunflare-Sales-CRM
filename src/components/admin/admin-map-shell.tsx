@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { AdminMapCanvas } from "@/components/admin/admin-map-canvas";
 import { useShiftBreadcrumbs } from "@/features/admin/use-shift-breadcrumbs";
-import { formatSydneyDateString } from "@/features/knocks/format-knock-date";
 import type { AdminMapFilters } from "@/features/knocks/use-admin-map-knocks";
 import {
   DOOR_OUTCOME_COLORS,
@@ -21,10 +20,9 @@ type AdminMapShellProps = {
 };
 
 function defaultFilters(): AdminMapFilters {
-  const today = formatSydneyDateString(new Date());
   return {
-    from: today,
-    to: today,
+    from: null,
+    to: null,
     repIds: null,
     outcomes: null,
   };
@@ -86,11 +84,23 @@ export function AdminMapShell({ reps }: AdminMapShellProps) {
   }, []);
 
   const updateDate = useCallback((field: "from" | "to", value: string) => {
-    setFilters((prev) => ({ ...prev, [field]: value }));
+    setFilters((prev) => ({
+      ...prev,
+      [field]: value.length > 0 ? value : null,
+    }));
     setRefreshKey((k) => k + 1);
   }, []);
 
-  const singleDay = filters.from === filters.to;
+  const clearDateRange = useCallback(() => {
+    setFilters((prev) => ({ ...prev, from: null, to: null }));
+    setRefreshKey((k) => k + 1);
+  }, []);
+
+  const allDatesSelected = filters.from === null && filters.to === null;
+  const singleDay =
+    filters.from !== null &&
+    filters.to !== null &&
+    filters.from === filters.to;
   const breadcrumbRepId =
     filters.repIds?.length === 1 ? filters.repIds[0]! : null;
   const breadcrumbDate = singleDay ? filters.from : null;
@@ -142,11 +152,12 @@ export function AdminMapShell({ reps }: AdminMapShellProps) {
   ]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-      <aside className="w-full shrink-0 border-b border-zinc-200 bg-white p-4 md:w-72 md:border-b-0 md:border-r">
+    <div className="flex min-h-0 w-full flex-1 flex-col md:h-full md:flex-row md:overflow-hidden">
+      <aside className="flex w-full shrink-0 flex-col border-b border-zinc-200 bg-white md:h-full md:w-72 md:min-h-0 md:border-b-0 md:border-r">
+        <div className="min-h-0 flex-1 overflow-y-auto p-4">
         <h1 className="text-lg font-semibold text-zinc-900">Global map</h1>
         <p className="mt-1 text-sm text-zinc-600">
-          All reps&apos; knock pins with filters.
+          All reps&apos; knock pins. Showing all time by default.
         </p>
 
         <div className="mt-6 space-y-6">
@@ -188,30 +199,47 @@ export function AdminMapShell({ reps }: AdminMapShellProps) {
             ) : null}
           </section>
 
-          <section className="grid gap-3">
-            <div className="space-y-1">
-              <label htmlFor="admin-map-from" className="text-sm font-medium text-zinc-900">
-                From
-              </label>
-              <input
-                id="admin-map-from"
-                type="date"
-                value={filters.from}
-                onChange={(e) => updateDate("from", e.target.value)}
-                className="min-h-10 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900"
-              />
+          <section className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-medium text-zinc-900">Date range</p>
+              <button
+                type="button"
+                onClick={clearDateRange}
+                className={`min-h-8 rounded-lg px-2.5 text-xs font-semibold ring-2 ${
+                  allDatesSelected
+                    ? "bg-zinc-900 text-white ring-zinc-900"
+                    : "bg-white text-zinc-700 ring-zinc-200 hover:bg-zinc-50"
+                }`}
+                aria-pressed={allDatesSelected}
+              >
+                All time
+              </button>
             </div>
-            <div className="space-y-1">
-              <label htmlFor="admin-map-to" className="text-sm font-medium text-zinc-900">
-                To
-              </label>
-              <input
-                id="admin-map-to"
-                type="date"
-                value={filters.to}
-                onChange={(e) => updateDate("to", e.target.value)}
-                className="min-h-10 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900"
-              />
+            <div className="grid gap-3">
+              <div className="space-y-1">
+                <label htmlFor="admin-map-from" className="text-sm text-zinc-700">
+                  From
+                </label>
+                <input
+                  id="admin-map-from"
+                  type="date"
+                  value={filters.from ?? ""}
+                  onChange={(e) => updateDate("from", e.target.value)}
+                  className="min-h-10 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="admin-map-to" className="text-sm text-zinc-700">
+                  To
+                </label>
+                <input
+                  id="admin-map-to"
+                  type="date"
+                  value={filters.to ?? ""}
+                  onChange={(e) => updateDate("to", e.target.value)}
+                  className="min-h-10 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900"
+                />
+              </div>
             </div>
           </section>
 
@@ -288,9 +316,10 @@ export function AdminMapShell({ reps }: AdminMapShellProps) {
             </div>
           </section>
         </div>
+        </div>
       </aside>
 
-      <div className="relative min-h-[420px] flex-1 md:min-h-0">
+      <div className="relative min-h-[min(70vh,560px)] shrink-0 flex-1 md:min-h-0 md:h-full">
         <AdminMapCanvas
           filters={filters}
           refreshKey={refreshKey}

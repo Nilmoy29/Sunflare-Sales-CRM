@@ -85,7 +85,7 @@ export function TerritoryAssignmentsPanel({
   ]);
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-1 lg:overflow-hidden">
+    <div className="flex flex-col gap-4">
       <label className="block text-sm">
         <span className="font-medium text-zinc-800">Filter by date</span>
         <input
@@ -114,7 +114,7 @@ export function TerritoryAssignmentsPanel({
         <p className="text-sm text-zinc-500">No assignments for this date.</p>
       ) : null}
 
-      <ul className="flex max-h-48 flex-col gap-2 overflow-y-auto lg:max-h-64">
+      <ul className="flex flex-col gap-2">
         {assignments.map((assignment) => (
           <li key={assignment.id}>
             <button

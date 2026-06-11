@@ -35,7 +35,7 @@ export async function getRepShiftSummary(
   try {
     const supabase = await createClient();
 
-    const [knocksRes, callsRes, leadsRes, apptsRes] = await Promise.all([
+    const [knocksRes, callsRes, apptsRes, leadsRes] = await Promise.all([
       supabase
         .from("door_knocks")
         .select("outcome")
@@ -50,17 +50,16 @@ export async function getRepShiftSummary(
         .lte("called_at", endedAt),
       supabase
         .from("leads")
-        .select("id", { count: "exact", head: true })
-        .eq("rep_id", repId)
-        .gte("created_at", startedAt)
-        .lte("created_at", endedAt),
-      supabase
-        .from("leads")
         .select("created_at, updated_at")
         .eq("rep_id", repId)
         .eq("stage", "appointment_set")
         .gte("updated_at", startedAt)
         .lte("updated_at", endedAt),
+      supabase.rpc("count_rep_interested_leads", {
+        p_rep_id: repId,
+        p_from: startedAt,
+        p_to: endedAt,
+      } as never),
     ]);
 
     if (knocksRes.error) {
@@ -69,12 +68,16 @@ export async function getRepShiftSummary(
     if (callsRes.error) {
       throw callsRes.error;
     }
-    if (leadsRes.error) {
-      throw leadsRes.error;
-    }
     if (apptsRes.error) {
       throw apptsRes.error;
     }
+    if (leadsRes.error) {
+      throw leadsRes.error;
+    }
+
+    const leadsCountData = (leadsRes as { data: unknown }).data;
+    const interestedLeadsCount =
+      typeof leadsCountData === "number" ? leadsCountData : 0;
 
     const knocks = (knocksRes.data ?? []) as { outcome: DoorOutcome }[];
     const apptCandidates = (apptsRes.data ?? []) as {
@@ -89,7 +92,7 @@ export async function getRepShiftSummary(
       doors: knocks.length,
       door_outcomes: aggregateDoorOutcomes(knocks),
       calls: callsRes.count ?? 0,
-      leads_added: leadsRes.count ?? 0,
+      leads_added: interestedLeadsCount,
       appointments_set,
     };
   } catch {
