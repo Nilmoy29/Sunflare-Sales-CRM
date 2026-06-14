@@ -108,12 +108,12 @@ export function PipelineFiltersBar({
   );
 
   return (
-    <section className="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-zinc-50/80 p-4">
+    <section className="flex flex-col gap-4 rounded-lg border border-border bg-secondary/80 p-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-1 sm:col-span-2 lg:col-span-1">
           <label
             htmlFor="pipeline-suburb"
-            className="text-sm font-medium text-zinc-900"
+            className="text-sm font-medium text-foreground"
           >
             Suburb
           </label>
@@ -126,12 +126,12 @@ export function PipelineFiltersBar({
               onChange({ ...filters, suburb: suburbDraft.trim() })
             }
             placeholder="Filter by suburb"
-            className="min-h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900"
+            className="min-h-11 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
           />
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="pipeline-from" className="text-sm font-medium text-zinc-900">
+          <label htmlFor="pipeline-from" className="text-sm font-medium text-foreground">
             From
           </label>
           <input
@@ -139,12 +139,12 @@ export function PipelineFiltersBar({
             type="date"
             value={filters.from}
             onChange={(e) => updateDate("from", e.target.value)}
-            className="min-h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900"
+            className="min-h-11 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
           />
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="pipeline-to" className="text-sm font-medium text-zinc-900">
+          <label htmlFor="pipeline-to" className="text-sm font-medium text-foreground">
             To
           </label>
           <input
@@ -152,21 +152,21 @@ export function PipelineFiltersBar({
             type="date"
             value={filters.to}
             onChange={(e) => updateDate("to", e.target.value)}
-            className="min-h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900"
+            className="min-h-11 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm font-medium text-zinc-900">Stage</p>
+        <p className="text-sm font-medium text-foreground">Stage</p>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={selectAllStages}
             className={`min-h-10 rounded-lg px-3 py-1.5 text-sm font-semibold ring-2 ${
               allStagesSelected
-                ? "bg-zinc-900 text-white ring-zinc-900"
-                : "bg-white text-zinc-700 ring-zinc-200"
+                ? "bg-accent text-accent-foreground ring-accent"
+                : "bg-card text-muted-foreground ring-border"
             }`}
           >
             All stages
@@ -183,8 +183,8 @@ export function PipelineFiltersBar({
                 onClick={() => toggleStage(stage)}
                 className={`min-h-10 rounded-lg px-3 py-1.5 text-sm font-semibold ring-2 ${
                   selected
-                    ? "bg-zinc-900 text-white ring-zinc-900"
-                    : "bg-white text-zinc-700 ring-zinc-200"
+                    ? "bg-accent text-accent-foreground ring-accent"
+                    : "bg-card text-muted-foreground ring-border"
                 }`}
               >
                 {LEAD_STAGE_LABELS[stage]}
@@ -195,15 +195,15 @@ export function PipelineFiltersBar({
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm font-medium text-zinc-900">Channel</p>
+        <p className="text-sm font-medium text-foreground">Channel</p>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={selectAllSources}
             className={`min-h-10 rounded-lg px-3 py-1.5 text-sm font-semibold ring-2 ${
               allSourcesSelected
-                ? "bg-zinc-900 text-white ring-zinc-900"
-                : "bg-white text-zinc-700 ring-zinc-200"
+                ? "bg-accent text-accent-foreground ring-accent"
+                : "bg-card text-muted-foreground ring-border"
             }`}
           >
             All channels
@@ -220,8 +220,8 @@ export function PipelineFiltersBar({
                 onClick={() => toggleSource(source)}
                 className={`min-h-10 rounded-lg px-3 py-1.5 text-sm font-semibold ring-2 ${
                   selected
-                    ? "bg-zinc-900 text-white ring-zinc-900"
-                    : "bg-white text-zinc-700 ring-zinc-200"
+                    ? "bg-accent text-accent-foreground ring-accent"
+                    : "bg-card text-muted-foreground ring-border"
                 }`}
               >
                 {LEAD_SOURCE_LABELS[source]}
@@ -233,14 +233,14 @@ export function PipelineFiltersBar({
 
       {showOwnerFilter ? (
         <div className="space-y-2">
-          <p className="text-sm font-medium text-zinc-900">Owner</p>
+          <p className="text-sm font-medium text-foreground">Owner</p>
           <div className="max-h-40 space-y-2 overflow-y-auto">
             <label className="flex min-h-10 cursor-pointer items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 checked={allRepsSelected}
                 onChange={selectAllReps}
-                className="size-4 rounded border-zinc-300"
+                className="size-4 rounded border-border"
               />
               <span className="font-medium">All reps</span>
             </label>
@@ -258,7 +258,7 @@ export function PipelineFiltersBar({
                     type="checkbox"
                     checked={checked}
                     onChange={() => toggleRep(rep.id)}
-                    className="size-4 rounded border-zinc-300"
+                    className="size-4 rounded border-border"
                   />
                   <span>{rep.name}</span>
                 </label>

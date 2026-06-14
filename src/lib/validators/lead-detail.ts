@@ -10,13 +10,17 @@ import {
 
 export const leadDetailHeaderSchema = z.object({
   id: z.string().uuid(),
+  contact_id: z.string().uuid(),
   stage: leadStageSchema,
   source: leadSourceSchema,
   rep_id: z.string().uuid(),
   rep_name: z.string(),
   contact_name: z.string(),
+  first_name: z.string().nullable(),
+  last_name: z.string().nullable(),
   address: z.string().nullable(),
   suburb: z.string().nullable(),
+  postcode: z.string().nullable(),
   phone: z.string().nullable(),
   created_at: z.string(),
   lost_reason: lostReasonSchema.nullable(),

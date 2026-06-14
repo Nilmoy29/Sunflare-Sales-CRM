@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import { AddLeadButton } from "@/components/rep/add-lead-button";
+import { BookAppointmentSheet } from "@/components/rep/book-appointment-sheet";
 import { DoorOutcomeSheet } from "@/components/rep/door-outcome-sheet";
 import { LogKnockButton } from "@/components/rep/log-knock-button";
 import { OfflinePendingIndicator } from "@/components/rep/offline-pending-indicator";
@@ -9,9 +11,11 @@ import { ShiftControls } from "@/components/rep/shift-controls";
 import { ShiftEndSummarySheet } from "@/components/rep/shift-end-summary-sheet";
 import { useRepLocation } from "@/features/gps/use-rep-location";
 import { useGpsPingLoop } from "@/features/gps/use-gps-ping-loop";
+import { useAppointmentDraft } from "@/features/knocks/use-appointment-draft";
 import { useKnockDraft } from "@/features/knocks/use-knock-draft";
 import { useKnockSyncLoop } from "@/features/knocks/use-knock-sync-loop";
 import { usePendingKnocks } from "@/features/knocks/use-pending-knocks";
+import type { BookAppointmentResponse } from "@/lib/validators/book-appointment";
 import type { SubmitKnockResult } from "@/features/knocks/submit-knock";
 import { isPromotableDoorOutcome } from "@/lib/validators/leads";
 import { useActiveShift } from "@/features/shifts/use-active-shift";
@@ -43,6 +47,12 @@ export function RepMapShiftShell() {
     useRepLocation(isActive);
 
   const { draft, isOpen, openDraft, closeDraft } = useKnockDraft();
+  const {
+    draft: appointmentDraft,
+    isOpen: isAppointmentOpen,
+    openDraft: openAppointmentDraft,
+    closeDraft: closeAppointmentDraft,
+  } = useAppointmentDraft();
   const [knockRefreshKey, setKnockRefreshKey] = useState(0);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
   const { pendingKnocks, pendingCount } = usePendingKnocks();
@@ -94,13 +104,24 @@ export function RepMapShiftShell() {
     enabled: isActive,
   });
 
+  const handleAppointmentBooked = useCallback(
+    (_result: BookAppointmentResponse) => {
+      setKnockRefreshKey((key) => key + 1);
+      setSaveNotice("Appointment booked · Added to pipeline");
+      closeAppointmentDraft();
+    },
+    [closeAppointmentDraft],
+  );
+
   useEffect(() => {
     if (!isActive) {
       closeDraft();
+      closeAppointmentDraft();
     }
-  }, [isActive, closeDraft]);
+  }, [isActive, closeDraft, closeAppointmentDraft]);
 
   const handleMapClick = (coords: { lat: number; lng: number }) => {
+    closeAppointmentDraft();
     openDraft({
       lat: coords.lat,
       lng: coords.lng,
@@ -109,6 +130,7 @@ export function RepMapShiftShell() {
   };
 
   const handlePinClick = (coords: { lat: number; lng: number }) => {
+    closeAppointmentDraft();
     openDraft({
       lat: coords.lat,
       lng: coords.lng,
@@ -120,6 +142,7 @@ export function RepMapShiftShell() {
     if (!userLocation) {
       return;
     }
+    closeAppointmentDraft();
     openDraft({
       lat: userLocation.lat,
       lng: userLocation.lng,
@@ -127,17 +150,37 @@ export function RepMapShiftShell() {
     });
   };
 
+  const handleAddLead = () => {
+    if (!userLocation) {
+      return;
+    }
+    closeDraft();
+    openAppointmentDraft({
+      lat: userLocation.lat,
+      lng: userLocation.lng,
+      source: "gps_quick_add",
+    });
+  };
+
+  const activeLocationDraft = appointmentDraft ?? draft;
+
   const territoryWarning = useMemo(() => {
-    if (!draft || territoryOverlays.length === 0) {
+    if (!activeLocationDraft || territoryOverlays.length === 0) {
       return null;
     }
 
-    if (isPointInAnyTerritory(draft.lng, draft.lat, territoryOverlays)) {
+    if (
+      isPointInAnyTerritory(
+        activeLocationDraft.lng,
+        activeLocationDraft.lat,
+        territoryOverlays,
+      )
+    ) {
       return null;
     }
 
     return "Outside your assigned territory for today";
-  }, [draft, territoryOverlays]);
+  }, [activeLocationDraft, territoryOverlays]);
 
   return (
     <>
@@ -170,13 +213,27 @@ export function RepMapShiftShell() {
               disabledReason={locationGeoWarning}
               onClick={handleLogKnock}
             />
+            <AddLeadButton
+              disabled={!userLocation}
+              disabledReason={locationGeoWarning}
+              onClick={handleAddLead}
+            />
             {isOpen && draft ? (
               <DoorOutcomeSheet
-                key={`${draft.lat}-${draft.lng}-${draft.source}`}
+                key={`knock-${draft.lat}-${draft.lng}-${draft.source}`}
                 draft={draft}
                 territoryWarning={territoryWarning}
                 onClose={closeDraft}
                 onSuccess={handleKnockSaved}
+              />
+            ) : null}
+            {isAppointmentOpen && appointmentDraft ? (
+              <BookAppointmentSheet
+                key={`appt-${appointmentDraft.lat}-${appointmentDraft.lng}-${appointmentDraft.source}`}
+                draft={appointmentDraft}
+                territoryWarning={territoryWarning}
+                onClose={closeAppointmentDraft}
+                onSuccess={handleAppointmentBooked}
               />
             ) : null}
           </>

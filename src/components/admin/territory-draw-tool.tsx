@@ -6,6 +6,7 @@ import {
   useEffect,
   useImperativeHandle,
   useRef,
+  useState,
 } from "react";
 import type {
   FilterSpecification,
@@ -24,6 +25,8 @@ import type {
   GeoJsonPolygon,
   TerritorySummary,
 } from "@/lib/validators/territories";
+import { useMapboxResize } from "@/lib/geo/use-mapbox-resize";
+import { waitForElementSize } from "@/lib/geo/wait-for-element-size";
 
 const TERRITORIES_SOURCE_ID = "territories-existing";
 const TERRITORIES_FILL_LAYER_ID = "territories-fill";
@@ -108,13 +111,15 @@ type MapboxDrawControl = import("@mapbox/mapbox-gl-draw").default;
 
 function safeDrawMode(draw: MapboxDrawControl, mode: string): void {
   try {
-    if (draw.getMode() === mode) {
+    const currentMode = (draw as { getMode?: () => string }).getMode?.();
+    if (currentMode === mode) {
       return;
     }
     draw.changeMode(mode);
   } catch {
     try {
-      if (draw.getMode() !== "simple_select") {
+      const currentMode = (draw as { getMode?: () => string }).getMode?.();
+      if (currentMode !== "simple_select") {
         draw.changeMode("simple_select");
       }
     } catch {
@@ -160,6 +165,7 @@ export const TerritoryDrawTool = forwardRef<
   const mapRef = useRef<MapboxMap | null>(null);
   const drawRef = useRef<import("@mapbox/mapbox-gl-draw").default | null>(null);
   const mapReadyRef = useRef(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
   const drawEnabledRef = useRef(drawEnabled);
   const isCapturingRef = useRef(false);
   const onPolygonDrawnRef = useRef(onPolygonDrawn);
@@ -179,6 +185,8 @@ export const TerritoryDrawTool = forwardRef<
   }));
 
   const token = getMapboxAccessToken();
+
+  useMapboxResize(mapRef, containerRef, mapLoaded);
 
   useEffect(() => {
     onPolygonDrawnRef.current = onPolygonDrawn;
@@ -213,6 +221,11 @@ export const TerritoryDrawTool = forwardRef<
       const mapboxgl = (await import("mapbox-gl")).default;
       const MapboxDraw = (await import("@mapbox/mapbox-gl-draw")).default;
 
+      if (cancelled || !containerRef.current) {
+        return;
+      }
+
+      await waitForElementSize(containerRef.current);
       if (cancelled || !containerRef.current) {
         return;
       }
@@ -340,6 +353,8 @@ export const TerritoryDrawTool = forwardRef<
         );
 
         mapReadyRef.current = true;
+        setMapLoaded(true);
+        requestAnimationFrame(() => map.resize());
 
         if (drawEnabledRef.current) {
           safeDrawMode(draw, "draw_polygon");
@@ -369,6 +384,7 @@ export const TerritoryDrawTool = forwardRef<
     return () => {
       cancelled = true;
       mapReadyRef.current = false;
+      setMapLoaded(false);
       drawRef.current = null;
       mapRef.current?.remove();
       mapRef.current = null;
@@ -445,7 +461,10 @@ export const TerritoryDrawTool = forwardRef<
       return;
     }
 
-    if (!drawEnabled && draw.getMode() === "draw_polygon") {
+    if (
+      !drawEnabled &&
+      (draw as { getMode?: () => string }).getMode?.() === "draw_polygon"
+    ) {
       safeDrawMode(draw, "simple_select");
     }
   }, [drawEnabled, pendingPolygon]);
@@ -470,14 +489,14 @@ export const TerritoryDrawTool = forwardRef<
 
   if (!token) {
     return (
-      <div className="flex h-full flex-1 flex-col items-center justify-center gap-3 bg-zinc-50 p-8 text-center">
-        <p className="text-lg font-semibold text-zinc-900">Mapbox not configured</p>
-        <p className="max-w-md text-sm text-zinc-600">
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-secondary p-8 text-center">
+        <p className="text-lg font-semibold text-foreground">Mapbox not configured</p>
+        <p className="max-w-md text-sm text-muted-foreground">
           Add{" "}
-          <code className="rounded bg-zinc-100 px-1 py-0.5">
+          <code className="rounded bg-secondary px-1 py-0.5">
             NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
           </code>{" "}
-          to <code className="rounded bg-zinc-100 px-1 py-0.5">.env.local</code>{" "}
+          to <code className="rounded bg-secondary px-1 py-0.5">.env.local</code>{" "}
           when you have credentials. See{" "}
           <span className="font-medium">docs/SETUP_KEYS.md</span> for setup steps.
         </p>
@@ -486,10 +505,10 @@ export const TerritoryDrawTool = forwardRef<
   }
 
   return (
-    <div className="relative h-full min-h-0 w-full flex-1">
+    <div className="absolute inset-0">
       <div
         ref={containerRef}
-        className="h-full w-full"
+        className="h-full w-full touch-manipulation"
         aria-label="Territory map"
       />
     </div>

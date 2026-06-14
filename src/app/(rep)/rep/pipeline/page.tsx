@@ -7,7 +7,7 @@ export default async function RepPipelinePage() {
   return (
     <PipelineBoardShell
       title="Pipeline"
-      description="Drag leads between stages to update your pipeline."
+      description="Track your leads, update status, and add notes from one sheet."
       showRepName={false}
       showOwnerFilter={false}
       detailBasePath="/rep/pipeline"

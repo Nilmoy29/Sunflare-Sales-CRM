@@ -23,6 +23,13 @@ export function formatLastTouchDate(iso: string): string {
   return formatKnockHistoryDate(iso);
 }
 
+export function formatPipelineDate(iso: string | null): string {
+  if (!iso) {
+    return "—";
+  }
+  return formatKnockHistoryDate(iso);
+}
+
 export function formatNextActionCountdown(dueAt: string | null): string {
   if (!dueAt) {
     return "None scheduled";

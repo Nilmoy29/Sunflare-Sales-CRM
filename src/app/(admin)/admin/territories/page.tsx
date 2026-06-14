@@ -19,7 +19,7 @@ export default async function AdminTerritoriesPage() {
   }));
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col">
+    <main className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:overflow-hidden">
       <TerritoryShell reps={reps} />
     </main>
   );

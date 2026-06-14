@@ -60,6 +60,32 @@ export const createContactBodySchema = z.object({
 
 export type CreateContactBody = z.infer<typeof createContactBodySchema>;
 
+const optionalTrimmedNullableString = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .optional()
+    .nullable()
+    .transform((value) => (value ? value : null));
+
+export const updateContactBodySchema = z.object({
+  first_name: z.string().trim().min(1, "Customer name is required").max(100),
+  last_name: optionalTrimmedNullableString(100),
+  phone: optionalTrimmedNullableString(32),
+  address: optionalTrimmedNullableString(500),
+  suburb: optionalTrimmedNullableString(120),
+  postcode: optionalTrimmedNullableString(16),
+});
+
+export type UpdateContactBody = z.infer<typeof updateContactBodySchema>;
+
+export const updateContactResponseSchema = z.object({
+  contact: contactSummarySchema,
+});
+
+export type UpdateContactResponse = z.infer<typeof updateContactResponseSchema>;
+
 export const createContactResponseSchema = z.object({
   contact: contactSummarySchema,
 });

@@ -21,12 +21,13 @@ export default async function AdminPipelinePage() {
     <div className="flex min-h-0 flex-1 flex-col">
       <PipelineBoardShell
         title="Pipeline"
-        description="View all reps' leads and move them through the sales process."
+        description="View all reps' leads and update status, notes, and proposals in one place."
         showRepName
         showOwnerFilter
         detailBasePath="/admin/pipeline"
         reps={reps}
         layout="desktop"
+        allowDelete
       />
     </div>
   );

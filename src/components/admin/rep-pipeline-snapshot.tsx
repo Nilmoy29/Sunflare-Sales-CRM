@@ -17,17 +17,17 @@ export function RepPipelineSnapshot({
   const totalLeads = stages.reduce((sum, stage) => sum + stage.count, 0);
 
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white">
-      <div className="border-b border-zinc-200 px-4 py-3">
-        <h2 className="text-lg font-semibold text-zinc-900">Current pipeline</h2>
-        <p className="mt-1 text-sm text-zinc-600">
+    <section className="rounded-lg border border-border bg-card">
+      <div className="border-b border-border px-4 py-3">
+        <h2 className="text-lg font-semibold text-foreground">Current pipeline</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
           Live lead counts by stage (not filtered by date range)
         </p>
       </div>
 
       <div className="p-4">
         {error ? (
-          <p className="rounded-lg bg-zinc-50 px-3 py-2 text-sm text-zinc-600 ring-1 ring-zinc-200">
+          <p className="rounded-lg bg-secondary px-3 py-2 text-sm text-muted-foreground ring-1 ring-border">
             {error}
           </p>
         ) : null}
@@ -37,14 +37,14 @@ export function RepPipelineSnapshot({
             {[0, 1, 2, 3, 4, 5].map((key) => (
               <div
                 key={key}
-                className="h-9 animate-pulse rounded bg-zinc-100"
+                className="h-9 animate-pulse rounded bg-secondary"
               />
             ))}
           </div>
         ) : null}
 
         {!loading && !error && stages.length === 0 ? (
-          <p className="rounded-lg bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-600 ring-1 ring-zinc-200">
+          <p className="rounded-lg bg-secondary px-4 py-6 text-center text-sm text-muted-foreground ring-1 ring-border">
             No pipeline data
           </p>
         ) : null}
@@ -53,7 +53,7 @@ export function RepPipelineSnapshot({
           <div className="overflow-x-auto">
             <table className="w-full min-w-[320px] text-left text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                <tr className="border-b border-border text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <th scope="col" className="pb-2 pr-4">
                     Stage
                   </th>
@@ -76,11 +76,11 @@ export function RepPipelineSnapshot({
                     <tr key={stage.stage_key}>
                       <th
                         scope="row"
-                        className="py-2.5 pr-4 font-medium text-zinc-900"
+                        className="py-2.5 pr-4 font-medium text-foreground"
                       >
                         {stage.label}
                       </th>
-                      <td className="py-2.5 pr-4 text-right tabular-nums text-zinc-800">
+                      <td className="py-2.5 pr-4 text-right tabular-nums text-foreground">
                         {stage.count}
                       </td>
                       <td className="py-2.5">
@@ -100,7 +100,7 @@ export function RepPipelineSnapshot({
         ) : null}
 
         {!loading && !error && stages.length > 0 ? (
-          <p className="mt-4 text-sm text-zinc-600">
+          <p className="mt-4 text-sm text-muted-foreground">
             {totalLeads} active lead{totalLeads === 1 ? "" : "s"} total
           </p>
         ) : null}

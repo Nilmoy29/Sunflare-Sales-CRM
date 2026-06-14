@@ -22,10 +22,10 @@ export function RepPeriodTotals({
   hasError = false,
 }: RepPeriodTotalsProps) {
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white">
-      <div className="border-b border-zinc-200 px-4 py-3">
-        <h2 className="text-lg font-semibold text-zinc-900">Period totals</h2>
-        <p className="mt-1 text-sm text-zinc-600">
+    <section className="rounded-lg border border-border bg-card">
+      <div className="border-b border-border px-4 py-3">
+        <h2 className="text-lg font-semibold text-foreground">Period totals</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
           Sum of daily activity for the selected date range
         </p>
       </div>
@@ -36,7 +36,7 @@ export function RepPeriodTotals({
             {[0, 1, 2, 3].map((key) => (
               <div
                 key={key}
-                className="h-16 animate-pulse rounded-lg bg-zinc-100"
+                className="h-16 animate-pulse rounded-lg bg-secondary"
               />
             ))}
           </div>
@@ -47,12 +47,12 @@ export function RepPeriodTotals({
             {METRIC_KEYS.map((key) => (
               <div
                 key={key}
-                className="rounded-lg border border-zinc-100 bg-zinc-50 px-4 py-3"
+                className="rounded-lg border border-zinc-100 bg-secondary px-4 py-3"
               >
-                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {LEADERBOARD_METRIC_LABELS[key]}
                 </p>
-                <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900">
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
                   {totals[key]}
                 </p>
               </div>

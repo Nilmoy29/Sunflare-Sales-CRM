@@ -2,12 +2,19 @@
 
 import { logoutAction } from "@/features/auth/actions";
 
-export function SignOutButton() {
+type SignOutButtonProps = {
+  className?: string;
+};
+
+export function SignOutButton({ className }: SignOutButtonProps) {
   return (
     <form action={logoutAction}>
       <button
         type="submit"
-        className="text-sm font-medium text-zinc-800 underline decoration-zinc-400 underline-offset-2 hover:text-zinc-950"
+        className={
+          className ??
+          "rounded-lg border border-border bg-secondary px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+        }
       >
         Sign out
       </button>

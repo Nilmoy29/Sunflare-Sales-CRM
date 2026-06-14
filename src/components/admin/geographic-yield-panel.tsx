@@ -25,7 +25,7 @@ function rankRowClassName(rank: number): string | undefined {
     return "border-l-4 border-amber-400 bg-amber-50/60";
   }
   if (rank === 2 || rank === 3) {
-    return "border-l-4 border-zinc-300 bg-zinc-50/80";
+    return "border-l-4 border-border bg-secondary/80";
   }
   return undefined;
 }
@@ -71,11 +71,11 @@ export function GeographicYieldPanel({
   const exportDisabled = loading || !!error || rows.length === 0;
 
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-zinc-200 px-4 py-3">
+    <section className="rounded-xl border border-border bg-card">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-3">
         <div>
-          <h2 className="text-lg font-semibold text-zinc-900">Geographic yield</h2>
-          <p className="mt-1 text-sm text-zinc-600">
+          <h2 className="text-lg font-semibold text-foreground">Geographic yield</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             Suburb conversion ranked by selected metric for the active date range
           </p>
         </div>
@@ -93,8 +93,8 @@ export function GeographicYieldPanel({
                 onClick={() => onMetricChange(option.id)}
                 className={
                   active
-                    ? "rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white"
-                    : "rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                    ? "rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground"
+                    : "rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-secondary"
                 }
               >
                 {option.label}
@@ -104,7 +104,7 @@ export function GeographicYieldPanel({
         </div>
 
         {error ? (
-          <p className="rounded-lg bg-zinc-50 px-3 py-2 text-sm text-zinc-600 ring-1 ring-zinc-200">
+          <p className="rounded-lg bg-secondary px-3 py-2 text-sm text-muted-foreground ring-1 ring-border">
             {error}
           </p>
         ) : null}
@@ -114,14 +114,14 @@ export function GeographicYieldPanel({
             {[0, 1, 2, 3, 4, 5].map((key) => (
               <div
                 key={key}
-                className="h-9 animate-pulse rounded bg-zinc-100"
+                className="h-9 animate-pulse rounded bg-secondary"
               />
             ))}
           </div>
         ) : null}
 
         {!loading && !error && rows.length === 0 ? (
-          <p className="rounded-lg bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-600 ring-1 ring-zinc-200">
+          <p className="rounded-lg bg-secondary px-4 py-6 text-center text-sm text-muted-foreground ring-1 ring-border">
             No knocks with suburb data in this period
           </p>
         ) : null}
@@ -130,7 +130,7 @@ export function GeographicYieldPanel({
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-left text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                <tr className="border-b border-border text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <th scope="col" className="pb-2 pr-4 w-16">
                     Rank
                   </th>
@@ -164,25 +164,25 @@ export function GeographicYieldPanel({
                       key={row.suburb}
                       className={rankRowClassName(row.rank)}
                     >
-                      <td className="py-2.5 pr-4 tabular-nums font-semibold text-zinc-900">
+                      <td className="py-2.5 pr-4 tabular-nums font-semibold text-foreground">
                         #{row.rank}
                       </td>
                       <th
                         scope="row"
-                        className="py-2.5 pr-4 font-medium text-zinc-900"
+                        className="py-2.5 pr-4 font-medium text-foreground"
                       >
                         {row.suburb}
                       </th>
-                      <td className="py-2.5 pr-4 text-right tabular-nums text-zinc-800">
+                      <td className="py-2.5 pr-4 text-right tabular-nums text-foreground">
                         {row.doors}
                       </td>
-                      <td className="py-2.5 pr-4 text-right tabular-nums text-zinc-800">
+                      <td className="py-2.5 pr-4 text-right tabular-nums text-foreground">
                         {row.interested}
                       </td>
-                      <td className="py-2.5 pr-4 text-right tabular-nums text-zinc-800">
+                      <td className="py-2.5 pr-4 text-right tabular-nums text-foreground">
                         {row.leads_added}
                       </td>
-                      <td className="py-2.5 pr-4 text-right tabular-nums text-zinc-800">
+                      <td className="py-2.5 pr-4 text-right tabular-nums text-foreground">
                         {formatInterestedPct(row.interested_pct)}
                       </td>
                       <td className="py-2.5">

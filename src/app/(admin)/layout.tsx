@@ -9,7 +9,7 @@ export default async function AdminLayout({
   const profile = await getAuthProfile();
 
   return (
-    <div className="admin-theme flex h-dvh flex-col overflow-hidden bg-white text-zinc-950">
+    <div className="admin-theme flex h-dvh flex-col overflow-hidden bg-background text-foreground">
       <AdminHeader name={profile?.name ?? "Manager"} />
       {children}
     </div>

@@ -9,6 +9,7 @@ import {
   TerritoryDrawTool,
   type TerritoryDrawToolHandle,
 } from "@/components/admin/territory-draw-tool";
+import { AdminMapViewport } from "@/components/admin/admin-map-viewport";
 import { createTerritoryAssignment } from "@/features/territories/api";
 import { formatSydneyDateString } from "@/features/knocks/format-knock-date";
 import { useTerritories } from "@/features/territories/use-territories";
@@ -262,24 +263,35 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
-      <aside className="flex w-full shrink-0 flex-col gap-4 border-b border-zinc-200 bg-white p-4 lg:min-h-0 lg:w-80 lg:overflow-y-auto lg:border-b-0 lg:border-r">
+      <AdminMapViewport>
+        <TerritoryDrawTool
+          ref={drawToolRef}
+          territories={territories}
+          selectedId={selectedId}
+          drawEnabled={view === "zones" && drawEnabled}
+          pendingPolygon={pendingPolygon}
+          onPolygonDrawn={handlePolygonDrawn}
+        />
+      </AdminMapViewport>
+
+      <aside className="flex w-full shrink-0 flex-col gap-4 border-t border-border bg-card p-4 lg:min-h-0 lg:w-80 lg:overflow-y-auto lg:border-t-0 lg:border-r">
         <div>
-          <h1 className="text-lg font-semibold text-zinc-900">Territories</h1>
-          <p className="mt-1 text-sm text-zinc-600">
+          <h1 className="text-lg font-semibold text-foreground">Territories</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             {view === "zones"
               ? "Draw zones, assign a rep, and add manager notes."
               : "Review and manage rep assignments by date."}
           </p>
         </div>
 
-        <div className="flex rounded-lg border border-zinc-200 p-1">
+        <div className="flex rounded-lg border border-border p-1">
           <button
             type="button"
             onClick={() => switchView("zones")}
             className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition ${
               view === "zones"
-                ? "bg-zinc-900 text-white"
-                : "text-zinc-700 hover:bg-zinc-50"
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:bg-secondary"
             }`}
           >
             Zones
@@ -289,8 +301,8 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
             onClick={() => switchView("assignments")}
             className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition ${
               view === "assignments"
-                ? "bg-zinc-900 text-white"
-                : "text-zinc-700 hover:bg-zinc-50"
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:bg-secondary"
             }`}
           >
             Assignments
@@ -302,13 +314,13 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
             <button
               type="button"
               onClick={startDraw}
-              className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+              className="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-accent-foreground hover:bg-accent/90"
             >
               Draw new zone
             </button>
 
             {loading ? (
-              <p className="text-sm text-zinc-600">Loading territories…</p>
+              <p className="text-sm text-muted-foreground">Loading territories…</p>
             ) : null}
 
             {error ? (
@@ -318,7 +330,7 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
             ) : null}
 
             {!loading && territories.length === 0 ? (
-              <p className="text-sm text-zinc-500">No territories yet.</p>
+              <p className="text-sm text-muted-foreground">No territories yet.</p>
             ) : null}
 
             <ul className="flex flex-col gap-2">
@@ -330,14 +342,14 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
                     className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
                       selectedId === territory.id
                         ? "border-amber-400 bg-amber-50"
-                        : "border-zinc-200 bg-white hover:border-zinc-300"
+                        : "border-border bg-card hover:border-border"
                     }`}
                   >
-                    <span className="block font-medium text-zinc-900">
+                    <span className="block font-medium text-foreground">
                       {territory.name}
                     </span>
                     {territory.notes ? (
-                      <span className="mt-1 block line-clamp-2 text-xs text-zinc-600">
+                      <span className="mt-1 block line-clamp-2 text-xs text-muted-foreground">
                         {territory.notes}
                       </span>
                     ) : null}
@@ -347,15 +359,15 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
             </ul>
 
             {formMode !== "idle" ? (
-              <div className="space-y-3 border-t border-zinc-200 pt-4">
-                <p className="text-sm font-medium text-zinc-900">
+              <div className="space-y-3 border-t border-border pt-4">
+                <p className="text-sm font-medium text-foreground">
                   {formMode === "create" ? "Save new territory" : "Edit territory"}
                 </p>
 
                 {formMode === "create" ? (
                   <p
                     className={`text-sm ${
-                      pendingPolygon ? "text-emerald-700" : "text-zinc-600"
+                      pendingPolygon ? "text-emerald-700" : "text-muted-foreground"
                     }`}
                   >
                     {pendingPolygon
@@ -367,19 +379,19 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
                 ) : null}
 
                 <label className="block text-sm">
-                  <span className="font-medium text-zinc-800">Name</span>
+                  <span className="font-medium text-foreground">Name</span>
                   <input
                     type="text"
                     value={name}
                     onChange={(event) => setName(event.target.value)}
                     maxLength={TERRITORY_NAME_MAX_LENGTH}
-                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2"
                     placeholder="e.g. Surry Hills East"
                   />
                 </label>
 
                 <label className="block text-sm">
-                  <span className="font-medium text-zinc-800">
+                  <span className="font-medium text-foreground">
                     Notes (optional)
                   </span>
                   <textarea
@@ -387,23 +399,23 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
                     onChange={(event) => setNotes(event.target.value)}
                     maxLength={TERRITORY_NOTES_MAX_LENGTH}
                     rows={3}
-                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2"
                     placeholder="Manager context for this zone"
                   />
                 </label>
 
-                <div className="space-y-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3">
-                  <p className="text-sm font-medium text-zinc-900">
+                <div className="space-y-3 rounded-lg border border-border bg-secondary p-3">
+                  <p className="text-sm font-medium text-foreground">
                     Assign rep to this zone
                   </p>
 
                   <label className="block text-sm">
-                    <span className="font-medium text-zinc-800">Rep</span>
+                    <span className="font-medium text-foreground">Rep</span>
                     <select
                       value={assignRepId}
                       onChange={(event) => setAssignRepId(event.target.value)}
                       disabled={reps.length === 0}
-                      className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2"
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2"
                     >
                       <option value="">Select rep…</option>
                       {reps.map((rep) => (
@@ -415,7 +427,7 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
                   </label>
 
                   <label className="block text-sm">
-                    <span className="font-medium text-zinc-800">
+                    <span className="font-medium text-foreground">
                       Canvass date
                     </span>
                     <input
@@ -427,11 +439,11 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
                         )
                       }
                       disabled={!assignRepId}
-                      className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 disabled:opacity-60"
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 disabled:opacity-60"
                     />
                   </label>
 
-                  <p className="text-xs text-zinc-600">
+                  <p className="text-xs text-muted-foreground">
                     {formMode === "create"
                       ? "Optional — assign when you save the new zone."
                       : "Optional — assign or re-assign when you save changes."}
@@ -447,7 +459,7 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
                     type="button"
                     onClick={() => void handleSave()}
                     disabled={saving || deleting}
-                    className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60"
+                    className="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-accent-foreground hover:bg-accent/90 disabled:opacity-60"
                   >
                     {saving ? "Saving…" : "Save"}
                   </button>
@@ -455,7 +467,7 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
                     type="button"
                     onClick={resetForm}
                     disabled={saving || deleting}
-                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
+                    className="rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground hover:bg-secondary disabled:opacity-60"
                   >
                     Cancel
                   </button>
@@ -483,17 +495,6 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
           />
         )}
       </aside>
-
-      <div className="relative min-h-[420px] shrink-0 flex-1 lg:min-h-0 lg:shrink">
-        <TerritoryDrawTool
-          ref={drawToolRef}
-          territories={territories}
-          selectedId={selectedId}
-          drawEnabled={view === "zones" && drawEnabled}
-          pendingPolygon={pendingPolygon}
-          onPolygonDrawn={handlePolygonDrawn}
-        />
-      </div>
     </div>
   );
 }

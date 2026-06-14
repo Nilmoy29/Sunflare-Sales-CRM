@@ -43,6 +43,8 @@ type PipelineKanbanProps = {
     stage: LeadStage,
     options?: MoveLeadStageOptions,
   ) => Promise<boolean>;
+  allowDelete?: boolean;
+  onDeleteLead?: (leadId: string) => Promise<boolean>;
 };
 
 type PendingLostMove = {
@@ -71,40 +73,63 @@ function PipelineLeadCardView({
   detailBasePath,
   dragging = false,
   showDetailsLink = true,
+  allowDelete = false,
+  deleting = false,
+  onDelete,
 }: {
   lead: PipelineLeadCard;
   showRepName: boolean;
   detailBasePath: string;
   dragging?: boolean;
   showDetailsLink?: boolean;
+  allowDelete?: boolean;
+  deleting?: boolean;
+  onDelete?: () => void;
 }) {
   return (
     <div
-      className={`rounded-md border border-zinc-200 bg-white p-3 shadow-sm ${
+      className={`rounded-md border border-border bg-card p-3 shadow-sm ${
         dragging ? "opacity-50" : ""
       }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-medium text-zinc-900">{lead.contact_name}</p>
-        <span
-          className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ${LEAD_SOURCE_BADGE_CLASS[lead.source]}`}
-        >
-          {LEAD_SOURCE_LABELS[lead.source]}
-        </span>
+        <p className="text-sm font-medium text-foreground">{lead.contact_name}</p>
+        <div className="flex shrink-0 items-center gap-1">
+          <span
+            className={`rounded px-1.5 py-0.5 text-xs font-medium ${LEAD_SOURCE_BADGE_CLASS[lead.source]}`}
+          >
+            {LEAD_SOURCE_LABELS[lead.source]}
+          </span>
+          {allowDelete && onDelete ? (
+            <button
+              type="button"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              disabled={deleting}
+              aria-label={`Delete ${lead.contact_name}`}
+              className="rounded px-1.5 py-0.5 text-xs font-medium text-destructive hover:bg-destructive/10 disabled:opacity-60"
+            >
+              {deleting ? "…" : "×"}
+            </button>
+          ) : null}
+        </div>
       </div>
       {lead.address ? (
-        <p className="mt-1 text-xs text-zinc-600">{lead.address}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{lead.address}</p>
       ) : null}
       {lead.suburb ? (
-        <p className="mt-0.5 text-xs text-zinc-500">{lead.suburb}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">{lead.suburb}</p>
       ) : null}
       {showRepName ? (
-        <p className="mt-2 text-xs text-zinc-600">Owner: {lead.rep_name}</p>
+        <p className="mt-2 text-xs text-muted-foreground">Owner: {lead.rep_name}</p>
       ) : null}
-      <p className="mt-2 text-xs text-zinc-500">
+      <p className="mt-2 text-xs text-muted-foreground">
         Last touch: {formatLastTouchDate(lead.last_touch_at)}
       </p>
-      <p className="mt-0.5 text-xs text-zinc-600">
+      <p className="mt-0.5 text-xs text-muted-foreground">
         Next: {formatNextActionCountdown(lead.next_action_due_at)}
       </p>
       {showDetailsLink ? (
@@ -112,7 +137,7 @@ function PipelineLeadCardView({
           href={`${detailBasePath}/${lead.id}`}
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
-          className="mt-2 inline-block min-h-11 text-xs font-medium text-zinc-700 underline"
+          className="mt-2 inline-block min-h-11 text-xs font-medium text-accent underline"
         >
           Details
         </Link>
@@ -125,10 +150,16 @@ function DraggableLeadCard({
   lead,
   showRepName,
   detailBasePath,
+  allowDelete = false,
+  deleting = false,
+  onDelete,
 }: {
   lead: PipelineLeadCard;
   showRepName: boolean;
   detailBasePath: string;
+  allowDelete?: boolean;
+  deleting?: boolean;
+  onDelete?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
@@ -153,6 +184,9 @@ function DraggableLeadCard({
         showRepName={showRepName}
         detailBasePath={detailBasePath}
         dragging={isDragging}
+        allowDelete={allowDelete}
+        deleting={deleting}
+        onDelete={onDelete}
       />
     </div>
   );
@@ -163,21 +197,27 @@ function PipelineColumn({
   leads,
   showRepName,
   detailBasePath,
+  allowDelete = false,
+  deletingLeadId,
+  onDeleteLead,
 }: {
   stage: LeadStage;
   leads: PipelineLeadCard[];
   showRepName: boolean;
   detailBasePath: string;
+  allowDelete?: boolean;
+  deletingLeadId?: string | null;
+  onDeleteLead?: (leadId: string, contactName: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage });
 
   return (
     <div className={`flex flex-col ${COLUMN_WIDTH_CLASS}`}>
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-zinc-900">
+        <h2 className="text-sm font-semibold text-foreground">
           {LEAD_STAGE_LABELS[stage]}
         </h2>
-        <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600">
+        <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
           {leads.length}
         </span>
       </div>
@@ -185,8 +225,8 @@ function PipelineColumn({
         ref={setNodeRef}
         className={`flex min-h-[12rem] flex-1 flex-col gap-2 rounded-lg border border-dashed p-2 ${
           isOver
-            ? "border-zinc-400 bg-zinc-50"
-            : "border-zinc-200 bg-zinc-50/50"
+            ? "border-accent/60 bg-accent/5"
+            : "border-border bg-secondary/30"
         }`}
       >
         {leads.map((lead) => (
@@ -195,6 +235,13 @@ function PipelineColumn({
             lead={lead}
             showRepName={showRepName}
             detailBasePath={detailBasePath}
+            allowDelete={allowDelete}
+            deleting={deletingLeadId === lead.id}
+            onDelete={
+              onDeleteLead
+                ? () => onDeleteLead(lead.id, lead.contact_name)
+                : undefined
+            }
           />
         ))}
       </div>
@@ -209,9 +256,12 @@ export function PipelineKanban({
   showRepName,
   detailBasePath,
   onStageChange,
+  allowDelete = false,
+  onDeleteLead,
 }: PipelineKanbanProps) {
   const [activeLeadId, setActiveLeadId] = useState<string | null>(null);
   const [moving, setMoving] = useState(false);
+  const [deletingLeadId, setDeletingLeadId] = useState<string | null>(null);
   const [pendingLost, setPendingLost] = useState<PendingLostMove | null>(null);
 
   const sensors = useSensors(
@@ -291,9 +341,30 @@ export function PipelineKanban({
     }
   }
 
+  async function handleDeleteLead(leadId: string, contactName: string) {
+    if (!onDeleteLead || deletingLeadId) {
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `Delete "${contactName}" from the pipeline? This removes the lead and its notes/follow-ups.`,
+      )
+    ) {
+      return;
+    }
+
+    setDeletingLeadId(leadId);
+    try {
+      await onDeleteLead(leadId);
+    } finally {
+      setDeletingLeadId(null);
+    }
+  }
+
   if (loading) {
     return (
-      <p className="text-sm text-zinc-600" role="status">
+      <p className="text-sm text-muted-foreground" role="status">
         Loading pipeline…
       </p>
     );
@@ -302,7 +373,7 @@ export function PipelineKanban({
   return (
     <div className="flex flex-col gap-4">
       {error ? (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error}
         </p>
       ) : null}
@@ -324,6 +395,11 @@ export function PipelineKanban({
                 leads={leadsByStage.get(stage) ?? []}
                 showRepName={showRepName}
                 detailBasePath={detailBasePath}
+                allowDelete={allowDelete}
+                deletingLeadId={deletingLeadId}
+                onDeleteLead={
+                  allowDelete && onDeleteLead ? handleDeleteLead : undefined
+                }
               />
             ))}
           </div>

@@ -3,6 +3,7 @@ import type {
   CreateFollowUpBody,
   CreateFollowUpResponse,
 } from "@/lib/validators/follow-ups";
+import type { UpdateContactBody, UpdateContactResponse } from "@/lib/validators/contacts";
 import type { LeadDetailResponse } from "@/lib/validators/lead-detail";
 import type {
   PipelineFilters,
@@ -212,4 +213,55 @@ export async function createLeadFollowUp(
   }
 
   return responseBody.data;
+}
+
+export async function updateContact(
+  contactId: string,
+  body: UpdateContactBody,
+  signal?: AbortSignal,
+): Promise<UpdateContactResponse> {
+  const res = await fetch(`/api/v1/contacts/${contactId}`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal,
+  });
+
+  const responseBody = (await res.json()) as {
+    data?: UpdateContactResponse;
+    error?: { code: string; message: string };
+  };
+
+  if (!res.ok) {
+    throw new Error(
+      responseBody.error?.message ?? "Could not update contact",
+    );
+  }
+
+  if (!responseBody.data) {
+    throw new Error("Could not update contact");
+  }
+
+  return responseBody.data;
+}
+
+export async function deleteLead(
+  leadId: string,
+  signal?: AbortSignal,
+): Promise<void> {
+  const res = await fetch(`/api/v1/leads/${leadId}`, {
+    method: "DELETE",
+    credentials: "include",
+    signal,
+  });
+
+  const body = (await res.json()) as {
+    data?: { deleted: boolean };
+    error?: { code: string; message: string };
+  };
+
+  if (!res.ok) {
+    throw new Error(body.error?.message ?? "Could not delete lead");
+  }
 }

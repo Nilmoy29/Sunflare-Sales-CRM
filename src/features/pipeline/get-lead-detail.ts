@@ -31,7 +31,7 @@ const LEAD_DETAIL_SELECT = `
   contact_id,
   created_at,
   profiles!leads_rep_id_fkey ( name ),
-  contacts!leads_contact_id_fkey ( first_name, last_name, address, suburb, phone )
+  contacts!leads_contact_id_fkey ( first_name, last_name, address, suburb, postcode, phone )
 `;
 
 const KNOCK_DETAIL_SELECT = `
@@ -224,6 +224,7 @@ export async function getLeadDetail(
     last_name?: string | null;
     address?: string | null;
     suburb?: string | null;
+    postcode?: string | null;
     phone?: string | null;
   } | null;
 
@@ -326,13 +327,17 @@ export async function getLeadDetail(
   return leadDetailResponseSchema.parse({
     lead: {
       id: row.id,
+      contact_id,
       stage: stageParsed.data,
       source: sourceParsed.data,
       rep_id: row.rep_id,
       rep_name: profiles.name,
       contact_name,
+      first_name: contacts?.first_name ?? null,
+      last_name: contacts?.last_name ?? null,
       address: contacts?.address ?? null,
       suburb: contacts?.suburb ?? null,
+      postcode: contacts?.postcode ?? null,
       phone: contacts?.phone ?? null,
       created_at,
       lost_reason: lostReasonParsed.data,

@@ -1,8 +1,5 @@
 @import "tailwindcss";
-
-/* Mapbox GL styles — import when implementing map stories (Story 2.3+):
-   @import "mapbox-gl/dist/mapbox-gl.css";
- */
+@import "mapbox-gl/dist/mapbox-gl.css";
 
 :root {
   --background: #ffffff;
@@ -12,15 +9,36 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
 body {
@@ -29,14 +47,72 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
-/* Field rep + admin UI — always light with high contrast (ignore OS dark mode) */
-.rep-theme,
-.admin-theme {
+/* Field rep UI — light theme */
+.rep-theme {
   color-scheme: light;
   --background: #ffffff;
   --foreground: #09090b;
-  background-color: #ffffff;
-  color: #09090b;
+  --card: #ffffff;
+  --card-foreground: #09090b;
+  --popover: #ffffff;
+  --popover-foreground: #09090b;
+  --primary: #18181b;
+  --primary-foreground: #fafafa;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #18181b;
+  --accent-foreground: #fafafa;
+  --destructive: #dc2626;
+  --destructive-foreground: #fafafa;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #18181b;
+  --chart-1: #3b82f6;
+  --chart-2: #22c55e;
+  --chart-3: #eab308;
+  --chart-4: #ef4444;
+  --chart-5: #a855f7;
+  --success: #16a34a;
+  --warning: #ca8a04;
+  --radius: 0.5rem;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* Admin console — v0 sales dashboard dark theme */
+.admin-theme {
+  color-scheme: dark;
+  --background: oklch(0.09 0.005 260);
+  --foreground: oklch(0.95 0 0);
+  --card: oklch(0.12 0.005 260);
+  --card-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.12 0.005 260);
+  --popover-foreground: oklch(0.95 0 0);
+  --primary: oklch(0.95 0 0);
+  --primary-foreground: oklch(0.09 0.005 260);
+  --secondary: oklch(0.18 0.005 260);
+  --secondary-foreground: oklch(0.95 0 0);
+  --muted: oklch(0.18 0.005 260);
+  --muted-foreground: oklch(0.65 0 0);
+  --accent: oklch(0.7 0.18 145);
+  --accent-foreground: oklch(0.09 0.005 260);
+  --destructive: oklch(0.65 0.2 25);
+  --destructive-foreground: oklch(0.95 0 0);
+  --border: oklch(0.22 0.005 260);
+  --input: oklch(0.18 0.005 260);
+  --ring: oklch(0.7 0.18 145);
+  --chart-1: oklch(0.7 0.18 220);
+  --chart-2: oklch(0.7 0.18 145);
+  --chart-3: oklch(0.75 0.18 55);
+  --chart-4: oklch(0.65 0.2 25);
+  --chart-5: oklch(0.7 0.15 300);
+  --success: oklch(0.7 0.18 145);
+  --warning: oklch(0.75 0.18 55);
+  --radius: 0.5rem;
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
 @utility pb-safe {
@@ -45,32 +121,4 @@ body {
 
 @utility sheet-bottom {
   padding-bottom: max(2rem, env(safe-area-inset-bottom, 0px));
-}
-
-@media (prefers-color-scheme: dark) {
-  .rep-theme,
-  .admin-theme {
-    --background: #ffffff;
-    --foreground: #09090b;
-  }
-}
-
-.rep-theme .text-zinc-500,
-.admin-theme .text-zinc-500 {
-  color: var(--color-zinc-700);
-}
-
-.rep-theme .text-zinc-600,
-.admin-theme .text-zinc-600 {
-  color: var(--color-zinc-800);
-}
-
-.rep-theme .border-zinc-200,
-.admin-theme .border-zinc-200 {
-  border-color: var(--color-zinc-300);
-}
-
-.rep-theme .ring-zinc-200,
-.admin-theme .ring-zinc-200 {
-  --tw-ring-color: var(--color-zinc-300);
 }

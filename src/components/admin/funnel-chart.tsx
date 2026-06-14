@@ -40,11 +40,11 @@ export function FunnelChart({ stages, loading, error }: FunnelChartProps) {
     loading || !!error || stages.length === 0 || totalLeads === 0;
 
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-zinc-200 px-4 py-3">
+    <section className="rounded-lg border border-border bg-card">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-3">
         <div>
-          <h2 className="text-lg font-semibold text-zinc-900">Funnel conversion</h2>
-          <p className="mt-1 text-sm text-zinc-600">
+          <h2 className="text-lg font-semibold text-foreground">Funnel conversion</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             Leads created in the selected period
           </p>
         </div>
@@ -53,7 +53,7 @@ export function FunnelChart({ stages, loading, error }: FunnelChartProps) {
 
       <div className="p-4">
         {error ? (
-          <p className="rounded-lg bg-zinc-50 px-3 py-2 text-sm text-zinc-600 ring-1 ring-zinc-200">
+          <p className="rounded-lg bg-secondary px-3 py-2 text-sm text-muted-foreground ring-1 ring-border">
             {error}
           </p>
         ) : null}
@@ -63,14 +63,14 @@ export function FunnelChart({ stages, loading, error }: FunnelChartProps) {
             {[0, 1, 2, 3, 4].map((key) => (
               <div
                 key={key}
-                className="h-10 animate-pulse rounded bg-zinc-100"
+                className="h-10 animate-pulse rounded bg-secondary"
               />
             ))}
           </div>
         ) : null}
 
         {isEmpty ? (
-          <p className="rounded-lg bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-600 ring-1 ring-zinc-200">
+          <p className="rounded-lg bg-secondary px-4 py-6 text-center text-sm text-muted-foreground ring-1 ring-border">
             No leads in this period
           </p>
         ) : null}
@@ -79,7 +79,7 @@ export function FunnelChart({ stages, loading, error }: FunnelChartProps) {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[320px] text-left text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                <tr className="border-b border-border text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <th scope="col" className="pb-2 pr-4">
                     Stage
                   </th>
@@ -111,16 +111,16 @@ export function FunnelChart({ stages, loading, error }: FunnelChartProps) {
                     <tr key={stage.stage_key}>
                       <th
                         scope="row"
-                        className="py-3 pr-4 font-medium text-zinc-900"
+                        className="py-3 pr-4 font-medium text-foreground"
                       >
                         <div>{stage.label}</div>
                         {conversionNote ? (
-                          <div className="mt-0.5 text-xs font-normal text-zinc-500">
+                          <div className="mt-0.5 text-xs font-normal text-muted-foreground">
                             {conversionNote}
                           </div>
                         ) : null}
                       </th>
-                      <td className="py-3 pr-4 text-right tabular-nums text-zinc-800">
+                      <td className="py-3 pr-4 text-right tabular-nums text-foreground">
                         {stage.count}
                       </td>
                       <td className="py-3">

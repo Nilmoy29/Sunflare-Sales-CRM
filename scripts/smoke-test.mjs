@@ -338,6 +338,37 @@ async function main() {
   }, results);
 
   if (repCookies) {
+    await runCheck("4", "Rep cannot DELETE /api/v1/leads/[id]", async () => {
+      const fakeLeadId = "00000000-0000-4000-8000-000000000001";
+      const res = await fetch(`${base}/api/v1/leads/${fakeLeadId}`, {
+        method: "DELETE",
+        headers: { cookie: repCookies },
+      });
+      if (res.status !== 403 && res.status !== 401) {
+        throw new Error(`expected 403/401 for rep delete, got ${res.status}`);
+      }
+    }, results);
+  } else {
+    skipCheck(
+      "4",
+      "Rep cannot DELETE /api/v1/leads/[id]",
+      "rep credentials not configured",
+      results,
+    );
+  }
+
+  await runCheck("4", "Admin DELETE /api/v1/leads/[id] returns 404 for missing lead", async () => {
+    const fakeLeadId = "00000000-0000-4000-8000-000000000001";
+    const res = await fetch(`${base}/api/v1/leads/${fakeLeadId}`, {
+      method: "DELETE",
+      headers: { cookie: adminCookies },
+    });
+    if (res.status !== 404) {
+      throw new Error(`expected 404 for missing lead delete, got ${res.status}`);
+    }
+  }, results);
+
+  if (repCookies) {
     await runCheck("4", "GET /api/v1/leads (rep)", async () => {
       const { response, json } = await fetchJson(`${base}/api/v1/leads`, {
         cookies: repCookies,
@@ -469,6 +500,24 @@ async function main() {
     );
     assertStatus(response.status, 200, "dashboard/geographic-yield");
     assertHasData(json, "dashboard/geographic-yield");
+  }, results);
+
+  await runCheck("7", "GET /api/v1/admin/dashboard/activity-trend", async () => {
+    const weekFrom = new Date();
+    weekFrom.setDate(weekFrom.getDate() - weekFrom.getDay());
+    const weekTo = new Date(weekFrom);
+    weekTo.setDate(weekFrom.getDate() + 6);
+    const fmt = (d) =>
+      new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney" }).format(d);
+    const { response, json } = await fetchJson(
+      `${base}/api/v1/admin/dashboard/activity-trend?from=${fmt(weekFrom)}&to=${fmt(weekTo)}`,
+      { cookies: adminCookies },
+    );
+    assertStatus(response.status, 200, "dashboard/activity-trend");
+    assertHasData(json, "dashboard/activity-trend");
+    if (!Array.isArray(json.data.days)) {
+      throw new Error("dashboard/activity-trend: data.days should be an array");
+    }
   }, results);
 
   await runCheck("7", "GET /api/v1/admin/calls/script (admin settings)", async () => {

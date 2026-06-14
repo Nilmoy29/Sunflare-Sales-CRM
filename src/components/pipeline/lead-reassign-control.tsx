@@ -50,8 +50,8 @@ export function LeadReassignControl({
   }
 
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
-      <h2 className="text-sm font-semibold text-zinc-900">Reassign owner</h2>
+    <section className="rounded-lg border border-border bg-card p-4 shadow-sm">
+      <h2 className="text-sm font-semibold text-foreground">Reassign owner</h2>
       <p className="mt-1 text-sm text-zinc-600">
         Transfer this lead and open follow-ups to another rep.
       </p>
@@ -61,7 +61,7 @@ export function LeadReassignControl({
           value={selectedRepId}
           onChange={(e) => setSelectedRepId(e.target.value)}
           disabled={submitting}
-          className="min-h-11 flex-1 rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900"
+          className="min-h-11 flex-1 rounded-lg border border-border bg-card px-3 text-sm text-foreground"
           aria-label="Select new owner"
         >
           <option value="">Select rep…</option>
@@ -78,7 +78,7 @@ export function LeadReassignControl({
             void handleReassign();
           }}
           disabled={unchanged || submitting}
-          className="min-h-11 rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60"
+          className="min-h-11 rounded-lg bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-zinc-800 disabled:opacity-60"
         >
           {submitting ? "Reassigning…" : "Reassign"}
         </button>

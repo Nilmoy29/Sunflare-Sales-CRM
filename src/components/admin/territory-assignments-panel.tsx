@@ -87,7 +87,7 @@ export function TerritoryAssignmentsPanel({
   return (
     <div className="flex flex-col gap-4">
       <label className="block text-sm">
-        <span className="font-medium text-zinc-800">Filter by date</span>
+        <span className="font-medium text-foreground">Filter by date</span>
         <input
           type="date"
           value={filterDate}
@@ -96,12 +96,12 @@ export function TerritoryAssignmentsPanel({
               event.target.value || formatSydneyDateString(new Date()),
             )
           }
-          className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2"
+          className="mt-1 w-full rounded-lg border border-border px-3 py-2"
         />
       </label>
 
       {loading ? (
-        <p className="text-sm text-zinc-600">Loading assignments…</p>
+        <p className="text-sm text-muted-foreground">Loading assignments…</p>
       ) : null}
 
       {error ? (
@@ -111,7 +111,7 @@ export function TerritoryAssignmentsPanel({
       ) : null}
 
       {!loading && assignments.length === 0 ? (
-        <p className="text-sm text-zinc-500">No assignments for this date.</p>
+        <p className="text-sm text-muted-foreground">No assignments for this date.</p>
       ) : null}
 
       <ul className="flex flex-col gap-2">
@@ -123,13 +123,13 @@ export function TerritoryAssignmentsPanel({
               className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
                 selectedTerritoryId === assignment.territory_id
                   ? "border-amber-400 bg-amber-50"
-                  : "border-zinc-200 bg-white hover:border-zinc-300"
+                  : "border-border bg-card hover:border-border"
               }`}
             >
-              <span className="block font-medium text-zinc-900">
+              <span className="block font-medium text-foreground">
                 {assignment.rep_name}
               </span>
-              <span className="mt-1 block text-xs text-zinc-600">
+              <span className="mt-1 block text-xs text-muted-foreground">
                 {assignment.territory_name} · {assignment.assigned_date}
               </span>
             </button>
@@ -137,16 +137,16 @@ export function TerritoryAssignmentsPanel({
         ))}
       </ul>
 
-      <div className="space-y-3 border-t border-zinc-200 pt-4">
-        <p className="text-sm font-medium text-zinc-900">Assign territory</p>
+      <div className="space-y-3 border-t border-border pt-4">
+        <p className="text-sm font-medium text-foreground">Assign territory</p>
 
         <label className="block text-sm">
-          <span className="font-medium text-zinc-800">Territory</span>
+          <span className="font-medium text-foreground">Territory</span>
           <select
             value={territoryId}
             onChange={(event) => setTerritoryId(event.target.value)}
             disabled={territoriesLoading || territories.length === 0}
-            className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2"
           >
             <option value="">Select territory…</option>
             {territories.map((territory) => (
@@ -158,12 +158,12 @@ export function TerritoryAssignmentsPanel({
         </label>
 
         <label className="block text-sm">
-          <span className="font-medium text-zinc-800">Rep</span>
+          <span className="font-medium text-foreground">Rep</span>
           <select
             value={repId}
             onChange={(event) => setRepId(event.target.value)}
             disabled={reps.length === 0}
-            className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2"
           >
             <option value="">Select rep…</option>
             {reps.map((rep) => (
@@ -175,12 +175,12 @@ export function TerritoryAssignmentsPanel({
         </label>
 
         <label className="block text-sm">
-          <span className="font-medium text-zinc-800">Date</span>
+          <span className="font-medium text-foreground">Date</span>
           <input
             type="date"
             value={assignDate}
             onChange={(event) => setAssignDate(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2"
           />
         </label>
 
@@ -192,7 +192,7 @@ export function TerritoryAssignmentsPanel({
           type="button"
           onClick={() => void handleAssign()}
           disabled={saving || territories.length === 0 || reps.length === 0}
-          className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60"
+          className="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-accent-foreground hover:bg-accent/90 disabled:opacity-60"
         >
           {saving ? "Assigning…" : "Assign"}
         </button>

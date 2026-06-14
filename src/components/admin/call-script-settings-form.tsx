@@ -36,17 +36,17 @@ export function CallScriptSettingsForm() {
 
   if (loading) {
     return (
-      <section className="rounded-lg border border-zinc-200 bg-white p-4">
-        <div className="h-6 w-32 animate-pulse rounded bg-zinc-100" />
-        <div className="mt-4 h-40 animate-pulse rounded-lg bg-zinc-100" />
+      <section className="rounded-lg border border-border bg-card p-4">
+        <div className="h-6 w-32 animate-pulse rounded bg-secondary" />
+        <div className="mt-4 h-40 animate-pulse rounded-lg bg-secondary" />
       </section>
     );
   }
 
   if (error) {
     return (
-      <section className="rounded-lg border border-zinc-200 bg-white p-4">
-        <p className="rounded-lg bg-zinc-50 px-3 py-2 text-sm text-zinc-600 ring-1 ring-zinc-200">
+      <section className="rounded-lg border border-border bg-card p-4">
+        <p className="rounded-lg bg-secondary px-3 py-2 text-sm text-muted-foreground ring-1 ring-border">
           {error}
         </p>
       </section>
@@ -54,15 +54,15 @@ export function CallScriptSettingsForm() {
   }
 
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white p-4">
+    <section className="rounded-lg border border-border bg-card p-4">
       <div>
-        <h2 className="text-lg font-semibold text-zinc-900">Call script</h2>
-        <p className="mt-1 text-sm text-zinc-600">
+        <h2 className="text-lg font-semibold text-foreground">Call script</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
           Reps see this text in the collapsible script widget on the calls panel.
           Plain text only — line breaks are preserved.
         </p>
         {updatedAt ? (
-          <p className="mt-2 text-xs text-zinc-500">
+          <p className="mt-2 text-xs text-muted-foreground">
             Last updated {formatKnockHistoryDate(updatedAt)}
           </p>
         ) : null}
@@ -81,12 +81,12 @@ export function CallScriptSettingsForm() {
           }}
           rows={12}
           maxLength={CALL_SCRIPT_BODY_MAX_LENGTH}
-          className="min-h-48 w-full resize-y rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900"
+          className="min-h-48 w-full resize-y rounded-lg border border-border px-3 py-2 text-sm text-foreground"
           placeholder="Enter the call script reps should follow…"
         />
 
         {nearLimit ? (
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-muted-foreground">
             {body.length.toLocaleString()} /{" "}
             {CALL_SCRIPT_BODY_MAX_LENGTH.toLocaleString()} characters
           </p>
@@ -109,7 +109,7 @@ export function CallScriptSettingsForm() {
           <button
             type="submit"
             disabled={saving || !dirty}
-            className="min-h-11 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+            className="min-h-11 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-accent-foreground hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving ? "Saving…" : "Save"}
           </button>

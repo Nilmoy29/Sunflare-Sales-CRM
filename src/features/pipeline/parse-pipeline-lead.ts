@@ -12,7 +12,7 @@ export const PIPELINE_LEAD_SELECT = `
   rep_id,
   updated_at,
   profiles!leads_rep_id_fkey ( name ),
-  contacts!leads_contact_id_fkey ( first_name, last_name, address, suburb )
+  contacts!leads_contact_id_fkey ( first_name, last_name, phone, address, suburb )
 `;
 
 export function pipelineLeadSelectWithSuburbFilter(): string {
@@ -39,6 +39,7 @@ export function parsePipelineLeadRow(
   const contacts = row.contacts as {
     first_name?: string | null;
     last_name?: string | null;
+    phone?: string | null;
     address?: string | null;
     suburb?: string | null;
   } | null;
@@ -75,6 +76,7 @@ export function parsePipelineLeadRow(
     rep_id,
     rep_name,
     contact_name,
+    phone: contacts?.phone ?? null,
     address: contacts?.address ?? null,
     suburb: contacts?.suburb ?? null,
     updated_at,

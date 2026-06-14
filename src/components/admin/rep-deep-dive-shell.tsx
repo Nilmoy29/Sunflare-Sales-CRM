@@ -30,14 +30,14 @@ function RepDeepDiveContent({ rep, reps }: RepDeepDiveShellProps) {
         <div>
           <Link
             href="/admin/dashboard"
-            className="text-sm text-zinc-600 underline hover:text-zinc-900"
+            className="text-sm text-muted-foreground underline hover:text-foreground"
           >
             ← Back to dashboard
           </Link>
-          <h1 className="mt-2 text-2xl font-semibold text-zinc-900">
+          <h1 className="mt-2 text-2xl font-semibold text-foreground">
             {rep.name}
           </h1>
-          <p className="mt-1 text-sm text-zinc-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Rep deep dive · {label}
           </p>
         </div>

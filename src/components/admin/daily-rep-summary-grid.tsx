@@ -40,12 +40,12 @@ export function DailyRepSummaryGrid({
   const exportDisabled = loading || !!error || rows.length === 0;
 
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-zinc-200 px-4 py-3">
+    <section className="rounded-xl border border-border bg-card">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-3">
         <div>
-          <h2 className="text-lg font-semibold text-zinc-900">{title}</h2>
+          <h2 className="text-lg font-semibold text-foreground">{title}</h2>
           {!isSingleDay ? (
-            <p className="mt-1 text-sm text-zinc-600">{label}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{label}</p>
           ) : null}
         </div>
         <CsvExportButton disabled={exportDisabled} onExport={handleExport} />
@@ -53,7 +53,7 @@ export function DailyRepSummaryGrid({
 
       <div className="p-4">
         {error ? (
-          <p className="rounded-lg bg-zinc-50 px-3 py-2 text-sm text-zinc-600 ring-1 ring-zinc-200">
+          <p className="rounded-lg bg-secondary px-3 py-2 text-sm text-muted-foreground ring-1 ring-border">
             {error}
           </p>
         ) : null}
@@ -63,14 +63,14 @@ export function DailyRepSummaryGrid({
             {[0, 1, 2].map((key) => (
               <div
                 key={key}
-                className="h-8 animate-pulse rounded bg-zinc-100"
+                className="h-8 animate-pulse rounded bg-secondary"
               />
             ))}
           </div>
         ) : null}
 
         {!loading && rows.length === 0 && !error ? (
-          <p className="rounded-lg bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-600 ring-1 ring-zinc-200">
+          <p className="rounded-lg bg-secondary px-4 py-6 text-center text-sm text-muted-foreground ring-1 ring-border">
             No reps in the system
           </p>
         ) : null}
@@ -79,7 +79,7 @@ export function DailyRepSummaryGrid({
           <div className="overflow-x-auto">
             <table className="w-full min-w-[280px] text-left text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                <tr className="border-b border-border text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <th scope="col" className="pb-2 pr-2">
                     Rep
                   </th>
@@ -117,25 +117,25 @@ export function DailyRepSummaryGrid({
                   >
                     <th
                       scope="row"
-                      className="py-2 pr-2 font-medium text-zinc-900"
+                      className="py-2 pr-2 font-medium text-foreground"
                     >
                       <Link
                         href={`/admin/reps/${row.rep_id}`}
-                        className="underline decoration-zinc-300 underline-offset-2 hover:text-zinc-700 hover:decoration-zinc-500"
+                        className="underline decoration-zinc-300 underline-offset-2 hover:text-muted-foreground hover:decoration-zinc-500"
                       >
                         {row.rep_name}
                       </Link>
                     </th>
-                    <td className="py-2 px-1 text-center tabular-nums text-zinc-800">
+                    <td className="py-2 px-1 text-center tabular-nums text-foreground">
                       {row.doors}
                     </td>
-                    <td className="py-2 px-1 text-center tabular-nums text-zinc-800">
+                    <td className="py-2 px-1 text-center tabular-nums text-foreground">
                       {row.calls}
                     </td>
-                    <td className="py-2 px-1 text-center tabular-nums text-zinc-800">
+                    <td className="py-2 px-1 text-center tabular-nums text-foreground">
                       {row.leads_added}
                     </td>
-                    <td className="py-2 px-1 text-center tabular-nums text-zinc-800">
+                    <td className="py-2 px-1 text-center tabular-nums text-foreground">
                       {row.appointments_set}
                     </td>
                   </tr>

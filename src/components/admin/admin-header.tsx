@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SignOutButton } from "@/features/auth/components/sign-out-button";
 
 const NAV_LINKS = [
@@ -26,46 +26,45 @@ export function AdminHeader({ name }: AdminHeaderProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
-
   return (
-    <header className="relative shrink-0 border-b border-zinc-200 bg-white">
-      <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
+    <header className="relative shrink-0 border-b border-border bg-background/80 backdrop-blur-sm">
+      <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top,0px))] lg:px-6">
         <div className="min-w-0">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Admin
           </p>
-          <p className="truncate text-sm font-medium text-zinc-900">{name}</p>
+          <p className="truncate text-sm font-medium text-foreground">{name}</p>
         </div>
 
         <nav
-          className="hidden items-center gap-3 lg:flex"
+          className="hidden items-center gap-1 lg:flex"
           aria-label="Admin navigation"
         >
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              className={`text-sm underline hover:text-zinc-900 ${
-                isActive(pathname, link.href)
-                  ? "font-semibold text-zinc-900"
-                  : "text-zinc-600"
-              }`}
-              href={link.href}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {NAV_LINKS.map((link) => {
+            const active = isActive(pathname, link.href);
+            return (
+              <Link
+                key={link.href}
+                className={`rounded-lg px-3 py-2 text-sm transition-colors ${
+                  active
+                    ? "bg-secondary font-semibold text-foreground"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                }`}
+                href={link.href}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           <SignOutButton />
         </nav>
 
         <div className="flex items-center gap-2 lg:hidden">
-          <SignOutButton />
+          <SignOutButton className="rounded-lg border border-border bg-secondary px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted" />
           <button
             type="button"
             onClick={() => setMenuOpen((open) => !open)}
-            className="flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-zinc-300 bg-white text-sm font-semibold text-zinc-800 touch-manipulation"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-border bg-secondary text-sm font-semibold text-foreground touch-manipulation"
             aria-expanded={menuOpen}
             aria-controls="admin-mobile-nav"
           >
@@ -77,7 +76,7 @@ export function AdminHeader({ name }: AdminHeaderProps) {
       {menuOpen ? (
         <nav
           id="admin-mobile-nav"
-          className="border-t border-zinc-200 bg-white px-4 py-2 lg:hidden"
+          className="border-t border-border bg-card px-4 py-2 lg:hidden"
           aria-label="Admin navigation"
         >
           <ul className="flex flex-col">
@@ -87,8 +86,11 @@ export function AdminHeader({ name }: AdminHeaderProps) {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className={`flex min-h-11 items-center text-sm font-medium touch-manipulation ${
-                      active ? "text-zinc-900" : "text-zinc-600"
+                    onClick={() => setMenuOpen(false)}
+                    className={`flex min-h-11 items-center rounded-lg px-2 text-sm font-medium touch-manipulation ${
+                      active
+                        ? "bg-secondary text-foreground"
+                        : "text-muted-foreground"
                     }`}
                     aria-current={active ? "page" : undefined}
                   >

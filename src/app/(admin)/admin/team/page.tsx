@@ -40,8 +40,8 @@ export default async function AdminTeamPage() {
   return (
     <main className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-4 md:p-8">
       <div>
-        <h1 className="text-2xl font-semibold">Team management</h1>
-        <p className="mt-1 text-sm text-zinc-600">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Team management</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Create and invite reps, activate/deactivate access, and trigger password reset emails.
         </p>
       </div>

@@ -18,7 +18,7 @@ export default async function AdminMapPage() {
   }));
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto md:overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:overflow-hidden">
       <AdminMapShell reps={reps} />
     </div>
   );

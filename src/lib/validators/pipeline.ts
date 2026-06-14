@@ -17,6 +17,7 @@ export const pipelineLeadCardBaseSchema = z.object({
   rep_id: z.string().uuid(),
   rep_name: z.string(),
   contact_name: z.string(),
+  phone: z.string().nullable(),
   address: z.string().nullable(),
   suburb: z.string().nullable(),
   updated_at: z.string(),
@@ -27,6 +28,9 @@ export type PipelineLeadCardBase = z.infer<typeof pipelineLeadCardBaseSchema>;
 export const pipelineLeadCardSchema = pipelineLeadCardBaseSchema.extend({
   last_touch_at: z.string(),
   next_action_due_at: z.string().nullable(),
+  booked_at: z.string().nullable(),
+  proposal_sent_at: z.string().nullable(),
+  latest_note: z.string().nullable(),
 });
 
 export type PipelineLeadCard = z.infer<typeof pipelineLeadCardSchema>;

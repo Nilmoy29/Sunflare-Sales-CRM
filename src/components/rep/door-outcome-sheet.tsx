@@ -14,7 +14,6 @@ import {
 } from "@/lib/geo/door-outcome-colors";
 import type { DoorOutcome } from "@/lib/validators/enums";
 import { DOOR_OUTCOMES } from "@/lib/validators/enums";
-import { isPromotableDoorOutcome } from "@/lib/validators/leads";
 import {
   ADDRESS_MAX_LENGTH,
   NOTES_MAX_LENGTH,
@@ -168,8 +167,9 @@ export function DoorOutcomeSheet({
   };
 
   const addressFieldsDisabled = submitting;
-  const showPromotionHint =
-    selectedOutcome !== null && isPromotableDoorOutcome(selectedOutcome);
+  const knockOutcomes = DOOR_OUTCOMES.filter(
+    (outcome) => outcome !== "interested",
+  );
 
   return (
     <div className="fixed inset-0 z-20">
@@ -345,7 +345,7 @@ export function DoorOutcomeSheet({
         <fieldset className="mt-4 space-y-3">
           <legend className="text-sm font-medium text-zinc-900">Outcome</legend>
           <div className="grid grid-cols-2 gap-2">
-            {DOOR_OUTCOMES.map((outcome) => {
+            {knockOutcomes.map((outcome) => {
               const selected = selectedOutcome === outcome;
               return (
                 <button
@@ -367,12 +367,6 @@ export function DoorOutcomeSheet({
             })}
           </div>
         </fieldset>
-
-        {showPromotionHint ? (
-          <p className="mt-3 text-sm text-emerald-700">
-            Adds to pipeline when you save
-          </p>
-        ) : null}
 
         <div className="mt-4 space-y-2">
           <label

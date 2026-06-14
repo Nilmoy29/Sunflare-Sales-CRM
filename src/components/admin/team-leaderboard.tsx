@@ -26,7 +26,7 @@ function rankRowClassName(rank: number): string | undefined {
     return "border-l-4 border-amber-400 bg-amber-50/60";
   }
   if (rank === 2 || rank === 3) {
-    return "border-l-4 border-zinc-300 bg-zinc-50/80";
+    return "border-l-4 border-border bg-secondary/80";
   }
   return undefined;
 }
@@ -55,11 +55,11 @@ export function TeamLeaderboard({
   const exportDisabled = loading || !!error || rows.length === 0;
 
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-zinc-200 px-4 py-3">
+    <section className="rounded-lg border border-border bg-card">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-3">
         <div>
-          <h2 className="text-lg font-semibold text-zinc-900">Team leaderboard</h2>
-          <p className="mt-1 text-sm text-zinc-600">
+          <h2 className="text-lg font-semibold text-foreground">Team leaderboard</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             Ranked by selected metric for the active date range
           </p>
         </div>
@@ -77,8 +77,8 @@ export function TeamLeaderboard({
                 onClick={() => onMetricChange(option.id)}
                 className={
                   active
-                    ? "rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white"
-                    : "rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                    ? "rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground"
+                    : "rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-secondary"
                 }
               >
                 {option.label}
@@ -88,7 +88,7 @@ export function TeamLeaderboard({
         </div>
 
         {error ? (
-          <p className="rounded-lg bg-zinc-50 px-3 py-2 text-sm text-zinc-600 ring-1 ring-zinc-200">
+          <p className="rounded-lg bg-secondary px-3 py-2 text-sm text-muted-foreground ring-1 ring-border">
             {error}
           </p>
         ) : null}
@@ -98,14 +98,14 @@ export function TeamLeaderboard({
             {[0, 1, 2, 3, 4].map((key) => (
               <div
                 key={key}
-                className="h-9 animate-pulse rounded bg-zinc-100"
+                className="h-9 animate-pulse rounded bg-secondary"
               />
             ))}
           </div>
         ) : null}
 
         {!loading && rows.length === 0 && !error ? (
-          <p className="rounded-lg bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-600 ring-1 ring-zinc-200">
+          <p className="rounded-lg bg-secondary px-4 py-6 text-center text-sm text-muted-foreground ring-1 ring-border">
             No reps in the system
           </p>
         ) : null}
@@ -114,7 +114,7 @@ export function TeamLeaderboard({
           <div className="overflow-x-auto">
             <table className="w-full min-w-[280px] text-left text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                <tr className="border-b border-border text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <th scope="col" className="pb-2 pr-4 w-16">
                     Rank
                   </th>
@@ -132,21 +132,21 @@ export function TeamLeaderboard({
                     key={row.rep_id}
                     className={rankRowClassName(row.rank)}
                   >
-                    <td className="py-2.5 pr-4 tabular-nums font-semibold text-zinc-900">
+                    <td className="py-2.5 pr-4 tabular-nums font-semibold text-foreground">
                       #{row.rank}
                     </td>
                     <th
                       scope="row"
-                      className="py-2.5 pr-4 font-medium text-zinc-900"
+                      className="py-2.5 pr-4 font-medium text-foreground"
                     >
                       <Link
                         href={`/admin/reps/${row.rep_id}`}
-                        className="underline decoration-zinc-300 underline-offset-2 hover:text-zinc-700 hover:decoration-zinc-500"
+                        className="underline decoration-zinc-300 underline-offset-2 hover:text-muted-foreground hover:decoration-zinc-500"
                       >
                         {row.rep_name}
                       </Link>
                     </th>
-                    <td className="py-2.5 text-right tabular-nums text-zinc-800">
+                    <td className="py-2.5 text-right tabular-nums text-foreground">
                       {row.value}
                     </td>
                   </tr>

@@ -39,11 +39,11 @@ export function LostReasonDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="lost-reason-dialog-title"
-        className="fixed inset-x-4 top-1/2 z-40 mx-auto max-w-md -translate-y-1/2 rounded-xl bg-white p-4 shadow-xl ring-1 ring-zinc-200 sm:inset-x-auto"
+        className="fixed inset-x-4 top-1/2 z-40 mx-auto max-w-md -translate-y-1/2 rounded-xl bg-card p-4 shadow-xl ring-1 ring-border sm:inset-x-auto"
       >
         <h2
           id="lost-reason-dialog-title"
-          className="text-lg font-semibold text-zinc-900"
+          className="text-lg font-semibold text-foreground"
         >
           Why was this lead lost?
         </h2>
@@ -54,7 +54,7 @@ export function LostReasonDialog({
           {LOST_REASONS.map((reason) => (
             <label
               key={reason}
-              className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-zinc-200 px-3 py-2 has-[:checked]:border-zinc-900 has-[:checked]:bg-zinc-50"
+              className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-border px-3 py-2 has-[:checked]:border-zinc-900 has-[:checked]:bg-zinc-50"
             >
               <input
                 type="radio"
@@ -64,7 +64,7 @@ export function LostReasonDialog({
                 onChange={() => setSelected(reason)}
                 className="h-4 w-4 shrink-0"
               />
-              <span className="text-sm text-zinc-900">
+              <span className="text-sm text-foreground">
                 {LOST_REASON_LABELS[reason]}
               </span>
             </label>
@@ -76,7 +76,7 @@ export function LostReasonDialog({
             type="button"
             onClick={onCancel}
             disabled={submitting}
-            className="min-h-11 rounded-lg border border-zinc-300 px-4 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
+            className="min-h-11 rounded-lg border border-border px-4 text-sm font-medium text-muted-foreground hover:bg-zinc-50 disabled:opacity-60"
           >
             Cancel
           </button>
@@ -88,7 +88,7 @@ export function LostReasonDialog({
                 onConfirm(selected);
               }
             }}
-            className="min-h-11 rounded-lg bg-zinc-900 px-4 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-60"
+            className="min-h-11 rounded-lg bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-zinc-800 disabled:opacity-60"
           >
             {submitting ? "Moving…" : "Move to Lost"}
           </button>

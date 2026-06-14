@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { AdminMapCanvas } from "@/components/admin/admin-map-canvas";
+import { AdminMapViewport } from "@/components/admin/admin-map-viewport";
 import { useShiftBreadcrumbs } from "@/features/admin/use-shift-breadcrumbs";
 import type { AdminMapFilters } from "@/features/knocks/use-admin-map-knocks";
 import {
@@ -152,24 +153,39 @@ export function AdminMapShell({ reps }: AdminMapShellProps) {
   ]);
 
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col md:h-full md:flex-row md:overflow-hidden">
-      <aside className="flex w-full shrink-0 flex-col border-b border-zinc-200 bg-white md:h-full md:w-72 md:min-h-0 md:border-b-0 md:border-r">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
+      <AdminMapViewport>
+        <AdminMapCanvas
+          filters={filters}
+          refreshKey={refreshKey}
+          heatmapEnabled={heatmapEnabled}
+          heatmapOpacity={heatmapOpacity}
+          breadcrumbs={{
+            enabled: breadcrumbEnabled,
+            points: breadcrumbs.points,
+            loading: breadcrumbs.loading,
+            error: breadcrumbs.error,
+          }}
+        />
+      </AdminMapViewport>
+
+      <aside className="flex w-full shrink-0 flex-col border-t border-border bg-card lg:min-h-0 lg:w-72 lg:overflow-y-auto lg:border-t-0 lg:border-r">
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
-        <h1 className="text-lg font-semibold text-zinc-900">Global map</h1>
-        <p className="mt-1 text-sm text-zinc-600">
+        <h1 className="text-lg font-semibold text-foreground">Global map</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           All reps&apos; knock pins. Showing all time by default.
         </p>
 
         <div className="mt-6 space-y-6">
           <section className="space-y-2">
-            <p className="text-sm font-medium text-zinc-900">Reps</p>
+            <p className="text-sm font-medium text-foreground">Reps</p>
             <div className="max-h-40 space-y-2 overflow-y-auto">
               <label className="flex min-h-10 cursor-pointer items-center gap-2 text-sm">
                 <input
                   type="checkbox"
                   checked={allRepsSelected}
                   onChange={selectAllReps}
-                  className="size-4 rounded border-zinc-300"
+                  className="size-4 rounded border-border"
                 />
                 <span className="font-medium">All reps</span>
               </label>
@@ -187,7 +203,7 @@ export function AdminMapShell({ reps }: AdminMapShellProps) {
                       type="checkbox"
                       checked={checked}
                       onChange={() => toggleRep(rep.id)}
-                      className="size-4 rounded border-zinc-300"
+                      className="size-4 rounded border-border"
                     />
                     <span>{rep.name}</span>
                   </label>
@@ -195,20 +211,20 @@ export function AdminMapShell({ reps }: AdminMapShellProps) {
               })}
             </div>
             {routeHint ? (
-              <p className="text-xs text-zinc-600">{routeHint}</p>
+              <p className="text-xs text-muted-foreground">{routeHint}</p>
             ) : null}
           </section>
 
           <section className="space-y-3">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-medium text-zinc-900">Date range</p>
+              <p className="text-sm font-medium text-foreground">Date range</p>
               <button
                 type="button"
                 onClick={clearDateRange}
                 className={`min-h-8 rounded-lg px-2.5 text-xs font-semibold ring-2 ${
                   allDatesSelected
-                    ? "bg-zinc-900 text-white ring-zinc-900"
-                    : "bg-white text-zinc-700 ring-zinc-200 hover:bg-zinc-50"
+                    ? "bg-accent text-accent-foreground ring-zinc-900"
+                    : "bg-card text-muted-foreground ring-border hover:bg-secondary"
                 }`}
                 aria-pressed={allDatesSelected}
               >
@@ -217,7 +233,7 @@ export function AdminMapShell({ reps }: AdminMapShellProps) {
             </div>
             <div className="grid gap-3">
               <div className="space-y-1">
-                <label htmlFor="admin-map-from" className="text-sm text-zinc-700">
+                <label htmlFor="admin-map-from" className="text-sm text-muted-foreground">
                   From
                 </label>
                 <input
@@ -225,11 +241,11 @@ export function AdminMapShell({ reps }: AdminMapShellProps) {
                   type="date"
                   value={filters.from ?? ""}
                   onChange={(e) => updateDate("from", e.target.value)}
-                  className="min-h-10 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900"
+                  className="min-h-10 w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground"
                 />
               </div>
               <div className="space-y-1">
-                <label htmlFor="admin-map-to" className="text-sm text-zinc-700">
+                <label htmlFor="admin-map-to" className="text-sm text-muted-foreground">
                   To
                 </label>
                 <input
@@ -237,22 +253,22 @@ export function AdminMapShell({ reps }: AdminMapShellProps) {
                   type="date"
                   value={filters.to ?? ""}
                   onChange={(e) => updateDate("to", e.target.value)}
-                  className="min-h-10 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900"
+                  className="min-h-10 w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground"
                 />
               </div>
             </div>
           </section>
 
           <section className="space-y-2">
-            <p className="text-sm font-medium text-zinc-900">Outcome</p>
+            <p className="text-sm font-medium text-foreground">Outcome</p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={selectAllOutcomes}
                 className={`min-h-10 rounded-lg px-3 py-1.5 text-sm font-semibold ring-2 ${
                   allOutcomesSelected
-                    ? "bg-zinc-900 text-white ring-zinc-900"
-                    : "bg-white text-zinc-700 ring-zinc-200 hover:bg-zinc-50"
+                    ? "bg-accent text-accent-foreground ring-zinc-900"
+                    : "bg-card text-muted-foreground ring-border hover:bg-secondary"
                 }`}
                 aria-pressed={allOutcomesSelected}
               >
@@ -266,7 +282,7 @@ export function AdminMapShell({ reps }: AdminMapShellProps) {
                     key={outcome}
                     type="button"
                     onClick={() => toggleOutcome(outcome)}
-                    className={`min-h-10 rounded-lg px-3 py-1.5 text-sm font-semibold text-white ring-2 ${
+                    className={`min-h-10 rounded-lg px-3 py-1.5 text-sm font-semibold text-accent-foreground ring-2 ${
                       selected ? "ring-zinc-900" : "ring-transparent opacity-80"
                     }`}
                     style={{ backgroundColor: DOOR_OUTCOME_COLORS[outcome] }}
@@ -280,20 +296,20 @@ export function AdminMapShell({ reps }: AdminMapShellProps) {
           </section>
 
           <section className="space-y-3">
-            <p className="text-sm font-medium text-zinc-900">Coverage heatmap</p>
+            <p className="text-sm font-medium text-foreground">Coverage heatmap</p>
             <label className="flex min-h-10 cursor-pointer items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 checked={heatmapEnabled}
                 onChange={(e) => setHeatmapEnabled(e.target.checked)}
-                className="size-4 rounded border-zinc-300"
+                className="size-4 rounded border-border"
               />
               <span>Show knock density</span>
             </label>
             <div className="space-y-1">
               <label
                 htmlFor="admin-map-heatmap-opacity"
-                className="flex items-center justify-between text-sm text-zinc-700"
+                className="flex items-center justify-between text-sm text-muted-foreground"
               >
                 <span>Opacity</span>
                 <span>{Math.round(heatmapOpacity * 100)}%</span>
@@ -318,21 +334,6 @@ export function AdminMapShell({ reps }: AdminMapShellProps) {
         </div>
         </div>
       </aside>
-
-      <div className="relative min-h-[min(70vh,560px)] shrink-0 flex-1 md:min-h-0 md:h-full">
-        <AdminMapCanvas
-          filters={filters}
-          refreshKey={refreshKey}
-          heatmapEnabled={heatmapEnabled}
-          heatmapOpacity={heatmapOpacity}
-          breadcrumbs={{
-            enabled: breadcrumbEnabled,
-            points: breadcrumbs.points,
-            loading: breadcrumbs.loading,
-            error: breadcrumbs.error,
-          }}
-        />
-      </div>
     </div>
   );
 }

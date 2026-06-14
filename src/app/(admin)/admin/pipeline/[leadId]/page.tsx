@@ -29,6 +29,7 @@ export default async function AdminLeadDetailPage({ params }: PageProps) {
       backLabel="Back to pipeline"
       layout="desktop"
       showReassign
+      showDelete
       reps={reps}
     />
   );

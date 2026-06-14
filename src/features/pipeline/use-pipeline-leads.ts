@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  deleteLead as deleteLeadApi,
   fetchPipelineLeads,
+  createLeadNote as createLeadNoteApi,
   updateLeadStage as updateLeadStageApi,
 } from "@/features/pipeline/api";
 import type { PipelineFilters } from "@/lib/validators/pipeline";
@@ -92,7 +94,15 @@ export function usePipelineLeads(filters: PipelineFilters) {
             return current.filter((lead) => lead.id !== leadId);
           }
           return current.map((lead) =>
-            lead.id === leadId ? result.lead : lead,
+            lead.id === leadId
+              ? {
+                  ...result.lead,
+                  proposal_sent_at:
+                    newStage === "proposal_sent"
+                      ? new Date().toISOString()
+                      : result.lead.proposal_sent_at,
+                }
+              : lead,
           );
         });
         return true;
@@ -113,6 +123,46 @@ export function usePipelineLeads(filters: PipelineFilters) {
     [filters.stages],
   );
 
+  const removeLead = useCallback(async (leadId: string) => {
+    let previousLeads: PipelineLeadCard[] = [];
+
+    setLeads((current) => {
+      previousLeads = current;
+      return current.filter((lead) => lead.id !== leadId);
+    });
+    setError(null);
+
+    try {
+      await deleteLeadApi(leadId);
+      return true;
+    } catch (e: unknown) {
+      setLeads(previousLeads);
+      setError(e instanceof Error ? e.message : "Could not delete lead");
+      return false;
+    }
+  }, []);
+
+  const addLeadNote = useCallback(async (leadId: string, content: string) => {
+    try {
+      await createLeadNoteApi(leadId, content);
+      setLeads((current) =>
+        current.map((lead) =>
+          lead.id === leadId
+            ? {
+                ...lead,
+                latest_note: content,
+                last_touch_at: new Date().toISOString(),
+              }
+            : lead,
+        ),
+      );
+      return true;
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Could not add note");
+      return false;
+    }
+  }, []);
+
   const displayLeads = loading ? [] : leads;
 
   return {
@@ -120,5 +170,7 @@ export function usePipelineLeads(filters: PipelineFilters) {
     loading,
     error,
     moveLeadStage,
+    removeLead,
+    addLeadNote,
   };
 }

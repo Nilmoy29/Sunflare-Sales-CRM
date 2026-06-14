@@ -28,6 +28,8 @@ import {
   type AdminKnockPin,
   type MapBbox,
 } from "@/lib/validators/knocks";
+import { useMapboxResize } from "@/lib/geo/use-mapbox-resize";
+import { waitForElementSize } from "@/lib/geo/wait-for-element-size";
 import type { ShiftBreadcrumbPoint } from "@/lib/validators/shift-breadcrumbs";
 
 const BREADCRUMB_SOURCE_ID = "admin-breadcrumbs";
@@ -259,6 +261,8 @@ export function AdminMapCanvas({
     refreshKey,
   );
 
+  useMapboxResize(mapRef, containerRef, mapLoaded);
+
   const syncKnocksToMap = useCallback((nextKnocks: AdminKnockPin[]) => {
     const map = mapRef.current;
     if (!map || !mapReadyRef.current) {
@@ -306,6 +310,11 @@ export function AdminMapCanvas({
 
     void (async () => {
       const mapboxgl = (await import("mapbox-gl")).default;
+      if (cancelled || !containerRef.current) {
+        return;
+      }
+
+      await waitForElementSize(containerRef.current);
       if (cancelled || !containerRef.current) {
         return;
       }
@@ -474,6 +483,7 @@ export function AdminMapCanvas({
         mapReadyRef.current = true;
         setMapLoaded(true);
         setBbox(initialSearchBbox());
+        requestAnimationFrame(() => map.resize());
 
         map.on("click", (e) => {
           if (!mapReadyRef.current) {
@@ -601,14 +611,14 @@ export function AdminMapCanvas({
 
   if (!token) {
     return (
-      <div className="flex h-full flex-1 flex-col items-center justify-center gap-3 bg-zinc-50 p-8 text-center">
-        <p className="text-lg font-semibold text-zinc-900">Mapbox not configured</p>
-        <p className="max-w-md text-sm text-zinc-600">
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-secondary p-8 text-center">
+        <p className="text-lg font-semibold text-foreground">Mapbox not configured</p>
+        <p className="max-w-md text-sm text-muted-foreground">
           Add{" "}
-          <code className="rounded bg-zinc-100 px-1 py-0.5">
+          <code className="rounded bg-secondary px-1 py-0.5">
             NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
           </code>{" "}
-          to <code className="rounded bg-zinc-100 px-1 py-0.5">.env.local</code>{" "}
+          to <code className="rounded bg-secondary px-1 py-0.5">.env.local</code>{" "}
           when you have credentials. See{" "}
           <span className="font-medium">docs/SETUP_KEYS.md</span> for setup steps.
         </p>
@@ -617,8 +627,12 @@ export function AdminMapCanvas({
   }
 
   return (
-    <div className="relative h-full min-h-0 w-full flex-1">
-      <div ref={containerRef} className="h-full w-full" aria-label="Admin map" />
+    <div className="absolute inset-0">
+      <div
+        ref={containerRef}
+        className="h-full w-full touch-manipulation"
+        aria-label="Admin map"
+      />
 
       {(loading ||
         error ||
@@ -627,7 +641,7 @@ export function AdminMapCanvas({
         breadcrumbs.error) && (
         <div className="pointer-events-none absolute left-4 top-4 z-10 flex max-w-xs flex-col gap-2">
           {loading ? (
-            <p className="rounded-lg bg-white/95 px-3 py-2 text-sm text-zinc-700 shadow-sm ring-1 ring-zinc-200">
+            <p className="rounded-lg bg-card/95 px-3 py-2 text-sm text-muted-foreground shadow-sm ring-1 ring-border">
               Loading pins…
             </p>
           ) : null}
@@ -637,12 +651,12 @@ export function AdminMapCanvas({
             </p>
           ) : null}
           {truncated ? (
-            <p className="rounded-lg bg-white/95 px-3 py-2 text-sm text-zinc-700 shadow-sm ring-1 ring-zinc-200">
+            <p className="rounded-lg bg-card/95 px-3 py-2 text-sm text-muted-foreground shadow-sm ring-1 ring-border">
               Showing the 500 most recent pins in this area.
             </p>
           ) : null}
           {breadcrumbs.loading ? (
-            <p className="rounded-lg bg-white/95 px-3 py-2 text-sm text-zinc-700 shadow-sm ring-1 ring-zinc-200">
+            <p className="rounded-lg bg-card/95 px-3 py-2 text-sm text-muted-foreground shadow-sm ring-1 ring-border">
               Loading route…
             </p>
           ) : null}

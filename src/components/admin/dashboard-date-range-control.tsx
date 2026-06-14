@@ -30,7 +30,7 @@ export function DashboardDateRangeControl() {
   );
 
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white px-4 py-3">
+    <div className="rounded-xl border border-border bg-card px-4 py-3">
       <div className="flex flex-wrap gap-2">
         {PRESETS.map((item) => {
           const active = preset === item.id;
@@ -41,8 +41,8 @@ export function DashboardDateRangeControl() {
               onClick={() => setPreset(item.id)}
               className={
                 active
-                  ? "rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white"
-                  : "rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                  ? "rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground"
+                  : "rounded-md border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-secondary"
               }
             >
               {item.label}
@@ -54,7 +54,7 @@ export function DashboardDateRangeControl() {
       {preset === "custom" ? (
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <label className="block text-sm">
-            <span className="mb-1 block text-zinc-600">From</span>
+            <span className="mb-1 block text-muted-foreground">From</span>
             <input
               type="date"
               value={customFrom}
@@ -67,11 +67,11 @@ export function DashboardDateRangeControl() {
                 }
                 setCustomRange(nextFrom, customTo);
               }}
-              className="w-full rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900"
+              className="w-full rounded-md border border-border px-2 py-1.5 text-sm text-foreground"
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block text-zinc-600">To</span>
+            <span className="mb-1 block text-muted-foreground">To</span>
             <input
               type="date"
               value={customTo}
@@ -84,19 +84,19 @@ export function DashboardDateRangeControl() {
                 }
                 setCustomRange(customFrom, nextTo);
               }}
-              className="w-full rounded-md border border-zinc-300 px-2 py-1.5 text-sm text-zinc-900"
+              className="w-full rounded-md border border-border px-2 py-1.5 text-sm text-foreground"
             />
           </label>
         </div>
       ) : null}
 
       {customRangeError ? (
-        <p className="mt-3 text-sm text-red-600" role="alert">
+        <p className="mt-3 text-sm text-destructive" role="alert">
           {customRangeError}
         </p>
       ) : null}
 
-      <p className="mt-3 text-sm text-zinc-600">{label}</p>
+      <p className="mt-3 text-sm text-muted-foreground">{label}</p>
     </div>
   );
 }

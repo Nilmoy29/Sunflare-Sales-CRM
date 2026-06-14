@@ -35,13 +35,11 @@ export type ContactNameFields = {
 export function formatContactDisplayName(contact: ContactNameFields): string {
   const name = [contact.first_name, contact.last_name]
     .filter(Boolean)
-    .join(" ")
-    .trim();
+    .map((part) => part?.trim())
+    .filter((part): part is string => Boolean(part))
+    .join(" ");
   if (name) {
     return name;
   }
-  if (contact.address) {
-    return contact.address;
-  }
-  return contact.suburb ?? "Unknown contact";
+  return "Unnamed contact";
 }

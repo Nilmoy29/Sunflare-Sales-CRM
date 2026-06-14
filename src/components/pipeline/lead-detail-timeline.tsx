@@ -40,7 +40,7 @@ function TimelineSection({
 
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="text-sm font-semibold text-zinc-900">{title}</h2>
+      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
       {hasItems ? (
         <ul className="flex flex-col gap-2">{children}</ul>
       ) : (
@@ -60,12 +60,12 @@ function TimelineItemCard({
   body?: ReactNode;
 }) {
   return (
-    <li className="rounded-md border border-zinc-200 bg-white p-3 shadow-sm">
+    <li className="rounded-md border border-border bg-card p-3 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <p className="text-sm font-medium text-zinc-900">{title}</p>
+        <p className="text-sm font-medium text-foreground">{title}</p>
         <p className="text-xs text-zinc-500">{meta}</p>
       </div>
-      {body ? <div className="mt-2 text-sm text-zinc-700">{body}</div> : null}
+      {body ? <div className="mt-2 text-sm text-muted-foreground">{body}</div> : null}
     </li>
   );
 }
@@ -201,7 +201,7 @@ export function LeadDetailTimeline({
       </TimelineSection>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold text-zinc-900">Notes</h2>
+        <h2 className="text-sm font-semibold text-foreground">Notes</h2>
         {onAddNote ? <LeadNoteCompose onSubmit={onAddNote} /> : null}
         {notes.length > 0 ? (
           <ul className="flex flex-col gap-2">
@@ -220,7 +220,7 @@ export function LeadDetailTimeline({
       </TimelineSection>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold text-zinc-900">Follow-ups</h2>
+        <h2 className="text-sm font-semibold text-foreground">Follow-ups</h2>
         {showPushPrompt ? <FollowUpPushPrompt /> : null}
         {onScheduleFollowUp ? (
           <LeadFollowUpCompose
