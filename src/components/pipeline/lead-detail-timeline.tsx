@@ -63,7 +63,7 @@ function TimelineItemCard({
     <li className="rounded-md border border-border bg-card p-3 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <p className="text-sm font-medium text-foreground">{title}</p>
-        <p className="text-xs text-zinc-500">{meta}</p>
+        <p className="text-xs text-muted-foreground">{meta}</p>
       </div>
       {body ? <div className="mt-2 text-sm text-muted-foreground">{body}</div> : null}
     </li>
@@ -189,6 +189,18 @@ export function LeadDetailTimeline({
 
   return (
     <div className="flex flex-col gap-6">
+      <section className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 shadow-sm">
+        <h2 className="text-sm font-semibold text-foreground">Notes</h2>
+        {onAddNote ? <LeadNoteCompose onSubmit={onAddNote} /> : null}
+        {notes.length > 0 ? (
+          <ul className="flex flex-col gap-2">
+            {notes.map(renderNoteItem)}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted-foreground">No notes yet.</p>
+        )}
+      </section>
+
       <TimelineSection
         title="Knocks"
         emptyCopy="No knocks recorded for this contact."
@@ -199,18 +211,6 @@ export function LeadDetailTimeline({
       <TimelineSection title="Calls" emptyCopy={callsEmptyCopy}>
         {calls.map(renderCallItem)}
       </TimelineSection>
-
-      <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold text-foreground">Notes</h2>
-        {onAddNote ? <LeadNoteCompose onSubmit={onAddNote} /> : null}
-        {notes.length > 0 ? (
-          <ul className="flex flex-col gap-2">
-            {notes.map(renderNoteItem)}
-          </ul>
-        ) : (
-          <p className="text-sm text-zinc-500">No notes yet.</p>
-        )}
-      </section>
 
       <TimelineSection
         title="Stage changes"
@@ -233,7 +233,7 @@ export function LeadDetailTimeline({
             {followUps.map(renderFollowUpItem)}
           </ul>
         ) : (
-          <p className="text-sm text-zinc-500">No follow-ups scheduled.</p>
+          <p className="text-sm text-muted-foreground">No follow-ups scheduled.</p>
         )}
       </section>
     </div>

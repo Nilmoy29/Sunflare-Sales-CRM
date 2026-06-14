@@ -12,6 +12,7 @@ import {
   PIPELINE_STAGE_ORDER,
 } from "@/features/pipeline/pipeline-stage-labels";
 import { formatContactDisplayName } from "@/lib/validators/contacts";
+import { formatPipelineDate } from "@/features/pipeline/format-pipeline-dates";
 import { LEAD_STAGES, type LeadStage, type LostReason } from "@/lib/validators/enums";
 import type { LeadDetailHeader } from "@/lib/validators/lead-detail";
 
@@ -256,6 +257,29 @@ export function LeadContactEditForm({
               {lead.rep_name}
             </p>
           </div>
+
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">Appointment</p>
+            <p className="min-h-11 rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm text-muted-foreground">
+              {formatPipelineDate(lead.booked_at)}
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">Closer</p>
+            <p className="min-h-11 rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm text-muted-foreground">
+              {lead.closer_name ?? "—"}
+            </p>
+          </div>
+
+          {lead.booking_notes ? (
+            <div className="space-y-1 sm:col-span-2">
+              <p className="text-sm font-medium text-foreground">Booking notes</p>
+              <p className="rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm text-muted-foreground">
+                {lead.booking_notes}
+              </p>
+            </div>
+          ) : null}
 
           <div className="space-y-1">
             <p className="text-sm font-medium text-foreground">Created</p>

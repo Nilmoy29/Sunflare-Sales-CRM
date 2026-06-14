@@ -1,5 +1,9 @@
 import { parseStageChangeContent } from "@/lib/validators/lead-activity";
 import {
+  parseBookingFollowUpNote,
+  pickLatestNote,
+} from "@/features/pipeline/parse-booking-metadata";
+import {
   pipelineLeadCardSchema,
   type PipelineLeadCard,
   type PipelineLeadCardBase,
@@ -7,6 +11,19 @@ import {
 import type { createClient } from "@/lib/supabase/server";
 
 type ServerSupabaseClient = Awaited<ReturnType<typeof createClient>>;
+
+type FollowUpRow = {
+  lead_id: string;
+  due_at: string;
+  note: string;
+  created_at: string;
+};
+
+type NoteRow = {
+  lead_id: string;
+  content: string;
+  created_at: string;
+};
 
 function maxIso(a: string, b: string): string {
   return a >= b ? a : b;
@@ -38,14 +55,12 @@ function buildEarliestDueMap(
   return map;
 }
 
-function buildLatestNoteMap(
-  rows: { lead_id: string; content: string; created_at: string }[],
-): Map<string, string> {
-  const map = new Map<string, string>();
+function buildLatestNoteMap(rows: NoteRow[]): Map<string, NoteRow> {
+  const map = new Map<string, NoteRow>();
   for (const row of rows) {
     const existing = map.get(row.lead_id);
-    if (!existing || row.created_at > existing) {
-      map.set(row.lead_id, row.content);
+    if (!existing || row.created_at > existing.created_at) {
+      map.set(row.lead_id, row);
     }
   }
   return map;
@@ -68,6 +83,17 @@ function buildProposalSentMap(
   return map;
 }
 
+function buildPrimaryFollowUpMap(rows: FollowUpRow[]): Map<string, FollowUpRow> {
+  const map = new Map<string, FollowUpRow>();
+  for (const row of rows) {
+    const existing = map.get(row.lead_id);
+    if (!existing || row.due_at < existing.due_at) {
+      map.set(row.lead_id, row);
+    }
+  }
+  return map;
+}
+
 export async function enrichPipelineLeads(
   supabase: ServerSupabaseClient,
   cards: PipelineLeadCardBase[],
@@ -78,7 +104,7 @@ export async function enrichPipelineLeads(
 
   const leadIds = cards.map((card) => card.id);
 
-  const [activityResult, followUpResult, noteResult, stageChangeResult] =
+  const [activityResult, followUpResult, noteResult, stageChangeResult, knockResult] =
     await Promise.all([
       supabase
         .from("lead_activity")
@@ -86,7 +112,7 @@ export async function enrichPipelineLeads(
         .in("lead_id", leadIds),
       supabase
         .from("follow_ups")
-        .select("lead_id, due_at")
+        .select("lead_id, due_at, note, created_at")
         .in("lead_id", leadIds),
       supabase
         .from("lead_activity")
@@ -98,6 +124,10 @@ export async function enrichPipelineLeads(
         .select("lead_id, content, created_at")
         .in("lead_id", leadIds)
         .eq("type", "stage_change"),
+      supabase
+        .from("leads")
+        .select("id, door_knocks ( notes, follow_up_at )")
+        .in("id", leadIds),
     ]);
 
   if (activityResult.error) {
@@ -112,23 +142,18 @@ export async function enrichPipelineLeads(
   if (stageChangeResult.error) {
     throw stageChangeResult.error;
   }
+  if (knockResult.error) {
+    throw knockResult.error;
+  }
 
   const latestActivity = buildLatestActivityMap(
     (activityResult.data ?? []) as { lead_id: string; created_at: string }[],
   );
-  const earliestDue = buildEarliestDueMap(
-    (followUpResult.data ?? []) as { lead_id: string; due_at: string }[],
-  );
-  const bookedAt = buildEarliestDueMap(
-    (followUpResult.data ?? []) as { lead_id: string; due_at: string }[],
-  );
-  const latestNotes = buildLatestNoteMap(
-    (noteResult.data ?? []) as {
-      lead_id: string;
-      content: string;
-      created_at: string;
-    }[],
-  );
+  const followUpRows = (followUpResult.data ?? []) as FollowUpRow[];
+  const earliestDue = buildEarliestDueMap(followUpRows);
+  const bookedAt = buildEarliestDueMap(followUpRows);
+  const primaryFollowUps = buildPrimaryFollowUpMap(followUpRows);
+  const latestNotes = buildLatestNoteMap((noteResult.data ?? []) as NoteRow[]);
   const proposalSentAt = buildProposalSentMap(
     (stageChangeResult.data ?? []) as {
       lead_id: string;
@@ -137,17 +162,57 @@ export async function enrichPipelineLeads(
     }[],
   );
 
-  return cards.map((card) =>
-    pipelineLeadCardSchema.parse({
+  const knockNotesByLead = new Map<string, { notes: string | null; follow_up_at: string | null }>();
+  for (const row of knockResult.data ?? []) {
+    const record = row as {
+      id?: string;
+      door_knocks?: { notes?: string | null; follow_up_at?: string | null } | null;
+    };
+    if (!record.id) {
+      continue;
+    }
+    const knock = record.door_knocks;
+    knockNotesByLead.set(record.id, {
+      notes: knock?.notes ?? null,
+      follow_up_at:
+        typeof knock?.follow_up_at === "string" ? knock.follow_up_at : null,
+    });
+  }
+
+  return cards.map((card) => {
+    const followUp = primaryFollowUps.get(card.id);
+    const parsedBooking = parseBookingFollowUpNote(followUp?.note);
+    const knock = knockNotesByLead.get(card.id);
+    const activityNote = latestNotes.get(card.id);
+
+    const bookingNotes =
+      parsedBooking.booking_notes ??
+      (knock?.notes?.trim() ? knock.notes.trim() : null);
+
+    const booked_at =
+      bookedAt.get(card.id) ??
+      knock?.follow_up_at ??
+      null;
+
+    const latest_note = pickLatestNote(
+      activityNote?.content ?? null,
+      activityNote?.created_at ?? null,
+      bookingNotes,
+      followUp?.created_at ?? null,
+    );
+
+    return pipelineLeadCardSchema.parse({
       ...card,
       last_touch_at: maxIso(
         latestActivity.get(card.id) ?? card.updated_at,
         card.updated_at,
       ),
       next_action_due_at: earliestDue.get(card.id) ?? null,
-      booked_at: bookedAt.get(card.id) ?? null,
+      booked_at,
+      closer_name: parsedBooking.closer_name,
+      booking_notes: bookingNotes,
       proposal_sent_at: proposalSentAt.get(card.id) ?? null,
-      latest_note: latestNotes.get(card.id) ?? null,
-    }),
-  );
+      latest_note,
+    });
+  });
 }

@@ -52,7 +52,7 @@ export function LeadFollowUpCompose({
       <div className="space-y-2">
         <label
           htmlFor="lead-follow-up-due"
-          className="text-sm font-medium text-zinc-900"
+          className="text-sm font-medium text-foreground"
         >
           Due date and time
         </label>
@@ -67,14 +67,14 @@ export function LeadFollowUpCompose({
             }
           }}
           disabled={disabled || submitting}
-          className="min-h-11 w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900"
+          className="min-h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
         />
       </div>
 
       <div className="space-y-2">
         <label
           htmlFor="lead-follow-up-note"
-          className="text-sm font-medium text-zinc-900"
+          className="text-sm font-medium text-foreground"
         >
           Note (optional)
         </label>
@@ -85,13 +85,13 @@ export function LeadFollowUpCompose({
           disabled={disabled || submitting}
           maxLength={NOTES_MAX_LENGTH}
           rows={2}
-          className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900"
+          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
           placeholder="What to follow up on…"
         />
       </div>
 
       {error ? (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {error}
         </p>
       ) : null}
@@ -102,7 +102,7 @@ export function LeadFollowUpCompose({
           void handleSubmit();
         }}
         disabled={disabled || submitting}
-        className="min-h-11 w-fit rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
+        className="min-h-11 w-fit rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90 disabled:opacity-50"
       >
         {submitting ? "Scheduling…" : "Schedule follow-up"}
       </button>

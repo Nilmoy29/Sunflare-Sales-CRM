@@ -23,14 +23,16 @@ export default async function AdminLeadDetailPage({ params }: PageProps) {
   }));
 
   return (
-    <LeadDetailShell
-      leadId={leadId}
-      backHref="/admin/pipeline"
-      backLabel="Back to pipeline"
-      layout="desktop"
-      showReassign
-      showDelete
-      reps={reps}
-    />
+    <div className="flex min-h-0 flex-1 flex-col">
+      <LeadDetailShell
+        leadId={leadId}
+        backHref="/admin/pipeline"
+        backLabel="Back to pipeline"
+        layout="desktop"
+        showReassign
+        showDelete
+        reps={reps}
+      />
+    </div>
   );
 }

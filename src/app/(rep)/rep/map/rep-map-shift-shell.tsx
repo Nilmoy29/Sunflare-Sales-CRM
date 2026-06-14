@@ -213,11 +213,27 @@ export function RepMapShiftShell() {
               disabledReason={locationGeoWarning}
               onClick={handleLogKnock}
             />
-            <AddLeadButton
-              disabled={!userLocation}
-              disabledReason={locationGeoWarning}
-              onClick={handleAddLead}
-            />
+            <div className="absolute bottom-4 right-4 z-10 flex flex-col items-end gap-3">
+              <AddLeadButton
+                disabled={!userLocation}
+                disabledReason={locationGeoWarning}
+                onClick={handleAddLead}
+              />
+              <ShiftControls
+                isActive={isActive}
+                loading={loading}
+                busy={busy}
+                error={error}
+                geoWarning={geoWarning}
+                pingWarning={pingWarning}
+                onStart={() => {
+                  void onStart();
+                }}
+                onEnd={() => {
+                  void onEnd();
+                }}
+              />
+            </div>
             {isOpen && draft ? (
               <DoorOutcomeSheet
                 key={`knock-${draft.lat}-${draft.lng}-${draft.source}`}
@@ -246,22 +262,24 @@ export function RepMapShiftShell() {
               Start your shift to open the map, see your live location, and log
               door knocks on the route.
             </p>
+            <div className="absolute bottom-4 right-4 z-10">
+              <ShiftControls
+                isActive={isActive}
+                loading={loading}
+                busy={busy}
+                error={error}
+                geoWarning={geoWarning}
+                pingWarning={pingWarning}
+                onStart={() => {
+                  void onStart();
+                }}
+                onEnd={() => {
+                  void onEnd();
+                }}
+              />
+            </div>
           </div>
         )}
-        <ShiftControls
-          isActive={isActive}
-          loading={loading}
-          busy={busy}
-          error={error}
-          geoWarning={geoWarning}
-          pingWarning={pingWarning}
-          onStart={() => {
-            void onStart();
-          }}
-          onEnd={() => {
-            void onEnd();
-          }}
-        />
       </main>
       {lastEndedSummary ? (
         <ShiftEndSummarySheet

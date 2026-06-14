@@ -10,12 +10,14 @@ export default async function RepLeadDetailPage({ params }: PageProps) {
   const { leadId } = await params;
 
   return (
-    <LeadDetailShell
-      leadId={leadId}
-      backHref="/rep/pipeline"
-      backLabel="Back to pipeline"
-      layout="mobile"
-      showPushPrompt
-    />
+    <div className="flex min-h-0 flex-1 flex-col">
+      <LeadDetailShell
+        leadId={leadId}
+        backHref="/rep/pipeline"
+        backLabel="Back to pipeline"
+        layout="mobile"
+        showPushPrompt
+      />
+    </div>
   );
 }

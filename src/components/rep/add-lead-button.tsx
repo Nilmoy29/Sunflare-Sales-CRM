@@ -17,7 +17,7 @@ export function AddLeadButton({
     disabledReason ?? (disabled ? "Location unavailable" : null);
 
   return (
-    <div className="absolute bottom-[5.25rem] right-4 z-10 flex max-w-[min(11rem,45vw)] flex-col items-end gap-1">
+    <div className="flex max-w-[min(11rem,45vw)] flex-col items-end gap-1">
       <button
         type="button"
         onClick={onClick}

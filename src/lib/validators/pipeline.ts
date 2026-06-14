@@ -29,6 +29,8 @@ export const pipelineLeadCardSchema = pipelineLeadCardBaseSchema.extend({
   last_touch_at: z.string(),
   next_action_due_at: z.string().nullable(),
   booked_at: z.string().nullable(),
+  closer_name: z.string().nullable(),
+  booking_notes: z.string().nullable(),
   proposal_sent_at: z.string().nullable(),
   latest_note: z.string().nullable(),
 });

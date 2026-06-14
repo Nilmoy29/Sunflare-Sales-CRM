@@ -27,7 +27,7 @@ export function ShiftControls({
 
   return (
     <div
-      className="absolute bottom-4 right-4 z-10 flex max-w-[min(18rem,55vw)] flex-col items-end gap-2"
+      className="flex max-w-[min(18rem,55vw)] flex-col items-end gap-2"
       aria-live="polite"
     >
       {warnings.map((message) => (

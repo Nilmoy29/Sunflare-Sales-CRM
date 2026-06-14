@@ -22,6 +22,9 @@ export const leadDetailHeaderSchema = z.object({
   suburb: z.string().nullable(),
   postcode: z.string().nullable(),
   phone: z.string().nullable(),
+  booked_at: z.string().nullable(),
+  closer_name: z.string().nullable(),
+  booking_notes: z.string().nullable(),
   created_at: z.string(),
   lost_reason: lostReasonSchema.nullable(),
 });

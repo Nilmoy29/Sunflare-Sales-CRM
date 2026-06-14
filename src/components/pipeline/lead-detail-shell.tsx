@@ -90,7 +90,7 @@ export function LeadDetailShell({
 
   return (
     <main
-      className={`flex flex-1 flex-col gap-6 p-4 ${
+      className={`flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto bg-background p-4 ${
         layout === "desktop" ? "md:p-8" : "md:p-6"
       }`}
     >
@@ -145,6 +145,14 @@ export function LeadDetailShell({
             onSaved={reload}
           />
 
+          <LeadDetailTimeline
+            timeline={data.timeline}
+            onAddNote={handleAddNote}
+            onScheduleFollowUp={handleScheduleFollowUp}
+            followUpComposeDisabled={reloading}
+            showPushPrompt={showPushPrompt}
+          />
+
           {showReassign ? (
             <LeadReassignControl
               leadId={leadId}
@@ -153,14 +161,6 @@ export function LeadDetailShell({
               onReassigned={reload}
             />
           ) : null}
-
-          <LeadDetailTimeline
-            timeline={data.timeline}
-            onAddNote={handleAddNote}
-            onScheduleFollowUp={handleScheduleFollowUp}
-            followUpComposeDisabled={reloading}
-            showPushPrompt={showPushPrompt}
-          />
         </>
       ) : null}
     </main>

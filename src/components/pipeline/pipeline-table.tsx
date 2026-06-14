@@ -82,6 +82,13 @@ function PipelineNoteCell({
         >
           {lead.latest_note}
         </p>
+      ) : lead.booking_notes ? (
+        <p
+          className={`text-xs text-muted-foreground ${expanded ? "" : "line-clamp-2"}`}
+          title={lead.booking_notes}
+        >
+          {lead.booking_notes}
+        </p>
       ) : (
         <p className="text-xs text-muted-foreground/70">No notes yet</p>
       )}
@@ -245,6 +252,7 @@ export function PipelineTable({
                 ) : null}
                 <th className="px-3 py-3 font-semibold text-foreground">Status</th>
                 <th className="px-3 py-3 font-semibold text-foreground">Booked</th>
+                <th className="px-3 py-3 font-semibold text-foreground">Closer</th>
                 <th className="px-3 py-3 font-semibold text-foreground">
                   Proposal sent
                 </th>
@@ -256,7 +264,7 @@ export function PipelineTable({
               {sortedLeads.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={showRepName ? 8 : 7}
+                    colSpan={showRepName ? 9 : 8}
                     className="px-3 py-10 text-center text-muted-foreground"
                   >
                     No leads match your filters.
@@ -319,6 +327,9 @@ export function PipelineTable({
                       </td>
                       <td className="whitespace-nowrap px-3 py-3 text-muted-foreground">
                         {formatPipelineDate(lead.booked_at)}
+                      </td>
+                      <td className="px-3 py-3 text-muted-foreground">
+                        {lead.closer_name ?? "—"}
                       </td>
                       <td className="px-3 py-3">
                         {isProposalSent(lead) ? (

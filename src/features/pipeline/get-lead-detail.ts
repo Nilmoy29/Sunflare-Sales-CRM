@@ -2,6 +2,7 @@ import {
   formatContactDisplayName,
   formatStageChangeDisplay,
 } from "@/features/pipeline/pipeline-stage-labels";
+import { parseBookingFollowUpNote } from "@/features/pipeline/parse-booking-metadata";
 import {
   type CallLogTimelineItem,
   parseCallLogTimelineRow,
@@ -317,6 +318,15 @@ export async function getLeadDetail(
     )
     .filter((item): item is LeadDetailTimelineItem => item !== null);
 
+  const primaryFollowUp = (followUpsResult.data ?? [])
+    .map((row) => row as { due_at?: string; note?: string })
+    .filter((row) => typeof row.due_at === "string")
+    .sort((a, b) => String(a.due_at).localeCompare(String(b.due_at)))[0];
+
+  const parsedBooking = parseBookingFollowUpNote(
+    typeof primaryFollowUp?.note === "string" ? primaryFollowUp.note : null,
+  );
+
   const timeline = [
     ...knockItems,
     ...callItems,
@@ -339,6 +349,12 @@ export async function getLeadDetail(
       suburb: contacts?.suburb ?? null,
       postcode: contacts?.postcode ?? null,
       phone: contacts?.phone ?? null,
+      booked_at:
+        typeof primaryFollowUp?.due_at === "string"
+          ? primaryFollowUp.due_at
+          : null,
+      closer_name: parsedBooking.closer_name,
+      booking_notes: parsedBooking.booking_notes,
       created_at,
       lost_reason: lostReasonParsed.data,
     },

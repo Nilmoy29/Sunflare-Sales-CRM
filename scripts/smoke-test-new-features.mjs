@@ -216,6 +216,12 @@ async function main() {
     if (!lead.booked_at) {
       throw new Error("booked_at should be set from appointment follow-up");
     }
+    if (lead.closer_name !== "Test Closer") {
+      throw new Error(`closer_name expected "Test Closer", got ${lead.closer_name}`);
+    }
+    if (!lead.booking_notes?.includes("Gate code")) {
+      throw new Error(`booking_notes missing gate code: ${lead.booking_notes}`);
+    }
     if (lead.stage !== "appointment_set") {
       throw new Error(`stage expected appointment_set, got ${lead.stage}`);
     }

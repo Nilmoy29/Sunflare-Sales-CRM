@@ -142,26 +142,21 @@ export function usePipelineLeads(filters: PipelineFilters) {
     }
   }, []);
 
-  const addLeadNote = useCallback(async (leadId: string, content: string) => {
-    try {
-      await createLeadNoteApi(leadId, content);
-      setLeads((current) =>
-        current.map((lead) =>
-          lead.id === leadId
-            ? {
-                ...lead,
-                latest_note: content,
-                last_touch_at: new Date().toISOString(),
-              }
-            : lead,
-        ),
-      );
-      return true;
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Could not add note");
-      return false;
-    }
-  }, []);
+  const addLeadNote = useCallback(
+    async (leadId: string, content: string) => {
+      try {
+        await createLeadNoteApi(leadId, content);
+        const refreshed = await fetchPipelineLeads(filters);
+        setLeads(refreshed.leads);
+        setError(null);
+        return true;
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : "Could not add note");
+        return false;
+      }
+    },
+    [filters],
+  );
 
   const displayLeads = loading ? [] : leads;
 

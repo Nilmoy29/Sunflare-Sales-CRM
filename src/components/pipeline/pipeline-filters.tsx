@@ -234,7 +234,7 @@ export function PipelineFiltersBar({
       {showOwnerFilter ? (
         <div className="space-y-2">
           <p className="text-sm font-medium text-foreground">Owner</p>
-          <div className="max-h-40 space-y-2 overflow-y-auto">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <label className="flex min-h-10 cursor-pointer items-center gap-2 text-sm">
               <input
                 type="checkbox"

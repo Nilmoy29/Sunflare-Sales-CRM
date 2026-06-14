@@ -53,11 +53,11 @@ export function LeadNoteCompose({ onSubmit, serverError }: LeadNoteComposeProps)
         disabled={submitting}
         maxLength={NOTES_MAX_LENGTH}
         rows={3}
-        className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900"
+        className="min-h-[5rem] w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground"
         placeholder="Add a note for the team…"
       />
       {displayError ? (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {displayError}
         </p>
       ) : null}
@@ -67,7 +67,7 @@ export function LeadNoteCompose({ onSubmit, serverError }: LeadNoteComposeProps)
           void handleSubmit();
         }}
         disabled={submitting}
-        className="min-h-11 w-fit rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
+        className="min-h-11 w-fit rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90 disabled:opacity-50"
       >
         {submitting ? "Adding…" : "Add note"}
       </button>
