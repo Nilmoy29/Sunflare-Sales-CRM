@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { AuthBrandHeader } from "@/components/auth/auth-brand-header";
+import { AuthFormCard } from "@/components/auth/auth-form-card";
 import { ResetPasswordUpdateForm } from "@/features/auth/components/reset-password-update-form";
 
 type PageProps = {
@@ -18,13 +19,10 @@ export default async function ResetPasswordUpdatePage({ searchParams }: PageProp
 
   return (
     <main className="w-full max-w-sm">
-      <div className="mb-8 text-center">
-        <Link href="/" className="text-2xl font-semibold tracking-tight">
-          Sunflare
-        </Link>
-        <p className="mt-2 text-sm text-zinc-600">Set your new password</p>
-      </div>
-      <ResetPasswordUpdateForm initialError={initialError} />
+      <AuthBrandHeader subtitle="Set your new password" />
+      <AuthFormCard>
+        <ResetPasswordUpdateForm initialError={initialError} />
+      </AuthFormCard>
     </main>
   );
 }

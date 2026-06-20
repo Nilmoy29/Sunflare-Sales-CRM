@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { AuthBrandHeader } from "@/components/auth/auth-brand-header";
+import { AuthFormCard } from "@/components/auth/auth-form-card";
 import { InviteAcceptForm } from "@/features/auth/components/invite-accept-form";
 
 type PageProps = {
@@ -17,15 +18,10 @@ export default async function InviteAcceptPage({ searchParams }: PageProps) {
 
   return (
     <main className="w-full max-w-sm">
-      <div className="mb-8 text-center">
-        <Link href="/" className="text-2xl font-semibold tracking-tight">
-          Sunflare
-        </Link>
-        <p className="mt-2 text-sm text-zinc-600">
-          You were invited to join the team. Complete your account setup.
-        </p>
-      </div>
-      <InviteAcceptForm initialError={initialError} />
+      <AuthBrandHeader subtitle="Complete your account setup" />
+      <AuthFormCard>
+        <InviteAcceptForm initialError={initialError} />
+      </AuthFormCard>
     </main>
   );
 }

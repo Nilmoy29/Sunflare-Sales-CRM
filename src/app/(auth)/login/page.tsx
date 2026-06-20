@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { AuthBrandHeader } from "@/components/auth/auth-brand-header";
+import { AuthFormCard } from "@/components/auth/auth-form-card";
 import { LoginForm } from "@/features/auth/components/login-form";
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -27,20 +29,17 @@ export default async function LoginPage({ searchParams }: PageProps) {
 
   return (
     <main className="w-full max-w-sm">
-      <div className="mb-8 text-center">
-        <Link href="/" className="text-2xl font-semibold tracking-tight">
-          Sunflare
-        </Link>
-        <p className="mt-2 text-sm text-zinc-600">Solar CRM — sign in</p>
-      </div>
-      <LoginForm nextPath={params.next} initialError={initialError} />
+      <AuthBrandHeader subtitle="Sign in to your account" />
+      <AuthFormCard>
+        <LoginForm nextPath={params.next} initialError={initialError} />
+      </AuthFormCard>
       {notice ? (
-        <p className="mt-3 text-center text-sm text-emerald-700">{notice}</p>
+        <p className="mt-4 text-center text-sm text-emerald-400">{notice}</p>
       ) : null}
       <div className="mt-4 text-center">
         <Link
           href="/reset-password"
-          className="text-sm text-zinc-600 underline hover:text-zinc-900"
+          className="text-sm text-white/40 transition hover:text-white/60"
         >
           Forgot password?
         </Link>

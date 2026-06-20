@@ -127,7 +127,7 @@ export function LoginForm({ nextPath, initialError }: LoginFormProps) {
       <button
         type="submit"
         disabled={pending}
-        className="min-h-11 rounded-lg bg-zinc-900 px-4 text-base font-medium text-white hover:bg-zinc-800 disabled:opacity-60"
+        className="min-h-11 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-4 text-base font-semibold text-slate-900 shadow-md shadow-amber-500/20 transition hover:from-amber-300 hover:to-orange-400 disabled:opacity-60"
       >
         {pending ? "Signing in…" : "Sign in"}
       </button>
