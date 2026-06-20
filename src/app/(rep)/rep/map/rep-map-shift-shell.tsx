@@ -39,9 +39,10 @@ export function RepMapShiftShell() {
   const { shift, isActive, loading, busy, error, lastEndedSummary, dismissEndedSummary, onStart, onEnd } =
     useActiveShift();
 
-  const { territories: territoryOverlays } = useRepTerritoryOverlay({
-    enabled: isActive,
-  });
+  const { territories: territoryOverlays, error: territoryOverlayError } =
+    useRepTerritoryOverlay({
+      enabled: isActive,
+    });
 
   const { userLocation, geoWarning: locationGeoWarning } =
     useRepLocation(isActive);
@@ -189,6 +190,15 @@ export function RepMapShiftShell() {
           <>
             <div className="pointer-events-none absolute inset-x-0 top-4 z-10 flex flex-col items-center gap-2 px-4">
               <OfflinePendingIndicator count={pendingCount} />
+              {territoryOverlayError ? (
+                <p
+                  className="max-w-[min(100%,24rem)] rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-center text-sm font-medium text-amber-950 shadow-lg"
+                  role="status"
+                  aria-live="polite"
+                >
+                  Could not load your assigned territory: {territoryOverlayError}
+                </p>
+              ) : null}
               {saveNotice ? (
                 <p
                   className="max-w-[min(100%,20rem)] rounded-lg border border-zinc-300 bg-white px-4 py-2 text-center text-sm font-semibold text-zinc-950 shadow-lg"

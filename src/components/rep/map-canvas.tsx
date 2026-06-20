@@ -19,6 +19,7 @@ import {
   type MapBbox,
   type PendingKnockPin,
 } from "@/lib/validators/knocks";
+import { boundsForTerritoryOverlays } from "@/lib/geo/territory-bounds";
 import type { RepTerritoryOverlay } from "@/lib/validators/territories";
 
 const REP_TERRITORIES_SOURCE_ID = "rep-territories";
@@ -143,6 +144,7 @@ export function MapCanvas({
   const onPinClickRef = useRef(onPinClick);
   const userLocationRef = useRef(userLocation);
   const hasCenteredOnUserRef = useRef(false);
+  const hasFitTerritoryBoundsRef = useRef(false);
 
   userLocationRef.current = userLocation;
 
@@ -417,6 +419,7 @@ export function MapCanvas({
     return () => {
       cancelled = true;
       hasCenteredOnUserRef.current = false;
+      hasFitTerritoryBoundsRef.current = false;
       mapReadyRef.current = false;
       setMapLoaded(false);
       setMapError(null);
@@ -434,6 +437,36 @@ export function MapCanvas({
     }
     syncTerritoriesToMap(territoryOverlays);
   }, [territoryOverlays, mapLoaded, syncTerritoriesToMap]);
+
+  useEffect(() => {
+    if (
+      !mapLoaded ||
+      territoryOverlays.length === 0 ||
+      hasFitTerritoryBoundsRef.current
+    ) {
+      return;
+    }
+
+    const map = mapRef.current;
+    if (!map) {
+      return;
+    }
+
+    const bounds = boundsForTerritoryOverlays(
+      territoryOverlays,
+      userLocationRef.current,
+    );
+    if (!bounds) {
+      return;
+    }
+
+    hasFitTerritoryBoundsRef.current = true;
+    map.fitBounds(bounds, {
+      padding: 48,
+      maxZoom: 15,
+      duration: 600,
+    });
+  }, [mapLoaded, territoryOverlays]);
 
   useEffect(() => {
     if (!mapLoaded) {

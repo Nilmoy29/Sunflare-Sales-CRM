@@ -1,7 +1,10 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { formatSydneyDateString } from "@/features/knocks/format-knock-date";
+import { useCallback, useEffect, useState } from "react";
+import {
+  refreshStaleAssignDate,
+  sydneyTodayAssignDate,
+} from "@/features/territories/assign-date-utils";
 import { useTerritoryAssignments } from "@/features/territories/use-territory-assignments";
 import type { TerritorySummary } from "@/lib/validators/territories";
 
@@ -25,16 +28,31 @@ export function TerritoryAssignmentsPanel({
   selectedTerritoryId,
   onSelectTerritory,
 }: TerritoryAssignmentsPanelProps) {
-  const [filterDate, setFilterDate] = useState(() =>
-    formatSydneyDateString(new Date()),
-  );
+  const [filterDate, setFilterDate] = useState(() => sydneyTodayAssignDate());
   const [territoryId, setTerritoryId] = useState("");
   const [repId, setRepId] = useState("");
-  const [assignDate, setAssignDate] = useState(() =>
-    formatSydneyDateString(new Date()),
-  );
+  const [assignDate, setAssignDate] = useState(() => sydneyTodayAssignDate());
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const today = sydneyTodayAssignDate();
+
+  useEffect(() => {
+    const refreshDates = () => {
+      setFilterDate((current) => refreshStaleAssignDate(current));
+      setAssignDate((current) => refreshStaleAssignDate(current));
+    };
+
+    window.addEventListener("focus", refreshDates);
+    return () => {
+      window.removeEventListener("focus", refreshDates);
+    };
+  }, []);
+
+  const handleFilterDateChange = useCallback((value: string) => {
+    const next = value || sydneyTodayAssignDate();
+    setFilterDate(next);
+    setAssignDate(next);
+  }, []);
 
   const { assignments, loading, error, create } = useTerritoryAssignments({
     assignedDate: filterDate,
@@ -75,6 +93,7 @@ export function TerritoryAssignmentsPanel({
     if (result.assignment.assigned_date !== filterDate) {
       setFilterDate(result.assignment.assigned_date);
     }
+    setAssignDate(sydneyTodayAssignDate());
   }, [
     assignDate,
     create,
@@ -91,11 +110,7 @@ export function TerritoryAssignmentsPanel({
         <input
           type="date"
           value={filterDate}
-          onChange={(event) =>
-            setFilterDate(
-              event.target.value || formatSydneyDateString(new Date()),
-            )
-          }
+          onChange={(event) => handleFilterDateChange(event.target.value)}
           className="mt-1 w-full rounded-lg border border-border px-3 py-2"
         />
       </label>
@@ -182,6 +197,12 @@ export function TerritoryAssignmentsPanel({
             onChange={(event) => setAssignDate(event.target.value)}
             className="mt-1 w-full rounded-lg border border-border px-3 py-2"
           />
+          {assignDate !== today ? (
+            <p className="mt-1 text-xs text-amber-800">
+              Reps only see this territory on the rep map for the assigned date
+              ({assignDate}), not necessarily today ({today}).
+            </p>
+          ) : null}
         </label>
 
         {formError ? (

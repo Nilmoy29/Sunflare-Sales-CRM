@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   TerritoryAssignmentsPanel,
   type TerritoryRep,
@@ -11,7 +11,10 @@ import {
 } from "@/components/admin/territory-draw-tool";
 import { AdminMapViewport } from "@/components/admin/admin-map-viewport";
 import { createTerritoryAssignment } from "@/features/territories/api";
-import { formatSydneyDateString } from "@/features/knocks/format-knock-date";
+import {
+  refreshStaleAssignDate,
+  sydneyTodayAssignDate,
+} from "@/features/territories/assign-date-utils";
 import { useTerritories } from "@/features/territories/use-territories";
 import {
   TERRITORY_NAME_MAX_LENGTH,
@@ -27,7 +30,7 @@ type TerritoryShellProps = {
 };
 
 function defaultAssignDate(): string {
-  return formatSydneyDateString(new Date());
+  return sydneyTodayAssignDate();
 }
 
 export function TerritoryShell({ reps }: TerritoryShellProps) {
@@ -48,6 +51,18 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const drawToolRef = useRef<TerritoryDrawToolHandle>(null);
+  const today = sydneyTodayAssignDate();
+
+  useEffect(() => {
+    const refreshAssignDate = () => {
+      setAssignDate((current) => refreshStaleAssignDate(current));
+    };
+
+    window.addEventListener("focus", refreshAssignDate);
+    return () => {
+      window.removeEventListener("focus", refreshAssignDate);
+    };
+  }, []);
 
   const resetForm = useCallback(() => {
     setFormMode("idle");
@@ -441,6 +456,12 @@ export function TerritoryShell({ reps }: TerritoryShellProps) {
                       disabled={!assignRepId}
                       className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 disabled:opacity-60"
                     />
+                    {assignRepId && assignDate !== today ? (
+                      <p className="mt-1 text-xs text-amber-800">
+                        Reps only see this zone on the rep map for {assignDate},
+                        not necessarily today ({today}).
+                      </p>
+                    ) : null}
                   </label>
 
                   <p className="text-xs text-muted-foreground">

@@ -11,6 +11,7 @@ type UseRepTerritoryOverlayOptions = {
 export function useRepTerritoryOverlay({ enabled }: UseRepTerritoryOverlayOptions) {
   const [territories, setTerritories] = useState<RepTerritoryOverlay[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const refresh = useCallback(() => {
@@ -28,17 +29,23 @@ export function useRepTerritoryOverlay({ enabled }: UseRepTerritoryOverlayOption
     async function load() {
       setLoading(true);
       setTerritories([]);
+      setError(null);
       try {
         const result = await fetchRepTerritoriesForDate(controller.signal);
         if (cancelled) {
           return;
         }
         setTerritories(result.territories);
-      } catch {
+      } catch (e) {
         if (cancelled) {
           return;
         }
         setTerritories([]);
+        setError(
+          e instanceof Error
+            ? e.message
+            : "Failed to load assigned territories",
+        );
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -57,6 +64,7 @@ export function useRepTerritoryOverlay({ enabled }: UseRepTerritoryOverlayOption
   return {
     territories: enabled && !loading ? territories : [],
     loading: enabled && loading,
+    error: enabled && !loading ? error : null,
     refresh,
   };
 }
