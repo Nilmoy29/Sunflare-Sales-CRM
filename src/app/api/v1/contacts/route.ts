@@ -4,7 +4,7 @@ import { createContactForRep } from "@/features/contacts/create-contact";
 import { createContactBodySchema } from "@/lib/validators/contacts";
 
 export async function POST(request: Request) {
-  const auth = await requireRoleForApi(["rep"]);
+  const auth = await requireRoleForApi(["rep"], request);
   if (auth instanceof Response) {
     return auth;
   }

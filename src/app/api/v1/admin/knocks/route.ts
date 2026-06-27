@@ -4,7 +4,7 @@ import { getAdminKnocksInBbox } from "@/features/knocks/get-admin-knocks-in-bbox
 import { parseAdminKnocksSearchParams } from "@/lib/validators/knocks";
 
 export async function GET(request: Request) {
-  const auth = await requireRoleForApi(["admin"]);
+  const auth = await requireRoleForApi(["admin"], request);
   if (auth instanceof Response) {
     return auth;
   }

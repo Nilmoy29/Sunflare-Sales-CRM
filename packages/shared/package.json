@@ -1,0 +1,20 @@
+{
+  "name": "@sunflare/shared",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared enums, validators, and types for Sunflare web and mobile",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.25.32"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}

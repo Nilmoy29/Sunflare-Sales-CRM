@@ -6,8 +6,8 @@ import { getActiveShiftForRep } from "@/features/shifts/queries";
 import { createClient } from "@/lib/supabase/server";
 import { shiftEndResponseSchema } from "@/lib/validators/shifts";
 
-export async function POST() {
-  const auth = await requireRoleForApi(["rep"]);
+export async function POST(request: Request) {
+  const auth = await requireRoleForApi(["rep"], request);
   if (auth instanceof Response) {
     return auth;
   }

@@ -5,7 +5,7 @@ import { formatSydneyDateString } from "@/features/knocks/format-knock-date";
 import { parseRepDailyCallCountSearchParams } from "@/lib/validators/call-logs";
 
 export async function GET(request: Request) {
-  const auth = await requireRoleForApi(["rep"]);
+  const auth = await requireRoleForApi(["rep"], request);
   if (auth instanceof Response) {
     return auth;
   }

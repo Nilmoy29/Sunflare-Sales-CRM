@@ -2,8 +2,8 @@ import { apiError, apiSuccess } from "@/lib/api/response";
 import { requireRoleForApi } from "@/lib/auth/guards";
 import { getMorningOverview } from "@/features/admin/get-morning-overview";
 
-export async function GET() {
-  const auth = await requireRoleForApi(["admin"]);
+export async function GET(request: Request) {
+  const auth = await requireRoleForApi(["admin"], request);
   if (auth instanceof Response) {
     return auth;
   }

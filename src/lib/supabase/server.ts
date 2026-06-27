@@ -1,8 +1,13 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createClient as createSupabaseJsClient } from "@supabase/supabase-js";
+import { cookies, headers } from "next/headers";
 import type { Database } from "@/types/supabase.generated";
 
-export async function createClient() {
+export type AppSupabaseClient = ReturnType<
+  typeof createServerClient<Database>
+>;
+
+function getSupabaseEnv() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -12,6 +17,19 @@ export async function createClient() {
     );
   }
 
+  return { url, anonKey };
+}
+
+export function parseBearerToken(authorization: string | null): string | null {
+  if (!authorization) {
+    return null;
+  }
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+  return match?.[1]?.trim() ?? null;
+}
+
+async function createCookieClient(): Promise<AppSupabaseClient> {
+  const { url, anonKey } = getSupabaseEnv();
   const cookieStore = await cookies();
 
   return createServerClient<Database>(url, anonKey, {
@@ -36,4 +54,36 @@ export async function createClient() {
       },
     },
   });
+}
+
+function createBearerClient(accessToken: string): AppSupabaseClient {
+  const { url, anonKey } = getSupabaseEnv();
+  return createSupabaseJsClient<Database>(url, anonKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  }) as unknown as AppSupabaseClient;
+}
+
+/** Cookie session (web) or Bearer token (mobile) from the incoming request. */
+export async function createClientFromRequest(request: Request) {
+  const bearerToken = parseBearerToken(request.headers.get("authorization"));
+  if (bearerToken) {
+    return createBearerClient(bearerToken);
+  }
+
+  return createCookieClient();
+}
+
+export async function createClient(): Promise<AppSupabaseClient> {
+  const headerStore = await headers();
+  const bearerToken = parseBearerToken(headerStore.get("authorization"));
+
+  if (bearerToken) {
+    return createBearerClient(bearerToken);
+  }
+
+  return createCookieClient();
 }

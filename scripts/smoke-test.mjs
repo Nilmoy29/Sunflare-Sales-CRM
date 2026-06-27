@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Sunflare smoke test — verifies Epics 1–7 via health, auth, page loads, and API checks.
+ * Sunflare smoke test — verifies Epics 1–8 via health, auth, page loads, and API checks.
  *
  * Prerequisites:
  *   - Dev or production server running (default http://localhost:3000)
@@ -26,6 +26,7 @@ import {
   loginWithForm,
   printSummary,
   runCheck,
+  signInRepBearer,
   skipCheck,
   SYDNEY_BBOX,
   sydneyToday,
@@ -560,6 +561,106 @@ async function main() {
       "7",
       "Rep deep-dive APIs and page",
       "no reps in summary grid — create a rep via /admin/team",
+      results,
+    );
+  }
+
+  // ── Epic 8: Mobile — Notifications, History & APK (API) ─────────────────
+  section("Epic 8 — Mobile: Notifications, History & APK (API)");
+
+  if (repCookies) {
+    const today = sydneyToday();
+    const historyQuery = `from=${today}&to=${today}&limit=10&offset=0`;
+
+    await runCheck("8", "GET /api/v1/calls/mine", async () => {
+      const { response, json } = await fetchJson(
+        `${base}/api/v1/calls/mine?${historyQuery}`,
+        { cookies: repCookies },
+      );
+      assertStatus(response.status, 200, "calls/mine");
+      assertHasData(json, "calls/mine");
+      if (!Array.isArray(json.data.calls)) {
+        throw new Error("calls/mine: data.calls should be an array");
+      }
+      if (typeof json.data.truncated !== "boolean") {
+        throw new Error("calls/mine: data.truncated should be boolean");
+      }
+    }, results);
+
+    let repBearer = null;
+    try {
+      repBearer = await signInRepBearer();
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      results.push({
+        epic: "8",
+        name: "Rep Bearer sign-in",
+        ok: false,
+        detail,
+      });
+      console.log("  ✗ Rep Bearer sign-in");
+      console.log(`    → ${detail}`);
+    }
+
+    if (repBearer) {
+      await runCheck("8", "GET /api/v1/calls/mine (Bearer)", async () => {
+        const { response, json } = await fetchJson(
+          `${base}/api/v1/calls/mine?${historyQuery}`,
+          { headers: { Authorization: `Bearer ${repBearer}` } },
+        );
+        assertStatus(response.status, 200, "calls/mine Bearer");
+        assertHasData(json, "calls/mine Bearer");
+      }, results);
+
+      await runCheck("8", "GET /api/v1/knocks/mine (Bearer)", async () => {
+        const { response, json } = await fetchJson(
+          `${base}/api/v1/knocks/mine?${historyQuery}`,
+          { headers: { Authorization: `Bearer ${repBearer}` } },
+        );
+        assertStatus(response.status, 200, "knocks/mine Bearer");
+        assertHasData(json, "knocks/mine Bearer");
+      }, results);
+
+      const smokeExpoToken = `ExponentPushToken[smoke-${Date.now().toString(36)}]`;
+
+      await runCheck("8", "POST /api/v1/push/subscribe (expo)", async () => {
+        const { response, json } = await fetchJson(`${base}/api/v1/push/subscribe`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${repBearer}` },
+          body: {
+            platform: "expo",
+            expo_push_token: smokeExpoToken,
+          },
+        });
+        assertStatus(response.status, 200, "push/subscribe expo");
+        assertHasData(json, "push/subscribe expo");
+        if (json.data?.subscribed !== true) {
+          throw new Error("push/subscribe: expected subscribed: true");
+        }
+      }, results);
+
+      await runCheck("8", "DELETE /api/v1/push/subscribe (expo cleanup)", async () => {
+        const { response, json } = await fetchJson(`${base}/api/v1/push/subscribe`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${repBearer}` },
+          body: { endpoint: smokeExpoToken },
+        });
+        assertStatus(response.status, 200, "push/unsubscribe expo");
+        assertHasData(json, "push/unsubscribe expo");
+      }, results);
+    } else if (!results.some((r) => r.epic === "8" && r.name === "Rep Bearer sign-in" && !r.ok)) {
+      skipCheck(
+        "8",
+        "Bearer + expo push checks",
+        "set TEST_REP_* and Supabase public env vars",
+        results,
+      );
+    }
+  } else {
+    skipCheck(
+      "8",
+      "Mobile history and push APIs",
+      "rep credentials not configured",
       results,
     );
   }

@@ -5,7 +5,7 @@ import { formatSydneyDateString } from "@/features/knocks/format-knock-date";
 import { parseFunnelConversionSearchParams } from "@/lib/validators/funnel-conversion";
 
 export async function GET(request: Request) {
-  const auth = await requireRoleForApi(["admin"]);
+  const auth = await requireRoleForApi(["admin"], request);
   if (auth instanceof Response) {
     return auth;
   }

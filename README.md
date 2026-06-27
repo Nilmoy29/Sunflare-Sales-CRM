@@ -41,10 +41,32 @@ Migrations in `supabase/migrations/` enable PostGIS, frozen PRD enums, `profiles
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Development server |
-| `npm run build` | Production build (uses `--webpack` for Serwist PWA service worker) |
+| `npm run verify:bearer` | Bearer token API check (mobile auth bridge) |
+| `npm run build` | Web production build |
 | `npm run lint` | ESLint |
 | `npm run start` | Start production server |
 | `npm run smoke` | Epic 1–7 smoke test (API + page checks; requires test users in `.env.local`) |
+
+## Monorepo (mobile)
+
+npm workspaces are enabled at the repo root:
+
+| Path | Package | Purpose |
+|------|---------|---------|
+| `/` (root) | `sunflare` | Next.js web PWA (unchanged) |
+| `packages/shared` | `@sunflare/shared` | Shared enums, Zod validators, types |
+| `apps/*` | (future) | Expo mobile app (`apps/mobile` in Epic 2) |
+
+```bash
+npm install          # links workspaces from root
+npm run dev          # web app (root)
+npm run build        # web production build
+cd apps/mobile && npm start   # Expo dev server
+
+Copy `apps/mobile/.env.example` to `apps/mobile/.env` and set the same Supabase/Mapbox public keys as web (use your machine IP for `EXPO_PUBLIC_API_URL` on a physical device).
+```
+
+Workspace packages import as `@sunflare/shared`. Mobile scaffold: `_bmad-output/planning-artifacts/epics-mobile-expo.md`.
 
 ## Documentation
 

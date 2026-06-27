@@ -10,7 +10,7 @@ import {
 } from "@/lib/validators/push";
 
 export async function POST(request: Request) {
-  const auth = await requireRoleForApi(["rep"]);
+  const auth = await requireRoleForApi(["rep"], request);
   if (auth instanceof Response) {
     return auth;
   }
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const auth = await requireRoleForApi(["rep"]);
+  const auth = await requireRoleForApi(["rep"], request);
   if (auth instanceof Response) {
     return auth;
   }

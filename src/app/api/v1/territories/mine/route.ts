@@ -4,7 +4,7 @@ import { getRepTerritoriesForDate } from "@/features/territories/get-rep-territo
 import { parseRepTerritoriesForDateQuery } from "@/lib/validators/territories";
 
 export async function GET(request: Request) {
-  const auth = await requireRoleForApi(["rep"]);
+  const auth = await requireRoleForApi(["rep"], request);
   if (auth instanceof Response) {
     return auth;
   }

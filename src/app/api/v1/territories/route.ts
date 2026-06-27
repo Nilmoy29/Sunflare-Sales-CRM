@@ -7,8 +7,8 @@ import {
 import { getTerritoriesForAdmin } from "@/features/territories/get-territories";
 import { createTerritoryBodySchema } from "@/lib/validators/territories";
 
-export async function GET() {
-  const auth = await requireRoleForApi(["admin"]);
+export async function GET(request: Request) {
+  const auth = await requireRoleForApi(["admin"], request);
   if (auth instanceof Response) {
     return auth;
   }
@@ -26,7 +26,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireRoleForApi(["admin"]);
+  const auth = await requireRoleForApi(["admin"], request);
   if (auth instanceof Response) {
     return auth;
   }

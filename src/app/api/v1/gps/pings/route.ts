@@ -5,7 +5,7 @@ import { gpsPingBodySchema } from "@/lib/validators/shifts";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
-  const auth = await requireRoleForApi(["rep"]);
+  const auth = await requireRoleForApi(["rep"], request);
   if (auth instanceof Response) {
     return auth;
   }

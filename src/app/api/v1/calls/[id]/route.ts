@@ -20,7 +20,7 @@ function isValidUuid(value: string): boolean {
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const auth = await requireRoleForApi(["rep"]);
+  const auth = await requireRoleForApi(["rep"], request);
   if (auth instanceof Response) {
     return auth;
   }
@@ -61,8 +61,8 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 }
 
-export async function DELETE(_request: Request, context: RouteContext) {
-  const auth = await requireRoleForApi(["rep"]);
+export async function DELETE(request: Request, context: RouteContext) {
+  const auth = await requireRoleForApi(["rep"], request);
   if (auth instanceof Response) {
     return auth;
   }

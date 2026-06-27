@@ -5,15 +5,26 @@ export const pushSubscriptionKeysSchema = z.object({
   auth: z.string().min(1),
 });
 
-export const pushSubscribeBodySchema = z.object({
+export const webPushSubscribeBodySchema = z.object({
+  platform: z.literal("web").optional(),
   endpoint: z.string().url(),
   keys: pushSubscriptionKeysSchema,
 });
 
+export const expoPushSubscribeBodySchema = z.object({
+  platform: z.literal("expo"),
+  expo_push_token: z.string().min(1),
+});
+
+export const pushSubscribeBodySchema = z.union([
+  expoPushSubscribeBodySchema,
+  webPushSubscribeBodySchema,
+]);
+
 export type PushSubscribeBody = z.infer<typeof pushSubscribeBodySchema>;
 
 export const pushUnsubscribeBodySchema = z.object({
-  endpoint: z.string().url(),
+  endpoint: z.string().min(1),
 });
 
 export type PushUnsubscribeBody = z.infer<typeof pushUnsubscribeBodySchema>;

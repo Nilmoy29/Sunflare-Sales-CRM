@@ -4,7 +4,7 @@ import { getLowActivityReps } from "@/features/admin/get-low-activity-reps";
 import { parseLowActivitySearchParams } from "@/lib/validators/dashboard-coaching";
 
 export async function GET(request: Request) {
-  const auth = await requireRoleForApi(["admin"]);
+  const auth = await requireRoleForApi(["admin"], request);
   if (auth instanceof Response) {
     return auth;
   }

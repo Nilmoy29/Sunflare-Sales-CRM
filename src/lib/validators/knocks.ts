@@ -1,97 +1,45 @@
 import { z } from "zod";
+import {
+  clampMapBbox,
+  createKnockBodySchema,
+  mapBboxSchema,
+  maxSpanBboxAround,
+  parseBboxParam,
+  SYNC_KNOCKS_MAX_BATCH,
+  syncKnockItemSchema,
+  syncKnocksBodySchema,
+  type MapBbox,
+  type SyncKnockItem,
+  type SyncKnocksBody,
+  ADDRESS_MAX_LENGTH,
+  NOTES_MAX_LENGTH,
+  POSTCODE_MAX_LENGTH,
+  SUBURB_MAX_LENGTH,
+  contactAddressFieldsSchema,
+  MAX_BBOX_SPAN_DEGREES,
+} from "@sunflare/shared";
 import { doorOutcomeSchema } from "@/lib/validators/enums";
 import { leadSummarySchema } from "@/lib/validators/leads";
 
-const MAX_BBOX_SPAN_DEGREES = 5;
+export {
+  MAX_BBOX_SPAN_DEGREES,
+  clampMapBbox,
+  createKnockBodySchema,
+  mapBboxSchema,
+  maxSpanBboxAround,
+  parseBboxParam,
+  SYNC_KNOCKS_MAX_BATCH,
+  syncKnockItemSchema,
+  syncKnocksBodySchema,
+  ADDRESS_MAX_LENGTH,
+  NOTES_MAX_LENGTH,
+  POSTCODE_MAX_LENGTH,
+  SUBURB_MAX_LENGTH,
+  contactAddressFieldsSchema,
+};
+export type { MapBbox, SyncKnockItem, SyncKnocksBody };
 
-export { MAX_BBOX_SPAN_DEGREES };
-
-export const mapBboxSchema = z
-  .object({
-    west: z.number().min(-180).max(180),
-    south: z.number().min(-90).max(90),
-    east: z.number().min(-180).max(180),
-    north: z.number().min(-90).max(90),
-  })
-  .refine((bbox) => bbox.west < bbox.east, {
-    message: "west must be less than east",
-  })
-  .refine((bbox) => bbox.south < bbox.north, {
-    message: "south must be less than north",
-  })
-  .refine(
-    (bbox) =>
-      bbox.east - bbox.west <= MAX_BBOX_SPAN_DEGREES &&
-      bbox.north - bbox.south <= MAX_BBOX_SPAN_DEGREES,
-    { message: "bbox span exceeds allowed limit" },
-  );
-
-export type MapBbox = z.infer<typeof mapBboxSchema>;
-
-/** Expands to the maximum server-allowed span centered on a point. */
-export function maxSpanBboxAround(lng: number, lat: number): MapBbox {
-  const half = MAX_BBOX_SPAN_DEGREES / 2;
-  return clampMapBbox({
-    west: lng - half,
-    south: lat - half,
-    east: lng + half,
-    north: lat + half,
-  });
-}
-
-/** Shrinks viewport bbox to the server-allowed span (centered). */
-export function clampMapBbox(bbox: MapBbox): MapBbox {
-  let { west, south, east, north } = bbox;
-  const lngSpan = east - west;
-  const latSpan = north - south;
-
-  if (lngSpan > MAX_BBOX_SPAN_DEGREES) {
-    const midLng = (west + east) / 2;
-    west = midLng - MAX_BBOX_SPAN_DEGREES / 2;
-    east = midLng + MAX_BBOX_SPAN_DEGREES / 2;
-  }
-
-  if (latSpan > MAX_BBOX_SPAN_DEGREES) {
-    const midLat = (south + north) / 2;
-    south = midLat - MAX_BBOX_SPAN_DEGREES / 2;
-    north = midLat + MAX_BBOX_SPAN_DEGREES / 2;
-  }
-
-  return { west, south, east, north };
-}
-
-export function parseBboxParam(value: string | null) {
-  if (!value) {
-    return {
-      success: false as const,
-      error: "bbox query param is required (west,south,east,north)",
-    };
-  }
-
-  const parts = value.split(",").map((part) => Number(part.trim()));
-  if (parts.length !== 4 || parts.some((n) => Number.isNaN(n))) {
-    return {
-      success: false as const,
-      error: "bbox must be four comma-separated numbers: west,south,east,north",
-    };
-  }
-
-  const parsed = mapBboxSchema.safeParse({
-    west: parts[0],
-    south: parts[1],
-    east: parts[2],
-    north: parts[3],
-  });
-
-  if (!parsed.success) {
-    return {
-      success: false as const,
-      error: parsed.error.issues[0]?.message ?? "Invalid bbox",
-    };
-  }
-
-  return { success: true as const, data: parsed.data };
-}
+export type CreateKnockBody = z.infer<typeof createKnockBodySchema>;
 
 export const knockPinSchema = z.object({
   id: z.string().uuid(),
@@ -113,71 +61,11 @@ export const knockDraftSchema = z.object({
 
 export type KnockDraft = z.infer<typeof knockDraftSchema>;
 
-export const NOTES_MAX_LENGTH = 2000;
-export const ADDRESS_MAX_LENGTH = 500;
-export const SUBURB_MAX_LENGTH = 120;
-export const POSTCODE_MAX_LENGTH = 16;
-
-const optionalTrimmedNullableString = (max: number) =>
-  z
-    .string()
-    .trim()
-    .max(max)
-    .optional()
-    .nullable()
-    .transform((value) => (value ? value : null));
-
-export const contactAddressFieldsSchema = z.object({
-  address: optionalTrimmedNullableString(ADDRESS_MAX_LENGTH),
-  suburb: optionalTrimmedNullableString(SUBURB_MAX_LENGTH),
-  postcode: optionalTrimmedNullableString(POSTCODE_MAX_LENGTH),
-});
-
-export const createKnockBodySchema = z
-  .object({
-    lat: z.number().min(-90).max(90),
-    lng: z.number().min(-180).max(180),
-    outcome: doorOutcomeSchema,
-    notes: z
-      .string()
-      .trim()
-      .max(NOTES_MAX_LENGTH)
-      .optional()
-      .nullable()
-      .transform((value) => (value ? value : null)),
-    follow_up_at: z
-      .string()
-      .datetime({ offset: true })
-      .optional()
-      .nullable()
-      .transform((value) => (value ? value : null)),
-  })
-  .merge(contactAddressFieldsSchema);
-
-export type CreateKnockBody = z.infer<typeof createKnockBodySchema>;
-
 export const pendingKnockPinSchema = knockPinSchema.extend({
   pending: z.literal(true),
 });
 
 export type PendingKnockPin = z.infer<typeof pendingKnockPinSchema>;
-
-export const SYNC_KNOCKS_MAX_BATCH = 50;
-
-export const syncKnockItemSchema = z
-  .object({
-    client_id: z.string().uuid(),
-    idempotency_key: z.string().uuid(),
-  })
-  .merge(createKnockBodySchema);
-
-export type SyncKnockItem = z.infer<typeof syncKnockItemSchema>;
-
-export const syncKnocksBodySchema = z.object({
-  knocks: z.array(syncKnockItemSchema).min(1).max(SYNC_KNOCKS_MAX_BATCH),
-});
-
-export type SyncKnocksBody = z.infer<typeof syncKnocksBodySchema>;
 
 export const createKnockResponseSchema = z.object({
   knock: knockPinSchema,

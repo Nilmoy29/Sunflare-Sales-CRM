@@ -10,8 +10,8 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-export async function POST(_request: Request, context: RouteContext) {
-  const auth = await requireRoleForApi(["rep"]);
+export async function POST(request: Request, context: RouteContext) {
+  const auth = await requireRoleForApi(["rep"], request);
   if (auth instanceof Response) {
     return auth;
   }

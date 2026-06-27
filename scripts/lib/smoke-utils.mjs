@@ -48,6 +48,45 @@ export function envCredential(value, label) {
   return trimmed;
 }
 
+/**
+ * Rep JWT for mobile Bearer API smoke checks (Epic 8).
+ * @returns {Promise<string | null>}
+ */
+export async function signInRepBearer() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const repEmail = envCredential(process.env.TEST_REP_EMAIL, "TEST_REP_EMAIL");
+  const repPassword = envCredential(
+    process.env.TEST_REP_PASSWORD,
+    "TEST_REP_PASSWORD",
+  );
+
+  if (!supabaseUrl || !anonKey || !repEmail || !repPassword) {
+    return null;
+  }
+
+  const res = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: anonKey,
+      Authorization: `Bearer ${anonKey}`,
+    },
+    body: JSON.stringify({ email: repEmail, password: repPassword }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Supabase rep sign-in failed (${res.status})`);
+  }
+
+  const json = await res.json();
+  if (!json.access_token) {
+    throw new Error("No access_token in rep sign-in response");
+  }
+
+  return json.access_token;
+}
+
 /** Sydney calendar date as YYYY-MM-DD (matches server validators). */
 export function sydneyToday() {
   return new Intl.DateTimeFormat("en-CA", {

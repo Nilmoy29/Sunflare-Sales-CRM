@@ -2,6 +2,10 @@
   "name": "sunflare",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "engines": {
     "node": ">=20.9.0"
   },
@@ -15,7 +19,8 @@
     "db:link": "supabase link --project-ref glruwdknafegbcofvnbp",
     "db:types": "node scripts/generate-supabase-types.mjs",
     "smoke": "node scripts/smoke-test.mjs",
-    "smoke:new": "node scripts/smoke-test-new-features.mjs"
+    "smoke:new": "node scripts/smoke-test-new-features.mjs",
+    "verify:bearer": "node scripts/verify-bearer-auth.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -24,9 +29,11 @@
     "@mapbox/mapbox-gl-draw": "^1.5.1",
     "@opentelemetry/api": "^1.9.1",
     "@serwist/next": "^9.0.18",
+    "@sunflare/shared": "*",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.8",
     "dexie": "^4.0.11",
+    "expo-server-sdk": "^3.15.0",
     "mapbox-gl": "^3.12.0",
     "next": "16.2.6",
     "react": "19.2.4",

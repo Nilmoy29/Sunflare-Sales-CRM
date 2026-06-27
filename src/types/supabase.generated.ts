@@ -451,29 +451,32 @@ export type Database = {
       }
       push_subscriptions: {
         Row: {
-          auth: string
+          auth: string | null
           created_at: string
           endpoint: string
           id: string
-          p256dh: string
+          p256dh: string | null
+          platform: string
           rep_id: string
           updated_at: string
         }
         Insert: {
-          auth: string
+          auth?: string | null
           created_at?: string
           endpoint: string
           id?: string
-          p256dh: string
+          p256dh?: string | null
+          platform?: string
           rep_id: string
           updated_at?: string
         }
         Update: {
-          auth?: string
+          auth?: string | null
           created_at?: string
           endpoint?: string
           id?: string
-          p256dh?: string
+          p256dh?: string | null
+          platform?: string
           rep_id?: string
           updated_at?: string
         }

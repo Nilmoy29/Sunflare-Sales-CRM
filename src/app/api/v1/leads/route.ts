@@ -4,7 +4,7 @@ import { getPipelineLeads } from "@/features/pipeline/get-pipeline-leads";
 import { parsePipelineLeadsQueryFromSearchParams } from "@/lib/validators/pipeline";
 
 export async function GET(request: Request) {
-  const auth = await requireRoleForApi(["admin", "rep"]);
+  const auth = await requireRoleForApi(["admin", "rep"], request);
   if (auth instanceof Response) {
     return auth;
   }

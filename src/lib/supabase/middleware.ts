@@ -127,7 +127,12 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  if (!user && !isPublicPath(pathname) && pathname.startsWith("/api/")) {
+  if (
+    !user &&
+    !isPublicPath(pathname) &&
+    pathname.startsWith("/api/") &&
+    !request.headers.get("authorization")?.match(/^Bearer\s+/i)
+  ) {
     return NextResponse.json(
       { error: { code: "UNAUTHORIZED", message: "Sign in required" } },
       { status: 401 },

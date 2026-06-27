@@ -1,6 +1,26 @@
 import { createClient } from "@/lib/supabase/server";
 import type { PushSubscribeBody } from "@/lib/validators/push";
 
+function subscriptionRow(repId: string, body: PushSubscribeBody) {
+  if ("expo_push_token" in body) {
+    return {
+      rep_id: repId,
+      platform: "expo" as const,
+      endpoint: body.expo_push_token,
+      p256dh: null,
+      auth: null,
+    };
+  }
+
+  return {
+    rep_id: repId,
+    platform: "web" as const,
+    endpoint: body.endpoint,
+    p256dh: body.keys.p256dh,
+    auth: body.keys.auth,
+  };
+}
+
 export async function upsertPushSubscription(
   repId: string,
   body: PushSubscribeBody,
@@ -8,12 +28,7 @@ export async function upsertPushSubscription(
   const supabase = await createClient();
 
   const { error } = await supabase.from("push_subscriptions").upsert(
-    {
-      rep_id: repId,
-      endpoint: body.endpoint,
-      p256dh: body.keys.p256dh,
-      auth: body.keys.auth,
-    } as never,
+    subscriptionRow(repId, body) as never,
     { onConflict: "endpoint" },
   );
 

@@ -7,8 +7,8 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-export async function GET(_request: Request, context: RouteContext) {
-  const auth = await requireRoleForApi(["admin", "rep"]);
+export async function GET(request: Request, context: RouteContext) {
+  const auth = await requireRoleForApi(["admin", "rep"], request);
   if (auth instanceof Response) {
     return auth;
   }
@@ -34,8 +34,8 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 }
 
-export async function DELETE(_request: Request, context: RouteContext) {
-  const auth = await requireRoleForApi(["admin"]);
+export async function DELETE(request: Request, context: RouteContext) {
+  const auth = await requireRoleForApi(["admin"], request);
   if (auth instanceof Response) {
     return auth;
   }

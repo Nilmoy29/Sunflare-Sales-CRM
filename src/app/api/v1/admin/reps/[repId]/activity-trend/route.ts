@@ -13,7 +13,7 @@ type RouteContext = {
 };
 
 export async function GET(request: Request, context: RouteContext) {
-  const auth = await requireRoleForApi(["admin"]);
+  const auth = await requireRoleForApi(["admin"], request);
   if (auth instanceof Response) {
     return auth;
   }

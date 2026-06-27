@@ -8,7 +8,7 @@ import {
 import { reverseGeocodeQuerySchema } from "@/lib/validators/geocode";
 
 export async function GET(request: Request) {
-  const auth = await requireRoleForApi(["rep"]);
+  const auth = await requireRoleForApi(["rep"], request);
   if (auth instanceof Response) {
     return auth;
   }

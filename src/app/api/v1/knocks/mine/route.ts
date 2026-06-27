@@ -4,7 +4,7 @@ import { getMyKnocks } from "@/features/knocks/get-my-knocks";
 import { parseKnockHistorySearchParams } from "@/lib/validators/knocks";
 
 export async function GET(request: Request) {
-  const auth = await requireRoleForApi(["rep"]);
+  const auth = await requireRoleForApi(["rep"], request);
   if (auth instanceof Response) {
     return auth;
   }

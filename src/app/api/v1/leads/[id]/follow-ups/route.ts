@@ -8,7 +8,7 @@ type RouteContext = {
 };
 
 export async function POST(request: Request, context: RouteContext) {
-  const auth = await requireRoleForApi(["admin", "rep"]);
+  const auth = await requireRoleForApi(["admin", "rep"], request);
   if (auth instanceof Response) {
     return auth;
   }

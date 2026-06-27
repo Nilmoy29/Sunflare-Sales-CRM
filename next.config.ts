@@ -16,6 +16,7 @@ const withSerwist = withSerwistInit({
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  transpilePackages: ["@sunflare/shared"],
 };
 
 export default withSerwist(nextConfig);

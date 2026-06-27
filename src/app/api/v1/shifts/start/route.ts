@@ -3,8 +3,8 @@ import { requireRoleForApi } from "@/lib/auth/guards";
 import { getActiveShiftForRep } from "@/features/shifts/queries";
 import { createClient } from "@/lib/supabase/server";
 
-export async function POST() {
-  const auth = await requireRoleForApi(["rep"]);
+export async function POST(request: Request) {
+  const auth = await requireRoleForApi(["rep"], request);
   if (auth instanceof Response) {
     return auth;
   }

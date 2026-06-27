@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatContactDisplayName } from "@/features/pipeline/pipeline-stage-labels";
+import { sendExpoPushNotification } from "@/features/push/send-expo-push";
 import { ensureVapidConfigured, webpush } from "@/features/push/vapid-config";
 import type { FollowUpRemindersCronResponse } from "@/lib/validators/push";
 
@@ -20,9 +21,10 @@ type DueFollowUpRow = {
 
 type PushSubscriptionRow = {
   id: string;
+  platform: "web" | "expo";
   endpoint: string;
-  p256dh: string;
-  auth: string;
+  p256dh: string | null;
+  auth: string | null;
 };
 
 export async function sendFollowUpReminders(): Promise<FollowUpRemindersCronResponse> {
@@ -69,11 +71,12 @@ export async function sendFollowUpReminders(): Promise<FollowUpRemindersCronResp
       suburb: contact.suburb,
     });
     const body = row.note.trim() || `Follow up with ${contactName}`;
-    const url = `/rep/pipeline/${row.lead_id}`;
+    const webUrl = `/rep/pipeline/${row.lead_id}`;
+    const mobileUrl = `sunflare://pipeline/${row.lead_id}`;
 
     const { data: subscriptions, error: subsError } = await supabase
       .from("push_subscriptions")
-      .select("id, endpoint, p256dh, auth")
+      .select("id, platform, endpoint, p256dh, auth")
       .eq("rep_id", row.rep_id);
 
     if (subsError) {
@@ -93,6 +96,29 @@ export async function sendFollowUpReminders(): Promise<FollowUpRemindersCronResp
 
     for (const sub of subs) {
       try {
+        if (sub.platform === "expo") {
+          const result = await sendExpoPushNotification({
+            token: sub.endpoint,
+            title: "Follow-up due",
+            body,
+            url: mobileUrl,
+          });
+
+          if (result.sent) {
+            anySent = true;
+          } else if (result.expired) {
+            expiredIds.push(sub.id);
+          } else {
+            errors += 1;
+          }
+          continue;
+        }
+
+        if (!sub.p256dh || !sub.auth) {
+          expiredIds.push(sub.id);
+          continue;
+        }
+
         await webpush.sendNotification(
           {
             endpoint: sub.endpoint,
@@ -101,7 +127,7 @@ export async function sendFollowUpReminders(): Promise<FollowUpRemindersCronResp
           JSON.stringify({
             title: "Follow-up due",
             body,
-            url,
+            url: webUrl,
           }),
         );
         anySent = true;

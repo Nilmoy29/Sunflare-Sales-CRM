@@ -5,7 +5,7 @@ import { resolveDashboardDateRange } from "@/features/dashboard/resolve-dashboar
 import { parseTeamActivityTrendSearchParams } from "@/lib/validators/team-activity-trend";
 
 export async function GET(request: Request) {
-  const auth = await requireRoleForApi(["admin"]);
+  const auth = await requireRoleForApi(["admin"], request);
   if (auth instanceof Response) {
     return auth;
   }

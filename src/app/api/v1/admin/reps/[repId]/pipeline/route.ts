@@ -8,8 +8,8 @@ type RouteContext = {
   params: Promise<{ repId: string }>;
 };
 
-export async function GET(_request: Request, context: RouteContext) {
-  const auth = await requireRoleForApi(["admin"]);
+export async function GET(request: Request, context: RouteContext) {
+  const auth = await requireRoleForApi(["admin"], request);
   if (auth instanceof Response) {
     return auth;
   }
