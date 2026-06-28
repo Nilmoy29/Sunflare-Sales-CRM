@@ -141,6 +141,7 @@ async function main() {
   }, results);
 
   let bookedLeadId;
+  let smokeFollowUpId;
   let bookedContactId;
   const smokeName = `Smoke Customer ${uniqueSuffix()}`;
 
@@ -227,6 +228,12 @@ async function main() {
     }
     if (!("latest_note" in lead)) {
       throw new Error("pipeline lead missing latest_note field");
+    }
+    if (!("next_follow_up_id" in lead)) {
+      throw new Error("pipeline lead missing next_follow_up_id field");
+    }
+    if (!("latest_note_at" in lead)) {
+      throw new Error("pipeline lead missing latest_note_at field");
     }
     if (!("proposal_sent_at" in lead)) {
       throw new Error("pipeline lead missing proposal_sent_at field");
@@ -379,6 +386,107 @@ async function main() {
     assertStatus(response.status, 200, "proposal_sent stage");
     if (json.data.lead.stage !== "proposal_sent") {
       throw new Error("stage not proposal_sent");
+    }
+  }, results);
+
+  await runCheck("NF", "POST /api/v1/leads/[id]/follow-ups schedules follow-up", async () => {
+    const dueAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const { response, json } = await fetchJson(
+      `${base}/api/v1/leads/${bookedLeadId}/follow-ups`,
+      {
+        cookies: adminCookies,
+        method: "POST",
+        body: {
+          due_at: dueAt,
+          note: "Smoke test follow-up callback",
+        },
+      },
+    );
+    assertStatus(response.status, 200, "create follow-up");
+    assertHasData(json, "create follow-up");
+    if (!json.data.follow_up?.id) {
+      throw new Error("follow-up id missing");
+    }
+    smokeFollowUpId = json.data.follow_up.id;
+  }, results);
+
+  await runCheck("NF", "Pipeline list shows scheduled follow-up", async () => {
+    const today = sydneyToday();
+    const { response, json } = await fetchJson(
+      `${base}/api/v1/leads?from=${today}&to=${today}`,
+      { cookies: adminCookies },
+    );
+    assertStatus(response.status, 200, "leads with follow-up");
+    const lead = json.data.leads.find((item) => item.id === bookedLeadId);
+    if (!lead?.next_action_due_at) {
+      throw new Error("pipeline missing next_action_due_at after follow-up");
+    }
+    if (lead.next_follow_up_id !== smokeFollowUpId) {
+      throw new Error(
+        `expected primary follow-up ${smokeFollowUpId}, got ${lead.next_follow_up_id}`,
+      );
+    }
+    if (!lead.next_follow_up_note?.includes("Smoke test follow-up")) {
+      throw new Error(`pipeline missing follow-up note: ${lead.next_follow_up_note}`);
+    }
+  }, results);
+
+  await runCheck("NF", "PATCH /api/v1/leads/[id]/follow-ups/[followUpId] completes follow-up", async () => {
+    const followUpId = smokeFollowUpId;
+    if (!followUpId) {
+      throw new Error("missing smoke follow-up id");
+    }
+    const { response, json } = await fetchJson(
+      `${base}/api/v1/leads/${bookedLeadId}/follow-ups/${followUpId}`,
+      {
+        cookies: adminCookies,
+        method: "PATCH",
+        body: { completed: true },
+      },
+    );
+    assertStatus(response.status, 200, "complete follow-up");
+    if (!json.data.follow_up?.completed) {
+      throw new Error("follow-up not marked completed");
+    }
+  }, results);
+
+  await runCheck("NF", "PATCH stage to lost requires lost_reason", async () => {
+    const { response } = await fetchJson(
+      `${base}/api/v1/leads/${bookedLeadId}/stage`,
+      {
+        cookies: adminCookies,
+        method: "PATCH",
+        body: { stage: "lost" },
+      },
+    );
+    if (response.status !== 400) {
+      throw new Error(`expected 400 for lost without reason, got ${response.status}`);
+    }
+  }, results);
+
+  await runCheck("NF", "PATCH stage to lost with lost_reason", async () => {
+    const { response, json } = await fetchJson(
+      `${base}/api/v1/leads/${bookedLeadId}/stage`,
+      {
+        cookies: adminCookies,
+        method: "PATCH",
+        body: { stage: "lost", lost_reason: "not_interested" },
+      },
+    );
+    assertStatus(response.status, 200, "lost stage");
+    assertHasData(json, "lost stage");
+    if (json.data.lead.stage !== "lost") {
+      throw new Error(`expected lost, got ${json.data.lead.stage}`);
+    }
+  }, results);
+
+  await runCheck("NF", "Rep cannot DELETE /api/v1/leads/[id]", async () => {
+    const res = await fetch(`${base}/api/v1/leads/${bookedLeadId}`, {
+      method: "DELETE",
+      headers: { cookie: repCookies },
+    });
+    if (res.status !== 403) {
+      throw new Error(`expected 403 for rep delete, got ${res.status}`);
     }
   }, results);
 

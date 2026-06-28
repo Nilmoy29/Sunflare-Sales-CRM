@@ -28,11 +28,14 @@ export type PipelineLeadCardBase = z.infer<typeof pipelineLeadCardBaseSchema>;
 export const pipelineLeadCardSchema = pipelineLeadCardBaseSchema.extend({
   last_touch_at: z.string(),
   next_action_due_at: z.string().nullable(),
+  next_follow_up_id: z.string().uuid().nullable(),
+  next_follow_up_note: z.string().nullable(),
   booked_at: z.string().nullable(),
   closer_name: z.string().nullable(),
   booking_notes: z.string().nullable(),
   proposal_sent_at: z.string().nullable(),
   latest_note: z.string().nullable(),
+  latest_note_at: z.string().nullable(),
 });
 
 export type PipelineLeadCard = z.infer<typeof pipelineLeadCardSchema>;

@@ -52,3 +52,10 @@ export function formatNextActionCountdown(dueAt: string | null): string {
   }
   return `Overdue ${Math.abs(diff)}d`;
 }
+
+export function isFollowUpOverdue(dueAt: string | null): boolean {
+  if (!dueAt) {
+    return false;
+  }
+  return formatNextActionCountdown(dueAt).startsWith("Overdue");
+}

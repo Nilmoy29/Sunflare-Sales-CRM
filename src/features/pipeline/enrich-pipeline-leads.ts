@@ -13,10 +13,12 @@ import type { createClient } from "@/lib/supabase/server";
 type ServerSupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
 type FollowUpRow = {
+  id: string;
   lead_id: string;
   due_at: string;
   note: string;
   created_at: string;
+  completed: boolean;
 };
 
 type NoteRow = {
@@ -86,9 +88,26 @@ function buildProposalSentMap(
 function buildPrimaryFollowUpMap(rows: FollowUpRow[]): Map<string, FollowUpRow> {
   const map = new Map<string, FollowUpRow>();
   for (const row of rows) {
+    if (row.completed) {
+      continue;
+    }
     const existing = map.get(row.lead_id);
     if (!existing || row.due_at < existing.due_at) {
       map.set(row.lead_id, row);
+    }
+  }
+  return map;
+}
+
+function buildEarliestDueMapIncomplete(rows: FollowUpRow[]): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const row of rows) {
+    if (row.completed) {
+      continue;
+    }
+    const existing = map.get(row.lead_id);
+    if (!existing || row.due_at < existing) {
+      map.set(row.lead_id, row.due_at);
     }
   }
   return map;
@@ -112,7 +131,7 @@ export async function enrichPipelineLeads(
         .in("lead_id", leadIds),
       supabase
         .from("follow_ups")
-        .select("lead_id, due_at, note, created_at")
+        .select("id, lead_id, due_at, note, created_at, completed")
         .in("lead_id", leadIds),
       supabase
         .from("lead_activity")
@@ -150,7 +169,7 @@ export async function enrichPipelineLeads(
     (activityResult.data ?? []) as { lead_id: string; created_at: string }[],
   );
   const followUpRows = (followUpResult.data ?? []) as FollowUpRow[];
-  const earliestDue = buildEarliestDueMap(followUpRows);
+  const earliestDue = buildEarliestDueMapIncomplete(followUpRows);
   const bookedAt = buildEarliestDueMap(followUpRows);
   const primaryFollowUps = buildPrimaryFollowUpMap(followUpRows);
   const latestNotes = buildLatestNoteMap((noteResult.data ?? []) as NoteRow[]);
@@ -208,11 +227,14 @@ export async function enrichPipelineLeads(
         card.updated_at,
       ),
       next_action_due_at: earliestDue.get(card.id) ?? null,
+      next_follow_up_id: followUp?.id ?? null,
+      next_follow_up_note: followUp?.note?.trim() ? followUp.note.trim() : null,
       booked_at,
       closer_name: parsedBooking.closer_name,
       booking_notes: bookingNotes,
       proposal_sent_at: proposalSentAt.get(card.id) ?? null,
       latest_note,
+      latest_note_at: activityNote?.created_at ?? null,
     });
   });
 }

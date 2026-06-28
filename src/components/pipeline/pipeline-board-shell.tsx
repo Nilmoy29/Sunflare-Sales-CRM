@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PipelineFiltersBar, type PipelineFilterRep } from "@/components/pipeline/pipeline-filters";
 import { PipelineTable } from "@/components/pipeline/pipeline-table";
+import {
+  PipelineViewToggle,
+  type PipelineListView,
+} from "@/components/pipeline/pipeline-view-toggle";
 import { defaultPipelineFilters } from "@/features/pipeline/default-pipeline-filters";
+import { filterOverdueFollowUpLeads } from "@/features/pipeline/latest-update-display";
 import { usePipelineLeads } from "@/features/pipeline/use-pipeline-leads";
 import type { PipelineFilters } from "@/lib/validators/pipeline";
 
@@ -29,8 +34,14 @@ export function PipelineBoardShell({
   allowDelete = false,
 }: PipelineBoardShellProps) {
   const [filters, setFilters] = useState<PipelineFilters>(defaultPipelineFilters);
-  const { leads, loading, error, moveLeadStage, removeLead, addLeadNote } =
+  const [listView, setListView] = useState<PipelineListView>("bookings");
+  const { leads, loading, error, moveLeadStage, removeLead, saveLeadFollowUp, completeLeadFollowUp } =
     usePipelineLeads(filters);
+
+  const overdueCount = useMemo(
+    () => filterOverdueFollowUpLeads(leads).length,
+    [leads],
+  );
 
   return (
     <main
@@ -52,14 +63,22 @@ export function PipelineBoardShell({
         reps={reps}
       />
 
+      <PipelineViewToggle
+        view={listView}
+        overdueCount={overdueCount}
+        onChange={setListView}
+      />
+
       <PipelineTable
         leads={leads}
         loading={loading}
         error={error}
+        listView={listView}
         showRepName={showRepName}
         detailBasePath={detailBasePath}
         onStageChange={moveLeadStage}
-        onAddNote={addLeadNote}
+        onSaveFollowUp={saveLeadFollowUp}
+        onCompleteFollowUp={completeLeadFollowUp}
         allowDelete={allowDelete}
         onDeleteLead={allowDelete ? removeLead : undefined}
       />

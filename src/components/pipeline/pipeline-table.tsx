@@ -3,11 +3,19 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { LostReasonDialog } from "@/components/pipeline/lost-reason-dialog";
-import { formatPipelineDate } from "@/features/pipeline/format-pipeline-dates";
+import { PipelineFollowUpCell } from "@/components/pipeline/pipeline-follow-up-cell";
+import { PipelineLatestUpdateCell } from "@/components/pipeline/pipeline-latest-update-cell";
+import type { PipelineListView } from "@/components/pipeline/pipeline-view-toggle";
 import {
-  LEAD_SOURCE_BADGE_CLASS,
-  LEAD_SOURCE_LABELS,
-} from "@/features/pipeline/pipeline-source-labels";
+  filterOverdueFollowUpLeads,
+  sortLeadsByBookedDate,
+  sortLeadsByOverdueDue,
+} from "@/features/pipeline/latest-update-display";
+import {
+  leadStageRowBorderStyle,
+  LEAD_STAGE_UNDERLINE_COLOR,
+} from "@/features/pipeline/pipeline-stage-colors";
+import { formatPipelineDate } from "@/features/pipeline/format-pipeline-dates";
 import {
   LEAD_STAGE_LABELS,
   PIPELINE_STAGE_ORDER,
@@ -20,6 +28,7 @@ type PipelineTableProps = {
   leads: PipelineLeadCard[];
   loading: boolean;
   error: string | null;
+  listView: PipelineListView;
   showRepName: boolean;
   detailBasePath: string;
   onStageChange: (
@@ -27,7 +36,11 @@ type PipelineTableProps = {
     stage: LeadStage,
     options?: MoveLeadStageOptions,
   ) => Promise<boolean>;
-  onAddNote: (leadId: string, content: string) => Promise<boolean>;
+  onSaveFollowUp: (
+    leadId: string,
+    input: { due_at: string | null; note: string },
+  ) => Promise<boolean>;
+  onCompleteFollowUp: (leadId: string, followUpId: string) => Promise<boolean>;
   allowDelete?: boolean;
   onDeleteLead?: (leadId: string) => Promise<boolean>;
 };
@@ -48,97 +61,16 @@ function isProposalSent(lead: PipelineLeadCard): boolean {
   return PROPOSAL_SENT_STAGES.includes(lead.stage);
 }
 
-function PipelineNoteCell({
-  lead,
-  onAddNote,
-}: {
-  lead: PipelineLeadCard;
-  onAddNote: (leadId: string, content: string) => Promise<boolean>;
-}) {
-  const [draft, setDraft] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-
-  async function handleSave() {
-    const content = draft.trim();
-    if (!content || saving) {
-      return;
-    }
-    setSaving(true);
-    const ok = await onAddNote(lead.id, content);
-    setSaving(false);
-    if (ok) {
-      setDraft("");
-      setExpanded(false);
-    }
-  }
-
-  return (
-    <div className="min-w-[12rem] space-y-1">
-      {lead.latest_note ? (
-        <p
-          className={`text-xs text-muted-foreground ${expanded ? "" : "line-clamp-2"}`}
-          title={lead.latest_note}
-        >
-          {lead.latest_note}
-        </p>
-      ) : lead.booking_notes ? (
-        <p
-          className={`text-xs text-muted-foreground ${expanded ? "" : "line-clamp-2"}`}
-          title={lead.booking_notes}
-        >
-          {lead.booking_notes}
-        </p>
-      ) : (
-        <p className="text-xs text-muted-foreground/70">No notes yet</p>
-      )}
-      {lead.latest_note && lead.latest_note.length > 60 ? (
-        <button
-          type="button"
-          onClick={() => setExpanded((value) => !value)}
-          className="text-xs font-medium text-accent underline"
-        >
-          {expanded ? "Less" : "More"}
-        </button>
-      ) : null}
-      <div className="flex gap-1">
-        <input
-          type="text"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="Add note…"
-          disabled={saving}
-          className="min-h-9 flex-1 rounded border border-border bg-card px-2 py-1 text-xs text-foreground"
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              void handleSave();
-            }
-          }}
-        />
-        <button
-          type="button"
-          onClick={() => {
-            void handleSave();
-          }}
-          disabled={saving || !draft.trim()}
-          className="shrink-0 rounded bg-secondary px-2 py-1 text-xs font-semibold text-foreground hover:bg-secondary/80 disabled:opacity-50"
-        >
-          {saving ? "…" : "Add"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export function PipelineTable({
   leads,
   loading,
   error,
+  listView,
   showRepName,
   detailBasePath,
   onStageChange,
-  onAddNote,
+  onSaveFollowUp,
+  onCompleteFollowUp,
   allowDelete = false,
   onDeleteLead,
 }: PipelineTableProps) {
@@ -146,11 +78,16 @@ export function PipelineTable({
   const [deletingLeadId, setDeletingLeadId] = useState<string | null>(null);
   const [pendingLost, setPendingLost] = useState<PendingLostMove | null>(null);
 
-  const sortedLeads = useMemo(
-    () =>
-      [...leads].sort((a, b) => b.updated_at.localeCompare(a.updated_at)),
-    [leads],
-  );
+  const isOverdueView = listView === "overdue_follow_ups";
+
+  const sortedLeads = useMemo(() => {
+    const filtered = isOverdueView
+      ? filterOverdueFollowUpLeads(leads)
+      : leads;
+    return isOverdueView
+      ? sortLeadsByOverdueDue(filtered)
+      : sortLeadsByBookedDate(filtered);
+  }, [isOverdueView, leads]);
 
   async function handleStageSelect(lead: PipelineLeadCard, newStage: LeadStage) {
     if (newStage === lead.stage || updatingLeadId) {
@@ -240,7 +177,11 @@ export function PipelineTable({
 
       <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[56rem] border-collapse text-left text-sm">
+          <table
+            className={`w-full border-separate border-spacing-0 text-left text-sm ${
+              isOverdueView ? "min-w-[62rem]" : "min-w-[56rem]"
+            }`}
+          >
             <thead>
               <tr className="border-b border-border bg-secondary/60">
                 <th className="sticky left-0 z-10 bg-secondary/95 px-3 py-3 font-semibold text-foreground">
@@ -256,7 +197,9 @@ export function PipelineTable({
                 <th className="px-3 py-3 font-semibold text-foreground">
                   Proposal sent
                 </th>
-                <th className="px-3 py-3 font-semibold text-foreground">Notes</th>
+                <th className="px-3 py-3 font-semibold text-foreground">
+                  {isOverdueView ? "Follow-up" : "Latest update"}
+                </th>
                 <th className="px-3 py-3 font-semibold text-foreground">Update</th>
               </tr>
             </thead>
@@ -267,20 +210,26 @@ export function PipelineTable({
                     colSpan={showRepName ? 9 : 8}
                     className="px-3 py-10 text-center text-muted-foreground"
                   >
-                    No leads match your filters.
+                    {isOverdueView
+                      ? "No overdue follow-ups. You're all caught up."
+                      : "No leads match your filters."}
                   </td>
                 </tr>
               ) : (
                 sortedLeads.map((lead) => {
                   const rowBusy =
                     updatingLeadId === lead.id || deletingLeadId === lead.id;
+                  const rowBorderStyle = leadStageRowBorderStyle(lead.stage);
 
                   return (
                     <tr
                       key={lead.id}
-                      className="border-b border-border/70 align-top hover:bg-secondary/20"
+                      className="align-top hover:bg-secondary/20"
                     >
-                      <td className="sticky left-0 z-10 bg-card px-3 py-3">
+                      <td
+                        style={rowBorderStyle}
+                        className="sticky left-0 z-10 bg-card px-3 py-3"
+                      >
                         <div className="space-y-1">
                           <p className="font-medium text-foreground">
                             {lead.contact_name}
@@ -290,23 +239,25 @@ export function PipelineTable({
                               {lead.phone}
                             </p>
                           ) : null}
-                          <span
-                            className={`inline-block rounded px-1.5 py-0.5 text-xs font-medium ${LEAD_SOURCE_BADGE_CLASS[lead.source]}`}
-                          >
-                            {LEAD_SOURCE_LABELS[lead.source]}
-                          </span>
                         </div>
                       </td>
-                      <td className="px-3 py-3 text-muted-foreground">
+                      <td
+                        style={rowBorderStyle}
+                        className="px-3 py-3 text-muted-foreground"
+                      >
                         {formatAddress(lead)}
                       </td>
                       {showRepName ? (
-                        <td className="px-3 py-3 text-muted-foreground">
+                        <td
+                          style={rowBorderStyle}
+                          className="px-3 py-3 text-muted-foreground"
+                        >
                           {lead.rep_name}
                         </td>
                       ) : null}
-                      <td className="px-3 py-3">
+                      <td style={rowBorderStyle} className="px-3 py-3">
                         <select
+                          key={`${lead.id}-${lead.stage}-${pendingLost?.leadId === lead.id ? "lost-dialog" : "ready"}`}
                           value={lead.stage}
                           disabled={rowBusy}
                           onChange={(e) => {
@@ -325,13 +276,19 @@ export function PipelineTable({
                           ))}
                         </select>
                       </td>
-                      <td className="whitespace-nowrap px-3 py-3 text-muted-foreground">
+                      <td
+                        style={rowBorderStyle}
+                        className="whitespace-nowrap px-3 py-3 text-muted-foreground"
+                      >
                         {formatPipelineDate(lead.booked_at)}
                       </td>
-                      <td className="px-3 py-3 text-muted-foreground">
+                      <td
+                        style={rowBorderStyle}
+                        className="px-3 py-3 text-muted-foreground"
+                      >
                         {lead.closer_name ?? "—"}
                       </td>
-                      <td className="px-3 py-3">
+                      <td style={rowBorderStyle} className="px-3 py-3">
                         {isProposalSent(lead) ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-700">
                             Sent
@@ -354,10 +311,19 @@ export function PipelineTable({
                           </button>
                         )}
                       </td>
-                      <td className="px-3 py-3">
-                        <PipelineNoteCell lead={lead} onAddNote={onAddNote} />
+                      <td style={rowBorderStyle} className="px-3 py-3">
+                        {isOverdueView ? (
+                          <PipelineFollowUpCell
+                            lead={lead}
+                            disabled={rowBusy}
+                            onSave={onSaveFollowUp}
+                            onComplete={onCompleteFollowUp}
+                          />
+                        ) : (
+                          <PipelineLatestUpdateCell lead={lead} />
+                        )}
                       </td>
-                      <td className="px-3 py-3">
+                      <td style={rowBorderStyle} className="px-3 py-3">
                         <div className="flex flex-col gap-1">
                           <Link
                             href={`${detailBasePath}/${lead.id}`}
@@ -388,9 +354,29 @@ export function PipelineTable({
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        {sortedLeads.length} lead{sortedLeads.length === 1 ? "" : "s"}
-      </p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs text-muted-foreground">
+          {sortedLeads.length} lead{sortedLeads.length === 1 ? "" : "s"}
+        </p>
+        <div
+          className="flex flex-wrap items-center gap-x-3 gap-y-1"
+          aria-label="Status color key"
+        >
+          {PIPELINE_STAGE_ORDER.map((stage) => (
+            <span
+              key={stage}
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
+            >
+              <span
+                className="inline-block h-0.5 w-4 rounded-full"
+                style={{ backgroundColor: LEAD_STAGE_UNDERLINE_COLOR[stage] }}
+                aria-hidden
+              />
+              {LEAD_STAGE_LABELS[stage]}
+            </span>
+          ))}
+        </div>
+      </div>
 
       {pendingLost ? (
         <LostReasonDialog

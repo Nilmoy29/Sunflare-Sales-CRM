@@ -17,6 +17,31 @@ export function parseFollowUpDatetimeLocal(
   return { ok: true, iso: date.toISOString() };
 }
 
+export function toFollowUpDatetimeLocalValue(iso: string | null): string {
+  if (!iso) {
+    return "";
+  }
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  const pad = (part: number) => String(part).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+export function parseOptionalFollowUpDatetimeLocal(
+  value: string,
+): { ok: true; iso: string | null } | { ok: false; message: string } {
+  if (!value.trim()) {
+    return { ok: true, iso: null };
+  }
+  const parsed = parseFollowUpDatetimeLocal(value);
+  if (!parsed.ok) {
+    return parsed;
+  }
+  return { ok: true, iso: parsed.iso };
+}
+
 export const followUpRowSchema = z.object({
   id: z.string().uuid(),
   lead_id: z.string().uuid(),
@@ -52,4 +77,38 @@ export const createFollowUpResponseSchema = z.object({
 
 export type CreateFollowUpResponse = z.infer<
   typeof createFollowUpResponseSchema
+>;
+
+export const updateFollowUpBodySchema = z
+  .object({
+    due_at: z
+      .string()
+      .refine(
+        (value) => !Number.isNaN(new Date(value).getTime()),
+        "Invalid due date",
+      )
+      .optional(),
+    note: z
+      .string()
+      .trim()
+      .max(NOTES_MAX_LENGTH, `Note must be at most ${NOTES_MAX_LENGTH} characters`)
+      .optional(),
+    completed: z.boolean().optional(),
+  })
+  .refine(
+    (data) =>
+      data.due_at !== undefined ||
+      data.note !== undefined ||
+      data.completed !== undefined,
+    "At least one field is required",
+  );
+
+export type UpdateFollowUpBody = z.infer<typeof updateFollowUpBodySchema>;
+
+export const updateFollowUpResponseSchema = z.object({
+  follow_up: leadDetailFollowUpTimelineItemSchema,
+});
+
+export type UpdateFollowUpResponse = z.infer<
+  typeof updateFollowUpResponseSchema
 >;

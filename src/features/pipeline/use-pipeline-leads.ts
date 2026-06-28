@@ -2,11 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  createLeadFollowUp as createLeadFollowUpApi,
   deleteLead as deleteLeadApi,
   fetchPipelineLeads,
   createLeadNote as createLeadNoteApi,
+  updateLeadFollowUp as updateLeadFollowUpApi,
   updateLeadStage as updateLeadStageApi,
 } from "@/features/pipeline/api";
+import type { SaveFollowUpInput } from "@/components/pipeline/pipeline-follow-up-cell";
 import type { PipelineFilters } from "@/lib/validators/pipeline";
 import type { PipelineLeadCard } from "@/lib/validators/pipeline";
 import type { LeadStage, LostReason } from "@/lib/validators/enums";
@@ -158,6 +161,64 @@ export function usePipelineLeads(filters: PipelineFilters) {
     [filters],
   );
 
+  const refreshLeads = useCallback(async () => {
+    const refreshed = await fetchPipelineLeads(filters);
+    setLeads(refreshed.leads);
+    setError(null);
+  }, [filters]);
+
+  const saveLeadFollowUp = useCallback(
+    async (leadId: string, input: SaveFollowUpInput) => {
+      const note = input.note.trim();
+
+      try {
+        if (input.due_at) {
+          if (input.follow_up_id) {
+            await updateLeadFollowUpApi(leadId, input.follow_up_id, {
+              due_at: input.due_at,
+              ...(note ? { note } : {}),
+            });
+          } else {
+            await createLeadFollowUpApi(leadId, {
+              due_at: input.due_at,
+              note,
+            });
+          }
+        } else if (note) {
+          await createLeadNoteApi(leadId, note);
+        } else {
+          setError("Add a note or follow-up date");
+          return false;
+        }
+
+        await refreshLeads();
+        return true;
+      } catch (e: unknown) {
+        setError(
+          e instanceof Error ? e.message : "Could not save follow-up",
+        );
+        return false;
+      }
+    },
+    [refreshLeads],
+  );
+
+  const completeLeadFollowUp = useCallback(
+    async (leadId: string, followUpId: string) => {
+      try {
+        await updateLeadFollowUpApi(leadId, followUpId, { completed: true });
+        await refreshLeads();
+        return true;
+      } catch (e: unknown) {
+        setError(
+          e instanceof Error ? e.message : "Could not complete follow-up",
+        );
+        return false;
+      }
+    },
+    [refreshLeads],
+  );
+
   const displayLeads = loading ? [] : leads;
 
   return {
@@ -167,5 +228,7 @@ export function usePipelineLeads(filters: PipelineFilters) {
     moveLeadStage,
     removeLead,
     addLeadNote,
+    saveLeadFollowUp,
+    completeLeadFollowUp,
   };
 }

@@ -47,14 +47,14 @@ export function LostReasonDialog({
         >
           Why was this lead lost?
         </h2>
-        <p className="mt-1 text-sm text-zinc-600">{contactName}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{contactName}</p>
 
         <fieldset className="mt-4 space-y-2" disabled={submitting}>
           <legend className="sr-only">Lost reason</legend>
           {LOST_REASONS.map((reason) => (
             <label
               key={reason}
-              className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-border px-3 py-2 has-[:checked]:border-zinc-900 has-[:checked]:bg-zinc-50"
+              className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-border px-3 py-2 has-[:checked]:border-accent has-[:checked]:bg-accent/10"
             >
               <input
                 type="radio"
@@ -76,7 +76,7 @@ export function LostReasonDialog({
             type="button"
             onClick={onCancel}
             disabled={submitting}
-            className="min-h-11 rounded-lg border border-border px-4 text-sm font-medium text-muted-foreground hover:bg-zinc-50 disabled:opacity-60"
+            className="min-h-11 rounded-lg border border-border px-4 text-sm font-medium text-muted-foreground hover:bg-secondary disabled:opacity-60"
           >
             Cancel
           </button>
@@ -88,7 +88,7 @@ export function LostReasonDialog({
                 onConfirm(selected);
               }
             }}
-            className="min-h-11 rounded-lg bg-accent px-4 text-sm font-medium text-accent-foreground hover:bg-zinc-800 disabled:opacity-60"
+            className="min-h-11 rounded-lg bg-accent px-4 text-sm font-medium text-accent-foreground hover:opacity-90 disabled:opacity-60"
           >
             {submitting ? "Moving…" : "Move to Lost"}
           </button>

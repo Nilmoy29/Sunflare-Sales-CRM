@@ -2,6 +2,8 @@ import type { CreateLeadNoteResponse } from "@/lib/validators/lead-activity";
 import type {
   CreateFollowUpBody,
   CreateFollowUpResponse,
+  UpdateFollowUpBody,
+  UpdateFollowUpResponse,
 } from "@/lib/validators/follow-ups";
 import type { UpdateContactBody, UpdateContactResponse } from "@/lib/validators/contacts";
 import type { LeadDetailResponse } from "@/lib/validators/lead-detail";
@@ -210,6 +212,38 @@ export async function createLeadFollowUp(
 
   if (!responseBody.data) {
     throw new Error("Could not schedule follow-up");
+  }
+
+  return responseBody.data;
+}
+
+export async function updateLeadFollowUp(
+  leadId: string,
+  followUpId: string,
+  body: UpdateFollowUpBody,
+  signal?: AbortSignal,
+): Promise<UpdateFollowUpResponse> {
+  const res = await fetch(`/api/v1/leads/${leadId}/follow-ups/${followUpId}`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal,
+  });
+
+  const responseBody = (await res.json()) as {
+    data?: UpdateFollowUpResponse;
+    error?: { code: string; message: string };
+  };
+
+  if (!res.ok) {
+    throw new Error(
+      responseBody.error?.message ?? "Could not update follow-up",
+    );
+  }
+
+  if (!responseBody.data) {
+    throw new Error("Could not update follow-up");
   }
 
   return responseBody.data;
