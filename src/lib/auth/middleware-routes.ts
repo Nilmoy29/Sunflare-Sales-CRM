@@ -2,6 +2,7 @@ import {
   AUTH_CALLBACK_PATH,
   FORBIDDEN_PATH,
   LOGIN_PATH,
+  SIGNUP_PATH,
 } from "@/lib/auth/paths";
 
 const PUBLIC_EXACT = new Set([
@@ -14,6 +15,7 @@ const PUBLIC_EXACT = new Set([
 
 const PUBLIC_PREFIXES = [
   LOGIN_PATH,
+  SIGNUP_PATH,
   AUTH_CALLBACK_PATH,
   "/reset-password",
   "/invite",

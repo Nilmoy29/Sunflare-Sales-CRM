@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { SIGNUP_PATH } from "@/lib/auth/paths";
 import { createRouteHandlerClient } from "@/lib/supabase/route-handler";
 
 /** Exchange auth code for session (SSR cookie flow). */
@@ -9,7 +10,7 @@ export async function GET(request: Request) {
   const type = searchParams.get("type");
   const next = searchParams.get("next") ?? "/";
   const recoveryDestination = "/reset-password/update";
-  const inviteDestination = "/invite/accept";
+  const inviteDestination = SIGNUP_PATH;
 
   const withInviteCookie = async (
     response: NextResponse,
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
     const { supabase } = await createRouteHandlerClient(response);
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return next.startsWith("/invite")
+      return next.startsWith("/invite") || next.startsWith(SIGNUP_PATH)
         ? withInviteCookie(response, supabase)
         : response;
     }
@@ -46,7 +47,7 @@ export async function GET(request: Request) {
   if (tokenHash && type) {
     const destination = next.startsWith("/reset-password")
       ? next
-      : next.startsWith("/invite")
+      : next.startsWith("/invite") || next.startsWith(SIGNUP_PATH)
         ? next
         : recoveryDestination;
     const response = NextResponse.redirect(`${origin}${destination}`);
@@ -62,7 +63,8 @@ export async function GET(request: Request) {
         | "email",
     });
     if (!error) {
-      return destination.startsWith("/invite")
+      return destination.startsWith("/invite") ||
+        destination.startsWith(SIGNUP_PATH)
         ? withInviteCookie(response, supabase)
         : response;
     }
@@ -74,12 +76,11 @@ export async function GET(request: Request) {
     );
   }
 
-  if (next.startsWith("/invite")) {
-    const response = NextResponse.redirect(
-      `${origin}${inviteDestination}?error=invalid_invite`,
-    );
-    response.cookies.delete("invite_onboarding");
-    return response;
+  // Invite/signup links often land here with tokens only in the URL hash.
+  // The server cannot read the hash, so hand off to /signup for client bootstrap
+  // instead of treating the request as an invalid invite.
+  if (next.startsWith("/invite") || next.startsWith(SIGNUP_PATH)) {
+    return NextResponse.redirect(`${origin}${inviteDestination}`);
   }
 
   return NextResponse.redirect(`${origin}/login?error=auth_callback`);

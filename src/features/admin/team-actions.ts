@@ -1,5 +1,6 @@
 "use server";
 
+import { SIGNUP_PATH } from "@/lib/auth/paths";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/auth/session";
@@ -48,11 +49,19 @@ export async function createRepAction(
   }
 
   const adminClient = createAdminClient();
-  const { data, error } = await adminClient.auth.admin.createUser({
-    email: parsed.data.email,
-    email_confirm: true,
-    user_metadata: { name: parsed.data.name, role: "rep" },
-  });
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const { data, error } = await adminClient.auth.admin.inviteUserByEmail(
+    parsed.data.email,
+    {
+      redirectTo: `${appUrl}/auth/callback?next=${SIGNUP_PATH}`,
+      data: {
+        name: parsed.data.name,
+        role: "rep",
+        phone: normalizeOptionalPhone(parsed.data.phone),
+        start_date: normalizeOptionalDate(parsed.data.start_date),
+      },
+    },
+  );
 
   if (error || !data.user) {
     return { error: error?.message ?? "Unable to create rep user" };
@@ -80,7 +89,7 @@ export async function createRepAction(
     email: parsed.data.email,
   });
 
-  return { success: `Created rep account for ${parsed.data.email}` };
+  return { success: `Invite sent to ${parsed.data.email} to complete account setup` };
 }
 
 export async function inviteRepAction(
@@ -108,7 +117,7 @@ export async function inviteRepAction(
   const { data, error } = await adminClient.auth.admin.inviteUserByEmail(
     parsed.data.email,
     {
-      redirectTo: `${appUrl}/auth/callback?next=/invite/accept`,
+      redirectTo: `${appUrl}/auth/callback?next=${SIGNUP_PATH}`,
       data: {
         name: parsed.data.name,
         role: "rep",

@@ -1,6 +1,7 @@
 import type { UserRole } from "@/lib/validators/enums";
 
 export const LOGIN_PATH = "/login";
+export const SIGNUP_PATH = "/signup";
 export const FORBIDDEN_PATH = "/forbidden";
 export const AUTH_CALLBACK_PATH = "/auth/callback";
 

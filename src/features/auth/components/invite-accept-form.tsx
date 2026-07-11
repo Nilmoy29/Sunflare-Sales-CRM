@@ -24,7 +24,7 @@ export function InviteAcceptForm({ initialError }: InviteAcceptFormProps) {
   useEffect(() => {
     if (state.success) {
       const timer = setTimeout(() => {
-        router.push("/login?notice=invite_complete");
+        router.push("/login?notice=signup_complete");
       }, 1200);
       return () => clearTimeout(timer);
     }
@@ -99,7 +99,7 @@ export function InviteAcceptForm({ initialError }: InviteAcceptFormProps) {
         disabled={pending}
         className="h-11 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-4 text-sm font-semibold text-slate-900 shadow-md shadow-amber-500/20 transition hover:from-amber-300 hover:to-orange-400 disabled:opacity-60"
       >
-        {pending ? "Completing..." : "Complete onboarding"}
+        {pending ? "Completing..." : "Create account"}
       </button>
 
       <Link

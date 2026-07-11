@@ -23,8 +23,8 @@ export default async function LoginPage({ searchParams }: PageProps) {
   const notice =
     params.notice === "reset_success"
       ? "Password updated. Please sign in with your new password."
-      : params.notice === "invite_complete"
-        ? "Onboarding complete. Please sign in."
+      : params.notice === "invite_complete" || params.notice === "signup_complete"
+        ? "Account setup complete. Please sign in."
         : undefined;
 
   return (
@@ -36,13 +36,20 @@ export default async function LoginPage({ searchParams }: PageProps) {
       {notice ? (
         <p className="mt-4 text-center text-sm text-emerald-400">{notice}</p>
       ) : null}
-      <div className="mt-4 text-center">
+      <div className="mt-4 flex flex-col items-center gap-2 text-center">
         <Link
           href="/reset-password"
           className="text-sm text-white/40 transition hover:text-white/60"
         >
           Forgot password?
         </Link>
+        <p className="text-xs text-white/35">
+          New rep?{" "}
+          <Link href="/signup" className="underline transition hover:text-white/55">
+            Complete account setup
+          </Link>{" "}
+          using your invite email.
+        </p>
       </div>
     </main>
   );

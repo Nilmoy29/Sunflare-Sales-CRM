@@ -43,6 +43,10 @@ export function TeamManagement({ reps }: TeamManagementProps) {
     <div className="flex flex-col gap-6">
       <section className="rounded-lg border border-border bg-card p-4">
         <h2 className="text-lg font-semibold text-foreground">Create rep</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Creates the account and emails a secure sign-up link so the rep can set
+          their password.
+        </p>
         <form action={createAction} className="mt-4 grid gap-3 md:grid-cols-2">
           <input
             name="email"
