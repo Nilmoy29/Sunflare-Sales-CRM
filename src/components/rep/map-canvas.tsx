@@ -13,11 +13,13 @@ import {
   getMapboxAccessToken,
   getMapboxClientTokenIssue,
 } from "@/lib/geo/mapbox";
+import { doorOutcomeSchema } from "@/lib/validators/enums";
 import {
   clampMapBbox,
   type KnockPin,
   type MapBbox,
   type PendingKnockPin,
+  type SelectedMapKnockPin,
 } from "@/lib/validators/knocks";
 import { boundsForTerritoryOverlays } from "@/lib/geo/territory-bounds";
 import type { RepTerritoryOverlay } from "@/lib/validators/territories";
@@ -52,8 +54,31 @@ type MapCanvasProps = {
   pendingKnocks?: PendingKnockPin[];
   territoryOverlays?: RepTerritoryOverlay[];
   onMapClick?: (coords: { lat: number; lng: number }) => void;
-  onPinClick?: (coords: { lat: number; lng: number }) => void;
+  onPinClick?: (knock: SelectedMapKnockPin) => void;
 };
+
+function knockPinFromFeatureProperties(
+  props: GeoJSON.GeoJsonProperties,
+  coords: { lat: number; lng: number },
+): SelectedMapKnockPin | null {
+  if (!props?.id || props.outcome == null || !props.knocked_at) {
+    return null;
+  }
+
+  const outcome = doorOutcomeSchema.safeParse(props.outcome);
+  if (!outcome.success) {
+    return null;
+  }
+
+  return {
+    id: String(props.id),
+    lat: coords.lat,
+    lng: coords.lng,
+    outcome: outcome.data,
+    knocked_at: String(props.knocked_at),
+    pending: props.pending === true || props.pending === "true",
+  };
+}
 
 function territoriesToFeatureCollection(
   territories: RepTerritoryOverlay[],
@@ -387,7 +412,13 @@ export function MapCanvas({
           );
           if (pinHit?.geometry.type === "Point") {
             const [lng, lat] = pinHit.geometry.coordinates;
-            onPinClickRef.current?.({ lat, lng });
+            const knock = knockPinFromFeatureProperties(pinHit.properties, {
+              lat,
+              lng,
+            });
+            if (knock) {
+              onPinClickRef.current?.(knock);
+            }
             return;
           }
 

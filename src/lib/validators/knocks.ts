@@ -51,6 +51,11 @@ export const knockPinSchema = z.object({
 
 export type KnockPin = z.infer<typeof knockPinSchema>;
 
+/** Knock pin selected from a map layer (includes pending/offline flag). */
+export type SelectedMapKnockPin = KnockPin & {
+  pending: boolean;
+};
+
 export const KNOCKS_PAGE_LIMIT = 500;
 
 export const knockDraftSchema = z.object({

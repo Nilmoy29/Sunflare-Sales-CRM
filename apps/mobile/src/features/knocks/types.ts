@@ -8,6 +8,10 @@ export type KnockPin = {
   knocked_at: string;
 };
 
+export type SelectedMapKnockPin = KnockPin & {
+  pending: boolean;
+};
+
 export type PendingKnockPin = KnockPin & {
   pending: true;
 };

@@ -266,3 +266,9 @@
 - `getCallScript` uses `limit(1)` instead of `.eq("id", 1)` — Story 5.7 deferral; singleton table.
 - Rep script refetch on calls panel mount only — Story 7.8 AC5 accepts reload/navigation v1.
 - `updated_by` set server-side but not shown in admin UI — not in story AC; audit UI optional future.
+
+## Deferred from: code review of fix-map-knock-pin-click-details (2026-07-11)
+
+- Web knock detail dialog has Escape + backdrop close but no full focus trap / `inert` on background — matches other rep sheets; optional a11y hardening later.
+- Cluster pin taps still ignore (no zoom-in) on web and mobile — pre-existing; optional follow-up.
+

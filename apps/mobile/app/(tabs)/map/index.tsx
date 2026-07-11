@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import { DoorOutcomeSheet } from "@/components/door-outcome-sheet";
 import { KnockMap } from "@/components/knock-map";
+import { KnockPinDetailSheet } from "@/components/knock-pin-detail-sheet";
 import { LogKnockFab } from "@/components/log-knock-fab";
 import { PendingSyncBanner } from "@/components/pending-sync-banner";
 import { ShiftControls } from "@/components/shift-controls";
@@ -10,7 +11,10 @@ import {
   isPromotableDoorOutcome,
   type SubmitKnockResult,
 } from "@/features/knocks/submit-knock";
-import type { KnockDraft } from "@/features/knocks/types";
+import type {
+  KnockDraft,
+  SelectedMapKnockPin,
+} from "@/features/knocks/types";
 import { useKnockSyncLoop } from "@/features/knocks/use-knock-sync-loop";
 import { usePendingKnocks } from "@/features/knocks/use-pending-knocks";
 import { useActiveShift } from "@/features/shifts/use-active-shift";
@@ -70,10 +74,14 @@ export default function MapScreen() {
     usePendingKnocks();
 
   const [knockDraft, setKnockDraft] = useState<KnockDraft | null>(null);
+  const [selectedPin, setSelectedPin] = useState<SelectedMapKnockPin | null>(
+    null,
+  );
   const [knockRefreshKey, setKnockRefreshKey] = useState(0);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
 
   const handleSynced = useCallback(() => {
+    setSelectedPin(null);
     setKnockRefreshKey((key) => key + 1);
     void refreshPendingKnocks();
   }, [refreshPendingKnocks]);
@@ -104,6 +112,7 @@ export default function MapScreen() {
   useEffect(() => {
     if (!isActive) {
       setKnockDraft(null);
+      setSelectedPin(null);
     }
   }, [isActive]);
 
@@ -119,7 +128,18 @@ export default function MapScreen() {
   }
 
   function openDraft(coords: { lat: number; lng: number }, source: KnockDraft["source"]) {
+    setSelectedPin(null);
     setKnockDraft({ lat: coords.lat, lng: coords.lng, source });
+  }
+
+  function handlePinPress(knock: SelectedMapKnockPin) {
+    setKnockDraft(null);
+    setSelectedPin(knock);
+  }
+
+  function handleKnockAgain(coords: { lat: number; lng: number }) {
+    setSelectedPin(null);
+    setKnockDraft({ lat: coords.lat, lng: coords.lng, source: "map_tap" });
   }
 
   function handleKnockSaved(result: SubmitKnockResult) {
@@ -181,6 +201,7 @@ export default function MapScreen() {
         pendingKnocks={pendingKnocks}
         territoryOverlays={territories}
         onMapPress={(coords) => openDraft(coords, "map_tap")}
+        onPinPress={handlePinPress}
       />
 
       <View style={styles.topBanners} pointerEvents="box-none">
@@ -233,6 +254,13 @@ export default function MapScreen() {
           </Text>
         </View>
       ) : null}
+
+      <KnockPinDetailSheet
+        visible={selectedPin !== null}
+        knock={selectedPin}
+        onClose={() => setSelectedPin(null)}
+        onKnockAgain={handleKnockAgain}
+      />
 
       <DoorOutcomeSheet
         visible={knockDraft !== null}

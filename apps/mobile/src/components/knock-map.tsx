@@ -2,7 +2,7 @@ import Mapbox from "@rnmapbox/maps";
 import type { Feature, Point } from "geojson";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { clampMapBbox, type MapBbox } from "@sunflare/shared";
+import { clampMapBbox, DOOR_OUTCOMES, type MapBbox } from "@sunflare/shared";
 import { doorOutcomeMapboxColorExpression } from "@/lib/geo/door-outcome-colors";
 import {
   emptyFeatureCollection,
@@ -10,7 +10,11 @@ import {
   territoriesToFeatureCollection,
 } from "@/lib/geo/map-geojson";
 import { DEFAULT_MAP_STYLE } from "@/lib/geo/mapbox";
-import type { KnockPin, PendingKnockPin } from "@/features/knocks/types";
+import type {
+  KnockPin,
+  PendingKnockPin,
+  SelectedMapKnockPin,
+} from "@/features/knocks/types";
 import type { RepLocation } from "@/features/gps/use-rep-location";
 import type { RepTerritoryOverlay } from "@/features/territories/use-rep-territories";
 import { useMapKnocks } from "@/features/knocks/use-map-knocks";
@@ -32,7 +36,32 @@ type KnockMapProps = {
   pendingKnocks?: PendingKnockPin[];
   territoryOverlays?: RepTerritoryOverlay[];
   onMapPress?: (coords: { lat: number; lng: number }) => void;
+  onPinPress?: (knock: SelectedMapKnockPin) => void;
 };
+
+function knockPinFromFeature(
+  feature: Feature,
+  coords: { lat: number; lng: number },
+): SelectedMapKnockPin | null {
+  const props = feature.properties;
+  if (!props?.id || props.outcome == null || !props.knocked_at) {
+    return null;
+  }
+
+  const outcome = String(props.outcome);
+  if (!DOOR_OUTCOMES.includes(outcome as (typeof DOOR_OUTCOMES)[number])) {
+    return null;
+  }
+
+  return {
+    id: String(props.id),
+    lat: coords.lat,
+    lng: coords.lng,
+    outcome: outcome as SelectedMapKnockPin["outcome"],
+    knocked_at: String(props.knocked_at),
+    pending: props.pending === true || props.pending === "true",
+  };
+}
 
 export function KnockMap({
   userLocation,
@@ -40,14 +69,19 @@ export function KnockMap({
   pendingKnocks = [],
   territoryOverlays = [],
   onMapPress,
+  onPinPress,
 }: KnockMapProps) {
   const mapRef = useRef<Mapbox.MapView>(null);
   const cameraRef = useRef<Mapbox.Camera>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasCenteredOnUserRef = useRef(false);
+  const suppressMapPressRef = useRef(false);
+  const suppressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onMapPressRef = useRef(onMapPress);
+  const onPinPressRef = useRef(onPinPress);
 
   onMapPressRef.current = onMapPress;
+  onPinPressRef.current = onPinPress;
 
   const [bbox, setBbox] = useState<MapBbox | null>(null);
 
@@ -116,20 +150,43 @@ export function KnockMap({
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
+      if (suppressTimerRef.current) {
+        clearTimeout(suppressTimerRef.current);
+      }
     };
   }, []);
 
-  const handlePinPress = useCallback(
-    (event: { features: Feature[] }) => {
-      const feature = event.features[0];
-      if (!feature || feature.geometry.type !== "Point") {
-        return;
-      }
-      const [lng, lat] = (feature.geometry as Point).coordinates;
-      onMapPressRef.current?.({ lat, lng });
-    },
-    [],
-  );
+  const handlePinPress = useCallback((event: { features: Feature[] }) => {
+    const feature = event.features[0];
+    if (!feature || feature.geometry.type !== "Point") {
+      return;
+    }
+
+    if (
+      feature.properties &&
+      "point_count" in feature.properties &&
+      feature.properties.point_count
+    ) {
+      return;
+    }
+
+    const [lng, lat] = (feature.geometry as Point).coordinates;
+    const knock = knockPinFromFeature(feature, { lat, lng });
+    if (!knock) {
+      return;
+    }
+
+    suppressMapPressRef.current = true;
+    if (suppressTimerRef.current) {
+      clearTimeout(suppressTimerRef.current);
+    }
+    suppressTimerRef.current = setTimeout(() => {
+      suppressMapPressRef.current = false;
+      suppressTimerRef.current = null;
+    }, 300);
+
+    onPinPressRef.current?.(knock);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -138,6 +195,9 @@ export function KnockMap({
         style={styles.map}
         styleURL={DEFAULT_MAP_STYLE}
         onPress={(event) => {
+          if (suppressMapPressRef.current) {
+            return;
+          }
           const { geometry } = event;
           if (geometry.type === "Point") {
             const [lng, lat] = geometry.coordinates;
