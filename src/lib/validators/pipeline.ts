@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { leadSourceSchema, leadStageSchema } from "@/lib/validators/enums";
+import { leadSourceSchema, leadStageSchema, lostReasonSchema } from "@/lib/validators/enums";
 
 export {
   reassignLeadBodySchema,
@@ -21,6 +21,7 @@ export const pipelineLeadCardBaseSchema = z.object({
   address: z.string().nullable(),
   suburb: z.string().nullable(),
   updated_at: z.string(),
+  lost_reason: lostReasonSchema.nullable(),
 });
 
 export type PipelineLeadCardBase = z.infer<typeof pipelineLeadCardBaseSchema>;
@@ -53,6 +54,7 @@ export const pipelineLeadsQuerySchema = z.object({
   suburb: z.string().optional(),
   from: sydneyDateSchema.optional(),
   to: sydneyDateSchema.optional(),
+  follow_up_queue: z.boolean().optional(),
 });
 
 export type PipelineLeadsQuery = z.infer<typeof pipelineLeadsQuerySchema>;
@@ -64,6 +66,7 @@ export const pipelineFiltersSchema = z.object({
   suburb: z.string(),
   from: sydneyDateSchema,
   to: sydneyDateSchema,
+  followUpQueue: z.boolean().optional(),
 });
 
 export type PipelineFilters = z.infer<typeof pipelineFiltersSchema>;
@@ -91,8 +94,9 @@ export function pipelineFiltersToQuery(
     rep_ids: filters.repIds ?? undefined,
     sources: filters.sources ?? undefined,
     suburb: suburb || undefined,
-    from: filters.from,
-    to: filters.to,
+    from: filters.followUpQueue ? undefined : filters.from,
+    to: filters.followUpQueue ? undefined : filters.to,
+    follow_up_queue: filters.followUpQueue ? true : undefined,
   };
 }
 
@@ -115,5 +119,7 @@ export function parsePipelineLeadsQueryFromSearchParams(
     suburb: searchParams.get("suburb")?.trim() || undefined,
     from: searchParams.get("from")?.trim() || undefined,
     to: searchParams.get("to")?.trim() || undefined,
+    follow_up_queue:
+      searchParams.get("follow_up_queue") === "true" ? true : undefined,
   });
 }

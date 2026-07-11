@@ -3,7 +3,7 @@ import {
   pipelineLeadCardBaseSchema,
   type PipelineLeadCardBase,
 } from "@/lib/validators/pipeline";
-import { leadSourceSchema, leadStageSchema } from "@/lib/validators/enums";
+import { leadSourceSchema, leadStageSchema, lostReasonSchema } from "@/lib/validators/enums";
 
 export const PIPELINE_LEAD_SELECT = `
   id,
@@ -11,6 +11,7 @@ export const PIPELINE_LEAD_SELECT = `
   source,
   rep_id,
   updated_at,
+  lost_reason,
   profiles!leads_rep_id_fkey ( name ),
   contacts!leads_contact_id_fkey ( first_name, last_name, phone, address, suburb )
 `;
@@ -49,6 +50,7 @@ export function parsePipelineLeadRow(
   const rep_name = profiles?.name;
   const stageParsed = leadStageSchema.safeParse(row.stage);
   const sourceParsed = leadSourceSchema.safeParse(row.source);
+  const lostReasonParsed = lostReasonSchema.nullable().safeParse(row.lost_reason ?? null);
   const updated_at = toIsoString(row.updated_at);
 
   if (
@@ -57,6 +59,7 @@ export function parsePipelineLeadRow(
     !rep_name ||
     !stageParsed.success ||
     !sourceParsed.success ||
+    !lostReasonParsed.success ||
     !updated_at
   ) {
     return null;
@@ -80,5 +83,6 @@ export function parsePipelineLeadRow(
     address: contacts?.address ?? null,
     suburb: contacts?.suburb ?? null,
     updated_at,
+    lost_reason: lostReasonParsed.data,
   });
 }

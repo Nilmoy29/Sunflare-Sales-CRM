@@ -18,7 +18,7 @@ export default async function AdminPipelinePage() {
   }));
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
       <PipelineBoardShell
         title="Pipeline"
         description="View all reps' leads and update status, notes, and proposals in one place."

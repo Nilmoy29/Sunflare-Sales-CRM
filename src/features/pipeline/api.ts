@@ -38,6 +38,9 @@ function buildLeadsQueryString(filters: PipelineFilters): string {
   if (query.to) {
     params.set("to", query.to);
   }
+  if (query.follow_up_queue) {
+    params.set("follow_up_queue", "true");
+  }
 
   const serialized = params.toString();
   return serialized ? `?${serialized}` : "";

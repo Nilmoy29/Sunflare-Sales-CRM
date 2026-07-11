@@ -7,9 +7,9 @@ import { PipelineFollowUpCell } from "@/components/pipeline/pipeline-follow-up-c
 import { PipelineLatestUpdateCell } from "@/components/pipeline/pipeline-latest-update-cell";
 import type { PipelineListView } from "@/components/pipeline/pipeline-view-toggle";
 import {
-  filterOverdueFollowUpLeads,
+  filterFollowUpQueueLeads,
   sortLeadsByBookedDate,
-  sortLeadsByOverdueDue,
+  sortLeadsByFollowUpQueue,
 } from "@/features/pipeline/latest-update-display";
 import {
   leadStageRowBorderStyle,
@@ -82,10 +82,10 @@ export function PipelineTable({
 
   const sortedLeads = useMemo(() => {
     const filtered = isOverdueView
-      ? filterOverdueFollowUpLeads(leads)
+      ? filterFollowUpQueueLeads(leads)
       : leads;
     return isOverdueView
-      ? sortLeadsByOverdueDue(filtered)
+      ? sortLeadsByFollowUpQueue(filtered)
       : sortLeadsByBookedDate(filtered);
   }, [isOverdueView, leads]);
 
@@ -175,7 +175,7 @@ export function PipelineTable({
         </p>
       ) : null}
 
-      <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      <div className="rounded-lg border border-border bg-card shadow-sm">
         <div className="overflow-x-auto">
           <table
             className={`w-full border-separate border-spacing-0 text-left text-sm ${
@@ -203,7 +203,7 @@ export function PipelineTable({
                 <th className="px-3 py-3 font-semibold text-foreground">Update</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="bg-card">
               {sortedLeads.length === 0 ? (
                 <tr>
                   <td
@@ -211,7 +211,7 @@ export function PipelineTable({
                     className="px-3 py-10 text-center text-muted-foreground"
                   >
                     {isOverdueView
-                      ? "No overdue follow-ups. You're all caught up."
+                      ? "No leads in the follow-up queue."
                       : "No leads match your filters."}
                   </td>
                 </tr>
@@ -290,10 +290,10 @@ export function PipelineTable({
                       </td>
                       <td style={rowBorderStyle} className="px-3 py-3">
                         {isProposalSent(lead) ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-400">
                             Sent
                             {lead.proposal_sent_at ? (
-                              <span className="font-normal text-emerald-600">
+                              <span className="font-normal text-emerald-300/90">
                                 {formatPipelineDate(lead.proposal_sent_at)}
                               </span>
                             ) : null}
@@ -356,26 +356,30 @@ export function PipelineTable({
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-muted-foreground">
-          {sortedLeads.length} lead{sortedLeads.length === 1 ? "" : "s"}
+          {isOverdueView
+            ? `${sortedLeads.length} in follow-up queue`
+            : `${sortedLeads.length} lead${sortedLeads.length === 1 ? "" : "s"}`}
         </p>
-        <div
-          className="flex flex-wrap items-center gap-x-3 gap-y-1"
-          aria-label="Status color key"
-        >
-          {PIPELINE_STAGE_ORDER.map((stage) => (
-            <span
-              key={stage}
-              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
-            >
+        {!isOverdueView ? (
+          <div
+            className="flex flex-wrap items-center gap-x-3 gap-y-1"
+            aria-label="Status color key"
+          >
+            {PIPELINE_STAGE_ORDER.map((stage) => (
               <span
-                className="inline-block h-0.5 w-4 rounded-full"
-                style={{ backgroundColor: LEAD_STAGE_UNDERLINE_COLOR[stage] }}
-                aria-hidden
-              />
-              {LEAD_STAGE_LABELS[stage]}
-            </span>
-          ))}
-        </div>
+                key={stage}
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
+              >
+                <span
+                  className="inline-block h-0.5 w-4 rounded-full"
+                  style={{ backgroundColor: LEAD_STAGE_UNDERLINE_COLOR[stage] }}
+                  aria-hidden
+                />
+                {LEAD_STAGE_LABELS[stage]}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {pendingLost ? (

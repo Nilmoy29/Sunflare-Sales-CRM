@@ -8,9 +8,19 @@ import {
   type PipelineListView,
 } from "@/components/pipeline/pipeline-view-toggle";
 import { defaultPipelineFilters } from "@/features/pipeline/default-pipeline-filters";
-import { filterOverdueFollowUpLeads } from "@/features/pipeline/latest-update-display";
+import { filterFollowUpQueueLeads } from "@/features/pipeline/latest-update-display";
 import { usePipelineLeads } from "@/features/pipeline/use-pipeline-leads";
 import type { PipelineFilters } from "@/lib/validators/pipeline";
+
+function filtersWithFollowUpQueue(
+  filters: PipelineFilters,
+  listView: PipelineListView,
+): PipelineFilters {
+  if (listView !== "overdue_follow_ups") {
+    return { ...filters, followUpQueue: false };
+  }
+  return { ...filters, followUpQueue: true };
+}
 
 type PipelineBoardShellProps = {
   title: string;
@@ -35,17 +45,23 @@ export function PipelineBoardShell({
 }: PipelineBoardShellProps) {
   const [filters, setFilters] = useState<PipelineFilters>(defaultPipelineFilters);
   const [listView, setListView] = useState<PipelineListView>("bookings");
+
+  const effectiveFilters = useMemo(
+    () => filtersWithFollowUpQueue(filters, listView),
+    [filters, listView],
+  );
+
   const { leads, loading, error, moveLeadStage, removeLead, saveLeadFollowUp, completeLeadFollowUp } =
-    usePipelineLeads(filters);
+    usePipelineLeads(effectiveFilters);
 
   const overdueCount = useMemo(
-    () => filterOverdueFollowUpLeads(leads).length,
+    () => filterFollowUpQueueLeads(leads).length,
     [leads],
   );
 
   return (
     <main
-      className={`flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-background p-4 sm:gap-6 ${
+      className={`flex flex-col gap-4 bg-background p-4 sm:gap-6 ${
         layout === "desktop" ? "md:p-8" : "md:p-6"
       }`}
     >
@@ -68,6 +84,13 @@ export function PipelineBoardShell({
         overdueCount={overdueCount}
         onChange={setListView}
       />
+
+      {listView === "overdue_follow_ups" ? (
+        <p className="text-sm text-muted-foreground">
+          Overdue follow-ups, signed deals, and lost / not interested
+          customers. Date filters are ignored in this view.
+        </p>
+      ) : null}
 
       <PipelineTable
         leads={leads}

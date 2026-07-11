@@ -39,11 +39,13 @@ export async function getPipelineLeads(
   if (suburbFilter) {
     request = request.ilike("contacts.suburb", `%${suburbFilter}%`);
   }
-  if (query.from) {
-    request = request.gte("updated_at", startOfDaySydney(query.from));
-  }
-  if (query.to) {
-    request = request.lte("updated_at", endOfDaySydney(query.to));
+  if (!query.follow_up_queue) {
+    if (query.from) {
+      request = request.gte("updated_at", startOfDaySydney(query.from));
+    }
+    if (query.to) {
+      request = request.lte("updated_at", endOfDaySydney(query.to));
+    }
   }
 
   const { data, error } = await request.order("updated_at", {
